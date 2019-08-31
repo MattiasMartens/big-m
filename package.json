@@ -1,0 +1,16 @@
+{
+  "name": "map-builders",
+  "version": "1.0.0",
+  "description": "Functions for composing, decomposing, and transforming Maps",
+  "main": "index.ts",
+  "author": "Mattias Martens <mattiasofmartens@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/wu": "^2.1.39",
+    "benchmark": "^2.1.4",
+    "fp-ts": "^2.0.5",
+    "mocha": "^6.2.0",
+    "should": "^13.2.3",
+    "wu": "^2.1.0"
+  }
+}
