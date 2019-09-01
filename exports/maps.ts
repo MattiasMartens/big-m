@@ -1,4 +1,4 @@
-import wu from "wu";
+import * as wu from "wu";
 import {BiMap} from "./bidirectional";
 import {pipe} from "fp-ts/lib/pipeable";
 import {defined, Possible, tuple} from "../types/utils";
@@ -13,13 +13,21 @@ export function stream<K, T>(
   );
 }
 
-type Reconciler<K, T, V> = (
+export type Reconciler<K, T, V> = (
   colliding: Possible<V>,
   incoming: T,
-  key: K,
-  map: Map<K, V>
+  key: K
 ) => V;
 
+export function collectInto<K, T>(
+  iterable: Iterable<[K, T]>,
+  seed: Map<K, T>
+): Map<K, T>
+export function collectInto<K, T, V>(
+  iterable: Iterable<[K, T]>,
+  seed: Map<K, V>,
+  reconcileFn: Reconciler<K, T, V>
+): Map<K, V>
 export function collectInto<K, T, V>(
   iterable: Iterable<[K, T]>,
   seed: Map<K, V>,
@@ -29,10 +37,9 @@ export function collectInto<K, T, V>(
     const [key, val] = entry;
     if (reconcileFn) {
       seed.set(key, reconcileFn(
-        seed.has(key) ? defined(seed.get(key)) : undefined,
+        seed.get(key),
         val,
-        key,
-        seed
+        key
       ));
     } else {
       seed.set(key, val as unknown as V);
@@ -42,6 +49,13 @@ export function collectInto<K, T, V>(
   return seed;
 }
 
+export function collect<K, T>(
+  iterable: Iterable<[K, T]>
+): Map<K, T>
+export function collect<K, T, V>(
+  iterable: Iterable<[K, T]>,
+  reconcileFn: Reconciler<K, T, V>
+): Map<K, V>
 export function collect<K, T, V>(
   iterable: Iterable<[K, T]>,
   reconcileFn?: Reconciler<K, T, V>
@@ -49,7 +63,25 @@ export function collect<K, T, V>(
   return collectInto(
     iterable,
     new Map<K, V>(),
-    reconcileFn
+    reconcileFn as any
+  );
+}
+
+export function collectBiMap<K, T>(
+  iterable: Iterable<[K, T]>
+): Map<K, T>
+export function collectBiMap<K, T, V>(
+  iterable: Iterable<[K, T]>,
+  reconcileFn: Reconciler<K, T, V>
+): Map<K, V>
+export function collectBiMap<K, T, V>(
+  iterable: Iterable<[K, T]>,
+  reconcileFn?: Reconciler<K, T, V>
+) {
+  return collectInto(
+    iterable,
+    new BiMap<K, V>(),
+    reconcileFn as any
   );
 }
 
@@ -139,24 +171,44 @@ export function makeEntries<T, K, V>(
   }
 }
 
+export function accumulate<T, K>(
+  arr: Iterable<T>,
+  keyFn: (value: T) => Possible<K>
+): Map<K, T>
 export function accumulate<T, K, V>(
   arr: Iterable<T>,
   keyFn: (value: T) => Possible<K>,
   reconcileFn: Reconciler<K, T, V>
+): Map<K, V>
+export function accumulate<T, K, V>(
+  arr: Iterable<T>,
+  keyFn: (value: T) => Possible<K>,
+  reconcileFn?: Reconciler<K, T, V>
 ): Map<K, V> {
   return accumulateInto(
     arr,
+    new Map(),
     keyFn,
-    reconcileFn,
-    new Map()
+    reconcileFn as any
   );
 }
 
+export function accumulateInto<T, K>(
+  arr: Iterable<T>,
+  seed: Map<K, T>,
+  keyFn: (value: T) => Possible<K>
+): Map<K, T>
 export function accumulateInto<T, K, V>(
   arr: Iterable<T>,
+  seed: Map<K, V>,
   keyFn: (value: T) => Possible<K>,
-  reconcileFn: Reconciler<K, T, V>,
-  seed: Map<K, V>
+  reconcileFn: Reconciler<K, T, V>
+): Map<K, V>
+export function accumulateInto<T, K, V>(
+  arr: Iterable<T>,
+  seed: Map<K, V>,
+  keyFn: (value: T) => Possible<K>,
+  reconcileFn?: Reconciler<K, T, V>
 ): Map<K, V> {
   pipe(
     makeEntries(
@@ -166,30 +218,61 @@ export function accumulateInto<T, K, V>(
     (entries) => collectInto(
       entries,
       seed,
-      reconcileFn
+      reconcileFn as any
     )
   );
 
   return seed;
 }
 
-export function* flattenDeepMap<K, V>(deepMap: Map<K, unknown>, shallow = false): Iterable<V> {
+type DeepMap1<K, T> = Map<K, T | Map<K, T>>;
+type DeepMap2<K, T> = Map<K, T | DeepMap1<K, T>>;
+type DeepMap3<K, T> = Map<K, T | DeepMap2<K, T>>;
+type DeepMap4<K, T> = Map<K, T | DeepMap3<K, T>>;
+type DeepMap5<K, T> = Map<K, T | DeepMap4<K, T>>;
+type DeepMap6<K, T> = Map<K, T | DeepMap5<K, T>>;
+type DeepMap7<K, T> = Map<K, T | DeepMap6<K, T>>;
+type DeepMap8<K, T> = Map<K, T | DeepMap7<K, T>>;
+export type DeepMap<K, T> = DeepMap8<K, T>;
+
+export function* squeezeDeepMap<K, T>(deepMap: DeepMap<K, T>): Iterable<T> {
   for (let entry of deepMap) {
     const [_, val] = entry;
 
-    if ((val instanceof Map) && !shallow) {
-      yield* flattenDeepMap(val) as Iterable<V>;
+    if (val instanceof Map) {
+      yield* squeezeDeepMap(val) as Iterable<T>;
     } else {
-      yield val as any as V;
+      yield val;
     }
   }
 }
 
-export function deepCollectInto<Y, T, K, V>(
+export function* flattenDeepMap<K, V>(deepMap: DeepMap<K, V>): MapStream<K[], V> {
+  for (let entry of deepMap) {
+    const [key, val] = entry;
+
+    if ((val instanceof Map)) {
+      yield* wu(flattenDeepMap(val)).map(([keys, val]) => [[key, ...keys], val])
+    } else {
+      yield [[key], val];
+    }
+  }
+}
+
+export function deepCollectInto<T, K>(
   arr: MapStream<K[], T>,
-  reconcileFn: (collidingValue: Possible<V>, value: T, keys: K[]) => V,
-  seed: Map<K, Y>
-): Map<K, Y> {
+  seed: DeepMap<K, T>,
+): DeepMap<K, T>
+export function deepCollectInto<T, K, V>(
+  arr: MapStream<K[], T>,
+  seed: DeepMap<K, V>,
+  reconcileFn: Reconciler<K[], T, V>
+): DeepMap<K, V>
+export function deepCollectInto<T, K, V>(
+  arr: MapStream<K[], T>,
+  seed: DeepMap<K, V>,
+  reconcileFn?: Reconciler<K[], T, V>,
+): DeepMap<K, V> {
   wu(arr).forEach(([keys, value]) => {
     if (!!keys && !!keys.length) {
       let deepReferenceTemp = seed;
@@ -197,10 +280,10 @@ export function deepCollectInto<Y, T, K, V>(
       const keyFollow = keys.slice(0);
       while (keyFollow.length > 1) {
         const keyToFollow = keyFollow.splice(0, 1)[0];
-        const deepReferenceAttempt = deepReferenceTemp.get(keyToFollow) as any as Possible<Map<K, Y>>;
+        const deepReferenceAttempt = deepReferenceTemp.get(keyToFollow) as any as Possible<Map<K, V>>;
         if (!deepReferenceAttempt) {
           const newMap = new Map();
-          deepReferenceTemp.set(keyToFollow, newMap as any as Y);
+          deepReferenceTemp.set(keyToFollow, newMap);
           deepReferenceTemp = newMap;
         } else {
           deepReferenceTemp = deepReferenceAttempt;
@@ -210,49 +293,78 @@ export function deepCollectInto<Y, T, K, V>(
       const deepestMap = defined(deepReferenceTemp);
 
       const [lastKey] = keyFollow;
-      deepestMap.set(lastKey, reconcileFn(deepestMap.get(lastKey) as any as Possible<V>, value, keys) as any as Y);
+      const toSet = reconcileFn ? reconcileFn(deepestMap.get(lastKey) as any as Possible<V>, value, keys)
+        : value;
+      deepestMap.set(lastKey, toSet as any as V);
     }
   });
 
   return seed;
 }
 
-export function deepCollect<Y, T, K, V>(
+export function deepCollect<T, K>(
+  arr: MapStream<K[], T>
+): DeepMap<K, T>
+export function deepCollect<T, K, V>(
   arr: MapStream<K[], T>,
-  reconcileFn: (collidingValue: Possible<V>, value: T, keys: K[]) => V
-): Map<K, Y> {
+  reconcileFn: Reconciler<K[], T, V>
+): DeepMap<K, V>
+export function deepCollect<T, K, V>(
+  arr: MapStream<K[], T>,
+  reconcileFn?: Reconciler<K[], T, V>
+): DeepMap<K, V> {
   return deepCollectInto(
     arr,
-    reconcileFn,
-    new Map()
+    new Map(),
+    reconcileFn as any
   );
 }
 
+export function deepAccumulateInto<Y, T, K>(
+  arr: Iterable<T>,
+  seed: DeepMap<K, Y>,
+  keyFn: (value: T) => K[] | undefined
+): DeepMap<K, T> 
 export function deepAccumulateInto<Y, T, K, V>(
   arr: Iterable<T>,
+  seed: Map<K, Y>,
   keyFn: (value: T) => K[] | undefined,
-  reconcileFn: (collidingValue: Possible<V>, value: T, keys: K[]) => V,
-  seed: Map<K, Y>
-): Map<K, Y> {
+  reconcileFn: (collidingValue: Possible<V>, value: T, keys: K[]) => V
+): DeepMap<K, V> 
+export function deepAccumulateInto<T, K, V>(
+  arr: Iterable<T>,
+  seed: DeepMap<K, V>,
+  keyFn: (value: T) => K[] | undefined,
+  reconcileFn?: (collidingValue: Possible<V>, value: T, keys: K[]) => V
+): DeepMap<K, V> {
   const entries = makeEntries(arr, keyFn);
 
   return deepCollectInto(
     entries,
-    reconcileFn,
-    seed
+    seed,
+    reconcileFn as any
   );
 }
 
-export function deepAccumulate<Y, T, K, V>(
+export function deepAccumulate<T, K>(
+  arr: Iterable<T>,
+  keyFn: (value: T) => K[] | undefined
+): Map<K, T>
+export function deepAccumulate<T, K, V>(
   arr: Iterable<T>,
   keyFn: (value: T) => K[] | undefined,
-  reconcileFn: (collidingValue: Possible<V>, value: T, keys: K[]) => V
-): Map<K, Y> {
+  reconcileFn: Reconciler<K[], T, V>
+): Map<K, V>
+export function deepAccumulate<T, K, V>(
+  arr: Iterable<T>,
+  keyFn: (value: T) => K[] | undefined,
+  reconcileFn?: Reconciler<K[], T, V>
+): DeepMap<K, V> {
   return deepAccumulateInto(
     arr,
+    new Map(),
     keyFn,
-    reconcileFn,
-    new Map()
+    reconcileFn as any
   );
 }
 
@@ -278,9 +390,43 @@ export function appenderReconciler<T, V, K>(
   }
 }
 
-export function appenderFlattenReconciler<T, V, K>(): Reconciler<K, T, T[]>
+export function adderReconciler<K>(): Reconciler<K, number, number>
+export function adderReconciler<T, K>(
+  mapFn: (val: T) => number
+): Reconciler<K, T, number>
+export function adderReconciler<T, K>(
+  mapFn?: (val: T) => number
+): Reconciler<K, T, number> {
+  return function(
+    collidingValue,
+    value
+  ) {
+    const val = mapFn ? mapFn(value) : value as any as number;
+
+    if (collidingValue === undefined) {
+      return val;
+    } else {
+      return val + collidingValue;
+    }
+  }
+}
+
+export function counterReconciler<K, T>(): Reconciler<K, T, number> {
+  return function(
+    collidingValue,
+    _
+  ) {
+    if (collidingValue === undefined) {
+      return 1;
+    } else {
+      return 1 + collidingValue;
+    }
+  }
+}
+
+export function appenderFlattenReconciler<T, K>(): Reconciler<K, (Possible<T | Iterable<T>>), T[]>
 export function appenderFlattenReconciler<T, V, K>(
-  mapFn: (val: T) => V[]
+  mapFn: (val: T) => Possible<V | Iterable<V>>
 ): Reconciler<K, T, V[]>
 export function appenderFlattenReconciler<T, V, K>(
   mapFn: (val: T) => V[] = (val: T) => val as any as V[]
@@ -299,6 +445,22 @@ export function appenderFlattenReconciler<T, V, K>(
   }
 }
 
+export function foldReconciler<T, K, V>(
+  mapper: (val: T) => V,
+  reducer: (colliding: V, val: T) => V
+): Reconciler<K, T, V> {
+  return function(
+    collidingValue,
+    value
+  ) {
+    if (collidingValue === undefined) {
+      return mapper(value);
+    } else {
+      return reducer(collidingValue, value);
+    }
+  }
+}
+
 export function invertBinMap<K, T>(map: MapStream<K, T[]>): Map<T, K[]> {
   return collect(
       wu(map)
@@ -306,5 +468,38 @@ export function invertBinMap<K, T>(map: MapStream<K, T[]>): Map<T, K[]> {
           ([key, arr]) => arr.map(t => [t, key])
         ),
       appenderReconciler()
+  );
+}
+
+export function mapToDictionary<K, T>(map: MapStream<K, T>, stringifier: (val: K) => string = JSON.stringify) {
+  const ret: { [key: string]: T } = {};
+
+  for (let entry of map) {
+    const [key, val] = entry;
+    ret[stringifier(key)] = val;
+  }
+
+  return ret;
+}
+
+function deepMapToDictionaryRecurse<K, T, Y>(map: MapStream<K, T>, depth: number, stringifier: (val: K, depth: number) => string) {
+  const ret: { [key: string]: Y } = {};
+
+  for (let entry of map) {
+    const [key, val] = entry;
+    
+    const outVal = val instanceof Map ? deepMapToDictionaryRecurse(val, depth + 1, stringifier)
+      : val;
+    ret[stringifier(key, depth)] = outVal as any as Y;
+  }
+
+  return ret;
+}
+
+export function deepMapToDictionary<K, T, Y>(map: MapStream<K, T>, stringifier: (val: K, depth: number) => string = String) {
+  return deepMapToDictionaryRecurse(
+    map,
+    0,
+    stringifier
   );
 }

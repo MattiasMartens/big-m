@@ -8,6 +8,10 @@ export function defined<T>(t: Possible<T>, errorMessage?: string): T {
   }
 }
 
+export function isDefined<T>(t: Possible<T>) {
+  return t !== undefined;
+}
+
 type MaybeNullOrUndefined<T> = T | null | undefined;
 
 export function notNullOrUndefined<T>(t: MaybeNullOrUndefined<T>, errorMessage?: string): T {
