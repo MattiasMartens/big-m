@@ -12,7 +12,11 @@ import {
   deepAccumulate,
   deepAccumulateInto,
   deepCollect,
-  deepCollectInto
+  deepCollectInto,
+  deepDictionaryToMap,
+  deepMapStream,
+  foldReconciler,
+  mapToDictionary
 } from "../exports/maps";
 import { defined, Possible, isDefined }from "../types/utils";
 import { BiMap } from "../exports/bidirectional";
@@ -443,36 +447,89 @@ describe('deepCollect', () => {
       b: 8
     });
   });
+});
 
-  describe('deepCollectInto', () => {
-    it('Should add an array of entries to a deeply nested map', function() {
-      const map1 = new Map();
-      const ret = deepCollectInto([[["a", "c"], 1], [["b"], 2]], map1);
-  
-      ret.should.equal(map1);
-      deepMapToDictionary(ret).should.deepEqual({
-        a: {
-          c: 1
-        },
-        b: 2
-      })
+describe('deepCollectInto', () => {
+  it('Should add an array of entries to a deeply nested map', function() {
+    const map1 = new Map();
+    const ret = deepCollectInto([[["a", "c"], 1], [["b"], 2]], map1);
+
+    ret.should.equal(map1);
+    deepMapToDictionary(ret).should.deepEqual({
+      a: {
+        c: 1
+      },
+      b: 2
+    })
+  });
+
+  it('Should turn an array into a map and given a reconciler combine entries on key collision', function() {
+    const map1 = new Map();
+    const ret = deepCollectInto(
+      [[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]],
+      map1,
+      adderReconciler()
+    );
+
+    ret.should.equal(map1);
+    deepMapToDictionary(ret).should.deepEqual({
+      x: {
+        a: 65 + 7
+      },
+      b: 8
     });
-  
-    it('Should turn an array into a map and given a reconciler combine entries on key collision', function() {
-      const map1 = new Map();
-      const ret = deepCollectInto(
-        [[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]],
-        map1,
-        adderReconciler()
-      );
-  
-      ret.should.equal(map1);
-      deepMapToDictionary(ret).should.deepEqual({
-        x: {
-          a: 65 + 7
-        },
-        b: 8
-      });
+  });
+});
+
+describe('deepDictionaryToMap', () => {
+  it ('Should transform a deeply nested object into a stream of key-lists and values', () => {
+    const ret = deepDictionaryToMap({
+      a: 1,
+      b: {
+        a: 2
+      }
+    });
+
+    ret.toArray().should.deepEqual([[["a"], 1], [["b", "a"], 2]]);
+  });
+});
+
+describe('deepMapStream', () => {
+  it ('Should transform a deeply nested map into a stream of key-lists and values', () => {
+    const ret = deepMapStream(new Map<string, any>([
+      ["a", 1],
+      ["b", new Map<number, any>([[1, "_a"], [99, new Map([["_b", {}]])]])]
+    ]));
+
+    ret.toArray().should.deepEqual([
+      [["a"], 1],
+      [["b", 1], "_a"],
+      [["b", 99, "_b"], {}]
+    ]);
+  });
+});
+
+describe('foldReconciler', () => {
+  it ('Should allow construction of a map using one function for each case of colliding value, no colliding value', () => {
+    const reconciler = foldReconciler(
+      (val: number) => 2 * val,
+      (colliding: number, val: number) => colliding + val
+    );
+
+    const ret = mapToDictionary(
+      collect(
+        [
+          ["a", 1],
+          ["b", 2],
+          ["b", 3]
+        ],
+        reconciler
+      )
+    );
+
+    ret.should.deepEqual({
+      a: 2,
+      b: 7
     });
   });
 });

@@ -3,9 +3,9 @@ import {BiMap} from "./bidirectional";
 import {pipe} from "fp-ts/lib/pipeable";
 import {defined, Possible, tuple} from "../types/utils";
 
-export type MapStream<K, V> = Iterable<[K, V]>;
+export type MapStream<K, V> = wu.WuIterable<[K, V]>;
 
-export function stream<K, T>(
+export function mapStream<K, T>(
   map: Map<K, T>
 ) {
   return wu(
@@ -86,26 +86,26 @@ export function collectBiMap<K, T, V>(
 }
 
 export function reversedMap<K, T>(
-  iterable: MapStream<K, T>
+  iterable: Iterable<[K, T]>
 ) {
   return wu.map(([k, t]) => [t, k] as [T, K], iterable)
 }
 
 export function mapValues<K, T, V>(
-  iterable: MapStream<K, T>,
+  iterable: Iterable<[K, T]>,
   fn: (value: T, key: K) => V
 ): MapStream<K, V> {
   return wu.map(([key, val]) => [key, fn(val, key)], iterable);
 }
 
 export function keysOf<K, T>(
-  iterable: MapStream<K, T>
+  iterable: Iterable<[K, T]>
 ) {
   return wu.map(arr => arr[0], iterable);
 }
 
 export function valuesOf<K, T>(
-  iterable: MapStream<K, T>
+  iterable: Iterable<[K, T]>
 ) {
   return wu.map(arr => arr[1], iterable);
 }
@@ -235,24 +235,34 @@ type DeepMap7<K, T> = Map<K, T | DeepMap6<K, T>>;
 type DeepMap8<K, T> = Map<K, T | DeepMap7<K, T>>;
 export type DeepMap<K, T> = DeepMap8<K, T>;
 
+export type DeepMapStream<K, T> = wu.WuIterable<[K[], T]>;
+
 export function* squeezeDeepMap<K, T>(deepMap: DeepMap<K, T>): Iterable<T> {
+  return wu(_squeezeDeepMap(deepMap));
+}
+
+function* _squeezeDeepMap<K, T>(deepMap: DeepMap<K, T>): Iterable<T> {
   for (let entry of deepMap) {
     const [_, val] = entry;
 
     if (val instanceof Map) {
-      yield* squeezeDeepMap(val) as Iterable<T>;
+      yield* _squeezeDeepMap(val) as Iterable<T>;
     } else {
       yield val;
     }
   }
 }
 
-export function* flattenDeepMap<K, V>(deepMap: DeepMap<K, V>): MapStream<K[], V> {
+export function deepMapStream<K, V>(deepMap: DeepMap<K, V>): MapStream<K[], V> {
+  return wu(_flattenDeepMap(deepMap));
+}
+
+function* _flattenDeepMap<K, V>(deepMap: DeepMap<K, V>): Iterable<[K[], V]> {
   for (let entry of deepMap) {
     const [key, val] = entry;
 
     if ((val instanceof Map)) {
-      yield* wu(flattenDeepMap(val)).map(([keys, val]) => [[key, ...keys], val])
+      yield* wu(_flattenDeepMap(val)).map(([keys, val]) => [[key, ...keys], val])
     } else {
       yield [[key], val];
     }
@@ -260,11 +270,11 @@ export function* flattenDeepMap<K, V>(deepMap: DeepMap<K, V>): MapStream<K[], V>
 }
 
 export function deepCollectInto<T, K>(
-  arr: MapStream<K[], T>,
+  arr: Iterable<[K[], T]>,
   seed: DeepMap<K, T>,
 ): DeepMap<K, T>
 export function deepCollectInto<T, K, V>(
-  arr: MapStream<K[], T>,
+  arr: Iterable<[K[], T]>,
   seed: DeepMap<K, V>,
   reconcileFn: Reconciler<K[], T, V>
 ): DeepMap<K, V>
@@ -303,14 +313,14 @@ export function deepCollectInto<T, K, V>(
 }
 
 export function deepCollect<T, K>(
-  arr: MapStream<K[], T>
+  arr: Iterable<[K[], T]>,
 ): DeepMap<K, T>
 export function deepCollect<T, K, V>(
-  arr: MapStream<K[], T>,
+  arr: Iterable<[K[], T]>,
   reconcileFn: Reconciler<K[], T, V>
 ): DeepMap<K, V>
 export function deepCollect<T, K, V>(
-  arr: MapStream<K[], T>,
+  arr: Iterable<[K[], T]>,
   reconcileFn?: Reconciler<K[], T, V>
 ): DeepMap<K, V> {
   return deepCollectInto(
@@ -445,7 +455,7 @@ export function appenderFlattenReconciler<T, V, K>(
   }
 }
 
-export function foldReconciler<T, K, V>(
+export function foldReconciler<K, T, V>(
   mapper: (val: T) => V,
   reducer: (colliding: V, val: T) => V
 ): Reconciler<K, T, V> {
@@ -471,7 +481,7 @@ export function invertBinMap<K, T>(map: MapStream<K, T[]>): Map<T, K[]> {
   );
 }
 
-export function mapToDictionary<K, T>(map: MapStream<K, T>, stringifier: (val: K) => string = JSON.stringify) {
+export function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (val: K) => string = String) {
   const ret: { [key: string]: T } = {};
 
   for (let entry of map) {
@@ -482,7 +492,7 @@ export function mapToDictionary<K, T>(map: MapStream<K, T>, stringifier: (val: K
   return ret;
 }
 
-function deepMapToDictionaryRecurse<K, T, Y>(map: MapStream<K, T>, depth: number, stringifier: (val: K, depth: number) => string) {
+function deepMapToDictionaryRecurse<K, T, Y>(map: Iterable<[K, T]>, depth: number, stringifier: (val: K, depth: number) => string) {
   const ret: { [key: string]: Y } = {};
 
   for (let entry of map) {
@@ -496,10 +506,24 @@ function deepMapToDictionaryRecurse<K, T, Y>(map: MapStream<K, T>, depth: number
   return ret;
 }
 
-export function deepMapToDictionary<K, T, Y>(map: MapStream<K, T>, stringifier: (val: K, depth: number) => string = String) {
+export function deepMapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (val: K, depth: number) => string = String) {
   return deepMapToDictionaryRecurse(
     map,
     0,
     stringifier
   );
+}
+
+export function deepDictionaryToMap<Y>(dictionary: {[key: string]: Object}): DeepMapStream<string, Y> {
+  return wu.entries(dictionary)
+    .concatMap(([key, object]) => {
+      if (object === null || typeof object !== "object" || Array.isArray(object) || object instanceof Date) {
+        return [[[key], object as any as Y]];
+      } else {
+        return wu.map(
+          ([keys, object]) => [[key, ...keys], object],
+          deepDictionaryToMap<Y>(object as {[key: string]: Object})
+        );
+      }
+    });
 }
