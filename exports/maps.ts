@@ -605,7 +605,7 @@ export function deepGetOrVal<K, T>(map: DeepMap<K, T>, lookup: K[], substitute: 
           return substitute;
         }
       } else {
-        return value;
+        return value as T;
       }
     } else {
       return substitute;
@@ -655,6 +655,35 @@ export function deepGetOrFail<K, T>(map: DeepMap<K, T>, lookup: K[], error?: str
           : error
     );
   });
+}
+
+export function deepHas<K, T>(map: DeepMap<K, T>, lookup: K[], error?: string | ((follow: K[], matched: K[]) => string)) {
+  const follow = lookup.slice();
+  const matched: K[] = [];
+  let innerMap = map;
+
+  while (follow.length) {
+    const [key] = follow.splice(0, 1);
+
+    if (innerMap.has(key)) {
+      matched.push(key);
+      const value = innerMap.get(key);
+
+      if (follow.length) {
+        if (value instanceof Map) {
+          innerMap = value;
+        } else {
+          return false;
+        }
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 function deepMapToDictionaryRecurse<K, T, Y>(map: Iterable<[K, T]>, depth: number, stringifier: (val: K, depth: number) => string) {

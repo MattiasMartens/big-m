@@ -1,34 +1,103 @@
+import * as should from 'should';
+
+import { BiMap } from '../exports/bidirectional';
 import {
-  adderReconciler,
-  collect,
-  collectInto,
-  counterReconciler,
-  deepFoldingGet,
-  deepGetOrElse,
-  deepGetOrFail,
-  deepGetOrVal,
-  deepMapToDictionary,
   accumulate,
   accumulateInto,
+  adderReconciler,
   appenderFlattenReconciler,
   appenderReconciler,
+  collect,
   collectBiMap,
+  collectInto,
+  counterReconciler,
   deepAccumulate,
   deepAccumulateInto,
   deepCollect,
   deepCollectInto,
   deepDictionaryToMap,
+  deepFoldingGet,
+  deepGet,
+  deepGetOrElse,
+  deepGetOrFail,
+  deepGetOrVal,
+  deepHas,
+  DeepMap,
   deepMapStream,
+  deepMapToDictionary,
+  foldingGet,
   foldReconciler,
-  mapToDictionary,
-} from "../exports/maps";
-import { defined, Possible, isDefined }from "../types/utils";
-import { BiMap } from "../exports/bidirectional";
+  mapToDictionary
+} from '../exports/maps';
+import { defined, isDefined, Possible } from '../types/utils';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
-import * as should from "should";
 require('should');
+
+describe("accumulate", () => {
+  it('Should turn an arbitrary array into a map using a key function', () => {
+    const arr = ["cat", "mouse", "giraffe", "hippopotamus"];
+
+    const ret = accumulate(
+      arr,
+      str => str.length
+    );
+
+    defined(ret.get(3)).should.equal("cat");
+    defined(ret.get(5)).should.equal("mouse");
+    defined(ret.get(7)).should.equal("giraffe");
+    defined(ret.get(12)).should.equal("hippopotamus");
+  });
+
+  it('Should turn an arbitrary array into a map using a key function and a reconciler', () => {
+    const arr = ["cat", "mouse", "giraffe", "dog"];
+
+    const ret = accumulate(
+      arr,
+      str => str.length,
+      (colliding: Possible<string>, incoming) => isDefined(colliding) ? `${colliding} and ${incoming}` : incoming
+    );
+
+    defined(ret.get(3)).should.equal("cat and dog");
+    defined(ret.get(5)).should.equal("mouse");
+    defined(ret.get(7)).should.equal("giraffe");
+  });
+});
+
+describe("accumulateInto", () => {
+  it('Should add an arbitrary array to a map using a key function', () => {
+    const map1 = new Map([[5, "horse"]]);
+    const arr = ["cat", "mouse", "giraffe", "hippopotamus"];
+
+    const ret = accumulateInto(
+      arr,
+      map1,
+      str => str.length
+    );
+
+    defined(ret.get(3)).should.equal("cat");
+    defined(ret.get(5)).should.equal("mouse");
+    defined(ret.get(7)).should.equal("giraffe");
+    defined(ret.get(12)).should.equal("hippopotamus");
+  });
+
+  it('Should add an arbitrary array to a map using a key function and a reconciler', () => {
+    const map1 = new Map([[5, "horse"]]);
+    const arr = ["cat", "mouse", "giraffe", "dog"];
+
+    const ret = accumulateInto(
+      arr,
+      map1,
+      str => str.length,
+      (colliding: Possible<string>, incoming) => isDefined(colliding) ? `${colliding} and ${incoming}` : incoming
+    );
+
+    defined(ret.get(3)).should.equal("cat and dog");
+    defined(ret.get(5)).should.equal("horse and mouse");
+    defined(ret.get(7)).should.equal("giraffe");
+  });
+});
 
 describe('adderReconciler', () => {
   it('Should be useable to compose a map by adding numbers with matching keys', () => {
@@ -43,6 +112,36 @@ describe('adderReconciler', () => {
 
     reconciler(undefined, "cat", "key").should.equal(3);
     reconciler(1, "mouse", "key").should.equal(5 + 1);
+  });
+});
+
+describe("appenderFlattenReconciler", () => {
+  it("Should be useable to append arrays of values to arrays stored in a map on collision", () => {
+    const map1 = new Map([[5, ["horse"]]]);
+
+    const ret = collectInto(
+      [[3, ["cat", "dog"]], [5, ["mouse"]]],
+      map1,
+      appenderFlattenReconciler()
+    );
+
+    defined(ret.get(3)).should.deepEqual(["cat", "dog"]);
+    defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
+  });
+});
+
+describe("appenderReconciler", () => {
+  it("Should be useable to append individual values to arrays stored in a map on collision", () => {
+    const map1 = new Map([[5, ["horse"]]]);
+
+    const ret = collectInto(
+      [[3, "cat"], [5, "mouse"]],
+      map1,
+      appenderReconciler()
+    );
+
+    defined(ret.get(3)).should.deepEqual(["cat"]);
+    defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
   });
 });
 
@@ -87,6 +186,36 @@ describe('collect', function() {
     defined(ret.get("b")).should.equal(8);
   });
 });
+
+describe('collectBiMap', function() {
+  it('Should turn an array of entries into a bidirectional map', function() {
+    const ret = collectBiMap([["a", 1], ["b", 2]]);
+    
+    ret.should.be.instanceOf(BiMap);
+    defined(ret.get("a")).should.equal(1);
+    defined(ret.get("b")).should.equal(2);
+  });
+
+  it('Should turn an array into a bidirectional map and by default on key collision overwrite earlier entries', function() {
+    const ret = collectBiMap([["a", 7], ["b", 8], ["a", 65]]);
+
+    ret.should.be.instanceOf(BiMap);
+    defined(ret.get("a")).should.equal(65);
+    defined(ret.get("b")).should.equal(8);
+  });
+
+  it('Should turn an array into a bidirectional map and given a reconciler combine entries on key collision', function() {
+    const ret = collectBiMap(
+      [["a", 7], ["b", 8], ["a", 65]],
+      (colliding: Possible<number>, incoming) => (colliding || 0) + incoming
+    );
+
+    ret.should.be.instanceOf(BiMap);
+    defined(ret.get("a")).should.equal(65 + 7);
+    defined(ret.get("b")).should.equal(8);
+  });
+});
+
 
 describe('collectInto', function() {
   it('Should add an array of entries to a map', function() {
@@ -177,6 +306,24 @@ describe('deepFoldingGet', () => {
   });
 });
 
+describe("deepGet", () => {
+  it("Should return the deeply matched value", () => {
+    const map1 = new Map([[5, new Map([[8, 13]])]]);
+
+    const ret = deepGet(map1, [5, 8]);
+
+    defined(ret).should.equal(13);
+  });
+
+  it("Should return undefined if the deeply matched value is not present", () => {
+    const map1 = new Map([[5, new Map([[9, 13]])]]);
+
+    const ret = deepGet(map1, [5, 8]);
+
+    should.equal(ret, undefined);
+  });
+});
+
 describe("deepGetOrElse", () => {
   it("Should return the deeply matched value", () => {
     const map1 = new Map([[5, new Map([[8, 13]])]]);
@@ -192,6 +339,107 @@ describe("deepGetOrElse", () => {
     const ret = deepGetOrElse(map1, [5, 8], () => 99);
 
     ret.should.equal(99);
+  });
+});
+
+describe("deepGetOrFail", () => {
+  it("Should return the deeply matched value", () => {
+    const map1 = new Map([[5, new Map([[8, 13]])]]);
+
+    const ret = deepGetOrElse(map1, [5, 8], () => 99);
+
+    ret.should.equal(13);
+  });
+
+  it("Should throw an error if the deeply matched value is not present", () => {
+    const map1 = new Map([[5, new Map([[9, 13]])]]);
+
+    try {
+      deepGetOrFail(map1, [5, 8]);
+      false.should.be.true("Test should have failed by now");
+    } catch (e) {
+      (e as Object).should.have.key("message").equal("Deep lookup failed on keys [5,8], keys matched were [5]");
+    }
+  });
+
+  it("Should throw an error if the deeply matched value is not present with a custom error", () => {
+    const map1 = new Map([[5, new Map([[9, 13]])]]);
+
+    try {
+      deepGetOrFail(map1, [5, 8], "Dag nabbit");
+      false.should.be.true("Test should have failed by now");
+    } catch (e) {
+      (e as Object).should.have.key("message").equal("Dag nabbit");
+    }
+  });
+
+  it("Should throw an error if the deeply matched value is not present with a custom error function", () => {
+    const map1 = new Map([[5, new Map([[9, 13]])]]);
+
+    try {
+      deepGetOrFail(map1, [5, 8], (lookup, matched) => JSON.stringify({lookup, matched}));
+      false.should.be.true("Test should have failed by now");
+    } catch (e) {
+      JSON.parse(e.message).should.deepEqual({
+        lookup: [5, 8],
+        matched: [5]
+      });
+    }
+  });
+});
+
+describe("deepGetOrElse", () => {
+  it("Should return the deeply matched value", () => {
+    const map1: DeepMap<number, Map<number, number>> = new Map([[5, new Map([[8, 13]])]]);
+
+    const ret = deepGetOrVal<number, Map<number, number>>(map1, [5], new Map([[99, 999]]));
+
+    defined(ret.get(8)).should.equal(13);
+  });
+
+  it("Should return a default value if the deeply matched value is not present", () => {
+    const map1: DeepMap<number, Map<number, number>> = new Map([[5, new Map([[8, 13]])]]);
+
+    const ret = deepGetOrVal<number, Map<number, number>>(map1, [7], new Map([[99, 999]]));
+
+    should.equal(ret.get(8), undefined);
+    defined(ret.get(99)).should.equal(999);
+  });
+});
+
+describe("deepGet", () => {
+  it("Should return true if lookup succeeds", () => {
+    const map1 = new Map([[5, new Map([[8, 13]])]]);
+
+    const ret = deepHas(map1, [5, 8]);
+
+    ret.should.true();
+  });
+
+  it("Should return true if deeper lookup succeeds", () => {
+    const map2 = new Map([
+      [
+        5,
+        new Map([
+          [
+            8,
+            new Map([[12, 13]])
+          ]
+        ])
+      ]
+    ]);
+
+    const ret2 = deepHas(map2, [5, 8, 12]);
+
+    ret2.should.true();
+  });
+
+  it("Should return false if lookup fails", () => {
+    const map1 = new Map([[5, new Map([[9, 13]])]]);
+
+    const ret = deepHas(map1, [5, 8]);
+
+    ret.should.false();
   });
 });
 
@@ -234,129 +482,6 @@ describe('deepMapToDictionary', () => {
         }
       }
     });
-  });
-});
-
-describe("accumulate", () => {
-  it('Should turn an arbitrary array into a map using a key function', () => {
-    const arr = ["cat", "mouse", "giraffe", "hippopotamus"];
-
-    const ret = accumulate(
-      arr,
-      str => str.length
-    );
-
-    defined(ret.get(3)).should.equal("cat");
-    defined(ret.get(5)).should.equal("mouse");
-    defined(ret.get(7)).should.equal("giraffe");
-    defined(ret.get(12)).should.equal("hippopotamus");
-  });
-
-  it('Should turn an arbitrary array into a map using a key function and a reconciler', () => {
-    const arr = ["cat", "mouse", "giraffe", "dog"];
-
-    const ret = accumulate(
-      arr,
-      str => str.length,
-      (colliding: Possible<string>, incoming) => isDefined(colliding) ? `${colliding} and ${incoming}` : incoming
-    );
-
-    defined(ret.get(3)).should.equal("cat and dog");
-    defined(ret.get(5)).should.equal("mouse");
-    defined(ret.get(7)).should.equal("giraffe");
-  });
-});
-
-describe("accumulateInto", () => {
-  it('Should add an arbitrary array to a map using a key function', () => {
-    const map1 = new Map([[5, "horse"]]);
-    const arr = ["cat", "mouse", "giraffe", "hippopotamus"];
-
-    const ret = accumulateInto(
-      arr,
-      map1,
-      str => str.length
-    );
-
-    defined(ret.get(3)).should.equal("cat");
-    defined(ret.get(5)).should.equal("mouse");
-    defined(ret.get(7)).should.equal("giraffe");
-    defined(ret.get(12)).should.equal("hippopotamus");
-  });
-
-  it('Should add an arbitrary array to a map using a key function and a reconciler', () => {
-    const map1 = new Map([[5, "horse"]]);
-    const arr = ["cat", "mouse", "giraffe", "dog"];
-
-    const ret = accumulateInto(
-      arr,
-      map1,
-      str => str.length,
-      (colliding: Possible<string>, incoming) => isDefined(colliding) ? `${colliding} and ${incoming}` : incoming
-    );
-
-    defined(ret.get(3)).should.equal("cat and dog");
-    defined(ret.get(5)).should.equal("horse and mouse");
-    defined(ret.get(7)).should.equal("giraffe");
-  });
-});
-
-describe("appenderFlattenReconciler", () => {
-  it("Should be useable to append arrays of values to arrays stored in a map on collision", () => {
-    const map1 = new Map([[5, ["horse"]]]);
-
-    const ret = collectInto(
-      [[3, ["cat", "dog"]], [5, ["mouse"]]],
-      map1,
-      appenderFlattenReconciler()
-    );
-
-    defined(ret.get(3)).should.deepEqual(["cat", "dog"]);
-    defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
-  });
-});
-
-describe("appenderReconciler", () => {
-  it("Should be useable to append individual values to arrays stored in a map on collision", () => {
-    const map1 = new Map([[5, ["horse"]]]);
-
-    const ret = collectInto(
-      [[3, "cat"], [5, "mouse"]],
-      map1,
-      appenderReconciler()
-    );
-
-    defined(ret.get(3)).should.deepEqual(["cat"]);
-    defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
-  });
-});
-
-describe('collectBiMap', function() {
-  it('Should turn an array of entries into a bidirectional map', function() {
-    const ret = collectBiMap([["a", 1], ["b", 2]]);
-    
-    ret.should.be.instanceOf(BiMap);
-    defined(ret.get("a")).should.equal(1);
-    defined(ret.get("b")).should.equal(2);
-  });
-
-  it('Should turn an array into a bidirectional map and by default on key collision overwrite earlier entries', function() {
-    const ret = collectBiMap([["a", 7], ["b", 8], ["a", 65]]);
-
-    ret.should.be.instanceOf(BiMap);
-    defined(ret.get("a")).should.equal(65);
-    defined(ret.get("b")).should.equal(8);
-  });
-
-  it('Should turn an array into a bidirectional map and given a reconciler combine entries on key collision', function() {
-    const ret = collectBiMap(
-      [["a", 7], ["b", 8], ["a", 65]],
-      (colliding: Possible<number>, incoming) => (colliding || 0) + incoming
-    );
-
-    ret.should.be.instanceOf(BiMap);
-    defined(ret.get("a")).should.equal(65 + 7);
-    defined(ret.get("b")).should.equal(8);
   });
 });
 
@@ -583,3 +708,4 @@ describe('foldReconciler', () => {
     });
   });
 });
+
