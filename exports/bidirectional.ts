@@ -32,7 +32,7 @@ export class BiMap<K, T> extends Map<K, T> {
     return this._reversedProxy || (this._reversedProxy = getReversedBiMap(this));
   }
 
-  constructor(forward?: Iterable<[K, T]>, reverse?: Iterable<[T, K]>, lazyWrapper?: boolean) {
+  constructor(forward?: Iterable<[K, T]>, reverse?: Iterable<[T, K]>) {
     super(forward);
     
     this._reverse = reverse
