@@ -1,6 +1,5 @@
 import * as wu from "wu";
 import {BiMap} from "./bidirectional";
-import {pipe} from "fp-ts/lib/pipeable";
 import {defined, Possible, tuple} from "../types/utils";
 
 export type MapStream<K, V> = wu.WuIterable<[K, V]>;
@@ -121,27 +120,64 @@ export function selectMap<K, T>(
   wu.filter(([key, val]) => filterFn(val, key), iterable);
 }
 
-export function getOrElse<T, V>(
+export function getOrVal<T, V>(
   map: Map<T, V>,
   key: T,
-  defaultVal: V
+  substitute: V
 ) {
   if (map.has(key)) {
     return map.get(key) as V;
   } else {
-    return defaultVal;
+    return substitute;
+  }
+}
+
+export function foldingGet<T, V, W>(
+  map: Map<T, V>,
+  key: T,
+  ifPresent: (val: V, key: T) => W,
+  ifAbsent: (key: T) => W
+) {
+  if (map.has(key)) {
+    return ifPresent(
+      map.get(key) as V,
+      key
+    );
+  } else {
+    return ifAbsent(key);
+  }
+}
+
+export function getOrElse<T, V>(
+  map: Map<T, V>,
+  key: T,
+  substitute: (key: T) => V
+) {
+  if (map.has(key)) {
+    return map.get(key) as V;
+  } else {
+    return substitute(key);
   }
 }
 
 export function getOrFail<T, V>(
   map: Map<T, V>,
-  key: T
+  key: T,
+  error?: string | ((key: T) => string)
 ) {
-  if (map.has(key)) {
-    return map.get(key);
-  } else {
-    throw new Error(`Map has no entry ${key}`);
-  }
+  getOrElse(
+    map,
+    key,
+    (key: T) => {
+      throw new Error(
+        typeof error === "function"
+          ? error(key)
+          : typeof error === "undefined"
+            ? `Map has no entry ${key}`
+            : error
+      );
+    }
+  );
 }
 
 export function makeEntries<T, K, V>(
@@ -210,16 +246,15 @@ export function accumulateInto<T, K, V>(
   keyFn: (value: T) => Possible<K>,
   reconcileFn?: Reconciler<K, T, V>
 ): Map<K, V> {
-  pipe(
-    makeEntries(
-      arr,
-      keyFn
-    ),
-    (entries) => collectInto(
-      entries,
-      seed,
-      reconcileFn as any
-    )
+  const entries = makeEntries(
+    arr,
+    keyFn
+  );
+  
+  collectInto(
+    entries,
+    seed,
+    reconcileFn as any
   );
 
   return seed;
@@ -490,6 +525,136 @@ export function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (val: 
   }
 
   return ret;
+}
+
+export function deepFoldingGet<T, V, W>(
+  map: Map<T, V>,
+  lookup: T[],
+  ifPresent: (val: V, keys: T[]) => W,
+  ifAbsent: (keys: T[], matched: T[]) => W
+) {
+  const follow = lookup.slice();
+  const matched: T[] = [];
+  let innerMap = map;
+
+  while (follow.length) {
+    const [key] = follow.splice(0, 1);
+
+    if (innerMap.has(key)) {
+      matched.push(key);
+      const value = innerMap.get(key);
+
+      if (follow.length) {
+        if (value instanceof Map) {
+          innerMap = value;
+        } else {
+          return ifAbsent(lookup, matched);
+        }
+      } else {
+        return ifPresent(value as V, lookup);
+      }
+    } else {
+      return ifAbsent(lookup, matched);
+    }
+  }
+
+  return ifAbsent(lookup, matched);
+}
+
+export function deepGet<K, T>(map: DeepMap<K, T>, lookup: K[]) {
+  const follow = lookup.slice();
+  let innerMap = map;
+
+  while (follow.length) {
+    const [key] = follow.splice(0, 1);
+
+    if (innerMap.has(key)) {
+      const value = innerMap.get(key);
+
+      if (follow.length) {
+        if (value instanceof Map) {
+          innerMap = value;
+        } else {
+          return undefined;
+        }
+      } else {
+        return value;
+      }
+    } else {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
+export function deepGetOrVal<K, T>(map: DeepMap<K, T>, lookup: K[], substitute: T) {
+  const follow = lookup.slice();
+  let innerMap = map;
+
+  while (follow.length) {
+    const [key] = follow.splice(0, 1);
+
+    if (innerMap.has(key)) {
+      const value = innerMap.get(key);
+
+      if (follow.length) {
+        if (value instanceof Map) {
+          innerMap = value;
+        } else {
+          return substitute;
+        }
+      } else {
+        return value;
+      }
+    } else {
+      return substitute;
+    }
+  }
+
+  return substitute;
+}
+
+export function deepGetOrElse<K, T>(map: DeepMap<K, T>, lookup: K[], substituteFn: (lookup: K[], matched: K[]) => T) {
+  const follow = lookup.slice();
+  const matched: K[] = [];
+  let innerMap = map;
+
+  while (follow.length) {
+    const [key] = follow.splice(0, 1);
+
+    if (innerMap.has(key)) {
+      matched.push(key);
+      const value = innerMap.get(key);
+
+      if (follow.length) {
+        if (value instanceof Map) {
+          innerMap = value;
+        } else {
+          return substituteFn(lookup, matched);
+        }
+      } else {
+        return value as T;
+      }
+    } else {
+      return substituteFn(lookup, matched);
+    }
+  }
+
+  return substituteFn(lookup, matched);
+}
+
+
+export function deepGetOrFail<K, T>(map: DeepMap<K, T>, lookup: K[], error?: string | ((follow: K[], matched: K[]) => string)) {  
+  return deepGetOrElse(map, lookup, (lookup, matched) => {
+    throw new Error(
+      typeof error === "function"
+        ? error(lookup, matched)
+        : typeof error === "undefined"
+          ? `Deep lookup failed on keys [${lookup}], keys matched were [${matched}]`
+          : error
+    );
+  });
 }
 
 function deepMapToDictionaryRecurse<K, T, Y>(map: Iterable<[K, T]>, depth: number, stringifier: (val: K, depth: number) => string) {

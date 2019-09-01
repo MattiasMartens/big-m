@@ -3,6 +3,10 @@ import {
   collect,
   collectInto,
   counterReconciler,
+  deepFoldingGet,
+  deepGetOrElse,
+  deepGetOrFail,
+  deepGetOrVal,
   deepMapToDictionary,
   accumulate,
   accumulateInto,
@@ -16,7 +20,7 @@ import {
   deepDictionaryToMap,
   deepMapStream,
   foldReconciler,
-  mapToDictionary
+  mapToDictionary,
 } from "../exports/maps";
 import { defined, Possible, isDefined }from "../types/utils";
 import { BiMap } from "../exports/bidirectional";
@@ -142,6 +146,52 @@ describe("counterReconciler", () => {
 
     defined(ret.get(3)).should.equal(1);
     defined(ret.get(5)).should.equal(2);
+  });
+});
+
+describe('deepFoldingGet', () => {
+  it ('Should run one function if the deep key is present', () => {
+    const map1 = new Map([[5, new Map([[8, 13]])]]);
+
+    const ret = deepFoldingGet(
+      map1,
+      [5, 8],
+      () => 99,
+      () => 996
+    );
+
+    ret.should.equal(99);
+  });
+
+  it ('Should run another function if the deep key is absent', () => {
+    const map1 = new Map([[5, new Map([[9, 13]])]]);
+
+    const ret = deepFoldingGet(
+      map1,
+      [5, 8],
+      () => 99,
+      () => 996
+    );
+
+    ret.should.equal(996);
+  });
+});
+
+describe("deepGetOrElse", () => {
+  it("Should return the deeply matched value", () => {
+    const map1 = new Map([[5, new Map([[8, 13]])]]);
+
+    const ret = deepGetOrElse(map1, [5, 8], () => 99);
+
+    ret.should.equal(13);
+  });
+
+  it("Should call the substitute function if the deeply matched value is not present", () => {
+    const map1 = new Map([[5, new Map([[9, 13]])]]);
+
+    const ret = deepGetOrElse(map1, [5, 8], () => 99);
+
+    ret.should.equal(99);
   });
 });
 
