@@ -1,4 +1,4 @@
-import { collect, reverseMap } from "../exports/maps";
+import { collect, reverseMap, foldingGet } from "../exports/maps";
 import { defined } from "../types/utils";
 
 function getReversedBiMap<K, T>(biMap: BiMap<K, T>): BiMap<T, K> {
@@ -10,16 +10,31 @@ function getReversedBiMap<K, T>(biMap: BiMap<K, T>): BiMap<T, K> {
         p
       ) {
         if (p === "reversed") {
-          return () => biMap;
+          return biMap;
         } else if (p === "set") {
           return (key: T, val: K) => biMap.set(val, key)
         } else if (p === "clear") {
           return () => biMap.clear()
         } else if (p === "delete") {
-          return (key: T) => target.has(key) ? biMap.delete(defined(target.get(key))) : false;
+          return (key: T) => foldingGet(
+            target,
+            key,
+            (val) => biMap.delete(val)
+          );
+        } else if (p === "hasVal") {
+          return (val: K) => biMap.has(val);
+        } else if (p === "deleteVal") {
+          return (val: K) => biMap.delete(val);
+        } else if (p === "getKey") {
+          return (val: K) => biMap.get(val);
         } else {
-          // @ts-ignore
-          return target[p];
+          const field = (target as any)[p];
+
+          if (typeof field === "function") {
+            return field.bind(target);
+          } else {
+            return field;
+          }
         }
       }
     }
@@ -35,9 +50,14 @@ export class BiMap<K, T> extends Map<K, T> {
   }
 
   constructor(forward?: Iterable<[K, T]>, reverse?: Iterable<[T, K]>) {
-    // @ts-ignore
-    super(forward);
-    
+    super();
+
+    if (forward) {
+      for (let entry of forward) {
+        const [key, value] = entry;
+        super.set(key, value);
+      }
+    }
 
     this._reverse = reverse
       ? new Map(reverse)
@@ -46,11 +66,12 @@ export class BiMap<K, T> extends Map<K, T> {
 
   set(key: K, val: T) {
     if (this._reverse.has(val)) {
-      this.delete(defined(this._reverse.get(val)));
+      this.delete(this._reverse.get(val) as K);
     }
 
     super.set(key, val);
     this._reverse.set(val, key);
+
     return this;
   }
 
@@ -61,20 +82,24 @@ export class BiMap<K, T> extends Map<K, T> {
 
   delete(key: K) {
     if (super.has(key)) {
-      const valueAt = defined(super.get(key));
+      const valueAt = super.get(key) as T;
       this._reverse.delete(valueAt);
     }
 
     return super.delete(key);
   }
 
-  // TODO implement on reversed map
   getKey(val: T) {
     return this._reverse.get(val);
   }
 
   deleteVal(val: T) {
-    return this.hasVal(val) ? this.delete(defined(this.getKey(val))) : false;
+    return foldingGet(
+      this._reverse,
+      val,
+      key => this.delete(key),
+      () => false
+    );
   }
 
   hasVal(val: T) {

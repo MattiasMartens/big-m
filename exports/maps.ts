@@ -135,8 +135,19 @@ export function getOrVal<T, V>(
 export function foldingGet<T, V, W>(
   map: Map<T, V>,
   key: T,
+  ifPresent: (val: V, key: T) => W
+): W
+export function foldingGet<T, V, W>(
+  map: Map<T, V>,
+  key: T,
   ifPresent: (val: V, key: T) => W,
   ifAbsent: (key: T) => W
+): W
+export function foldingGet<T, V, W>(
+  map: Map<T, V>,
+  key: T,
+  ifPresent: (val: V, key: T) => W,
+  ifAbsent: (key: T) => W = (() => {}) as () => W
 ) {
   if (map.has(key)) {
     return ifPresent(

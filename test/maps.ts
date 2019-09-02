@@ -1,5 +1,4 @@
 import * as should from 'should';
-import * as wu from 'wu';
 
 import { BiMap } from '../exports/bidirectional';
 import {
