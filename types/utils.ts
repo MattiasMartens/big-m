@@ -28,5 +28,3 @@ export type Awaited<T> = T extends Promise<infer U> ? U : T;
 export function tuple<A, B>(a: A, b: B): [A, B] {
   return [a, b];
 }
-
-const x = tuple("A", 1);

@@ -1,4 +1,4 @@
-import { collect, reversedMap } from "../exports/maps";
+import { collect, reverseMap } from "../exports/maps";
 import { defined } from "../types/utils";
 
 function getReversedBiMap<K, T>(biMap: BiMap<K, T>): BiMap<T, K> {
@@ -41,7 +41,7 @@ export class BiMap<K, T> extends Map<K, T> {
 
     this._reverse = reverse
       ? new Map(reverse)
-      : collect(reversedMap(forward || []));
+      : collect(reverseMap(forward || []));
   }
 
   set(key: K, val: T) {

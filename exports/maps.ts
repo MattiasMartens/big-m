@@ -84,7 +84,7 @@ export function collectBiMap<K, T, V>(
   );
 }
 
-export function reversedMap<K, T>(
+export function reverseMap<K, T>(
   iterable: Iterable<[K, T]>
 ) {
   return wu.map(([k, t]) => [t, k] as [T, K], iterable)
@@ -109,15 +109,15 @@ export function valuesOf<K, T>(
   return wu.map(arr => arr[1], iterable);
 }
 
-export function uniformMap<K, T>(keys: Iterable<K>, of: T): Map<K, T> {
-  return new Map(wu.map(key => [key, of] as [K, T], keys));
+export function uniformMap<K, T>(keys: Iterable<K>, of: T) {
+  return wu.map(key => [key, of] as [K, T], keys);
 }
 
 export function selectMap<K, T>(
-  iterable: MapStream<K, T>,
+  iterable: Iterable<[K, T]>,
   filterFn: (value: T, key: K) => boolean
 ) {
-  wu.filter(([key, val]) => filterFn(val, key), iterable);
+  return wu.filter(([key, val]) => filterFn(val, key), iterable);
 }
 
 export function getOrVal<T, V>(
@@ -165,7 +165,7 @@ export function getOrFail<T, V>(
   key: T,
   error?: string | ((key: T) => string)
 ) {
-  getOrElse(
+  return getOrElse(
     map,
     key,
     (key: T) => {
@@ -178,6 +178,17 @@ export function getOrFail<T, V>(
       );
     }
   );
+}
+
+export function flatMakeEntries<T, K, V>(
+  arr: Iterable<T>,
+  expandFn: (value: T) => Iterable<[K, V]>
+): wu.WuIterable<[K, V]> {
+  return wu.concatMap(function* (t) {
+    for (let entry of expandFn(t)) {
+      yield entry;
+    }
+  }, arr);
 }
 
 export function makeEntries<T, K, V>(
@@ -272,7 +283,7 @@ export type DeepMap<K, T> = DeepMap8<K, T>;
 
 export type DeepMapStream<K, T> = wu.WuIterable<[K[], T]>;
 
-export function* squeezeDeepMap<K, T>(deepMap: DeepMap<K, T>): Iterable<T> {
+export function squeezeDeepMap<K, T>(deepMap: DeepMap<K, T>): wu.WuIterable<T> {
   return wu(_squeezeDeepMap(deepMap));
 }
 
@@ -506,7 +517,7 @@ export function foldReconciler<K, T, V>(
   }
 }
 
-export function invertBinMap<K, T>(map: MapStream<K, T[]>): Map<T, K[]> {
+export function invertBinMap<K, T>(map: Iterable<[K, T[]]>): Map<T, K[]> {
   return collect(
       wu(map)
         .concatMap(

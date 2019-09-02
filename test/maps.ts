@@ -1,4 +1,5 @@
 import * as should from 'should';
+import * as wu from 'wu';
 
 import { BiMap } from '../exports/bidirectional';
 import {
@@ -25,9 +26,23 @@ import {
   DeepMap,
   deepMapStream,
   deepMapToDictionary,
+  flatMakeEntries,
   foldingGet,
   foldReconciler,
-  mapToDictionary
+  getOrElse,
+  getOrFail,
+  getOrVal,
+  invertBinMap,
+  keysOf,
+  makeEntries,
+  mapStream,
+  mapToDictionary,
+  mapValues,
+  reverseMap,
+  selectMap,
+  squeezeDeepMap,
+  uniformMap,
+  valuesOf
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 
@@ -356,7 +371,7 @@ describe("deepGetOrFail", () => {
 
     try {
       deepGetOrFail(map1, [5, 8]);
-      false.should.be.true("Test should have failed by now");
+      should.fail(false, false, "Should have failed by now");
     } catch (e) {
       (e as Object).should.have.key("message").equal("Deep lookup failed on keys [5,8], keys matched were [5]");
     }
@@ -367,7 +382,7 @@ describe("deepGetOrFail", () => {
 
     try {
       deepGetOrFail(map1, [5, 8], "Dag nabbit");
-      false.should.be.true("Test should have failed by now");
+      should.fail(false, false, "Should have failed by now");
     } catch (e) {
       (e as Object).should.have.key("message").equal("Dag nabbit");
     }
@@ -378,7 +393,7 @@ describe("deepGetOrFail", () => {
 
     try {
       deepGetOrFail(map1, [5, 8], (lookup, matched) => JSON.stringify({lookup, matched}));
-      false.should.be.true("Test should have failed by now");
+      should.fail(false, false, "Should have failed by now");
     } catch (e) {
       JSON.parse(e.message).should.deepEqual({
         lookup: [5, 8],
@@ -684,6 +699,55 @@ describe('deepMapStream', () => {
   });
 });
 
+describe('flatMakeEntries', () => {
+  it ('Should transform a stream of inputs into a sequence of arbitrary length using a key-list function', () => {
+    const ret = flatMakeEntries(
+      [
+        "cat",
+        "dog",
+        "squirrel",
+        "alpaca"
+      ],
+      str => str.slice(0, str.length % 3).split("").map((c, i) => [c, str.length])
+    );
+
+    ret.toArray().should.deepEqual(
+      [
+        ["s", 8],
+        ["q", 8]
+      ]
+    )
+  });
+});
+
+describe('foldingGet', () => {
+  it ('Should run one function if the key is present', () => {
+    const map1 = new Map([[5, 9]]);
+
+    const ret = foldingGet(
+      map1,
+      5,
+      (val) => val + 99,
+      () => 996
+    );
+
+    ret.should.equal(9 + 99);
+  });
+
+  it ('Should run another function if the key is absent', () => {
+    const map1 = new Map([[5, 9]]);
+
+    const ret = foldingGet(
+      map1,
+      7,
+      () => 99,
+      () => 996
+    );
+
+    ret.should.equal(996);
+  });
+});
+
 describe('foldReconciler', () => {
   it ('Should allow construction of a map using one function for each case of colliding value, no colliding value', () => {
     const reconciler = foldReconciler(
@@ -691,21 +755,325 @@ describe('foldReconciler', () => {
       (colliding: number, val: number) => colliding + val
     );
 
-    const ret = mapToDictionary(
-      collect(
-        [
-          ["a", 1],
-          ["b", 2],
-          ["b", 3]
-        ],
-        reconciler
-      )
+    const ret = collect(
+      [
+        ["a", 1],
+        ["b", 2],
+        ["b", 3]
+      ],
+      reconciler
     );
 
-    ret.should.deepEqual({
-      a: 2,
-      b: 7
-    });
+    defined(ret.get("a")).should.equal(2);
+    defined(ret.get("b")).should.equal(7);
   });
 });
 
+describe('getOrElse', () => {
+  it ('Should return value if the key is present', () => {
+    const map1 = new Map([[5, 9]]);
+
+    const ret = getOrElse(
+      map1,
+      5,
+      () => 99
+    );
+
+    ret.should.equal(9);
+  });
+
+  it ('Should run a function if the key is absent', () => {
+    const map1 = new Map([[5, 9]]);
+
+    const ret = getOrElse(
+      map1,
+      7,
+      () => 99
+    );
+
+    ret.should.equal(99);
+  });
+});
+
+describe('getOrFail', () => {
+  it ('Should return value if the key is present', () => {
+    const map1 = new Map([[5, 9]]);
+
+    const ret = getOrFail(
+      map1,
+      5
+    );
+
+    ret.should.equal(9);
+  });
+
+  it ('Should throw error if key is absent', () => {
+    const map1 = new Map([[5, 9]]);
+
+    try {
+      getOrFail(
+        map1,
+        6
+      );
+      should.fail(false, false, "Should have failed by now");
+    } catch (e) {
+      (e as Object).should.key("message").equal("Map has no entry 6");
+    }
+  });
+
+  it ('Should throw custom function error if key is absent', () => {
+    const map1 = new Map([[5, 9]]);
+
+    try {
+      getOrFail(
+        map1,
+        6,
+        key => JSON.stringify({key})
+      );
+      should.fail(false, false, "Should have failed by now");
+    } catch (e) {
+      JSON.parse(e.message).should.deepEqual({
+        key: 6
+      });
+    }
+  });
+
+  it ('Should throw custom error if key is absent', () => {
+    const map1 = new Map([[5, 9]]);
+
+    try {
+      getOrFail(
+        map1,
+        6,
+        "Dag nabbit"
+      );
+      should.fail(false, false, "Should have failed by now");
+    } catch (e) {
+      (e as Object).should.have.key("message").equal("Dag nabbit");
+    }
+  });
+});
+
+describe('getOrVal', () => {
+  it ('Should return value if the key is present', () => {
+    const map1 = new Map([[5, 9]]);
+
+    const ret = getOrVal(
+      map1,
+      5,
+      777
+    );
+
+    ret.should.equal(9);
+  });
+
+  it ('Should return substitute if the key is absent', () => {
+    const map1 = new Map([[5, 9]]);
+
+    const ret = getOrVal(
+      map1,
+      7,
+      777
+    );
+
+    ret.should.equal(777);
+  });
+});
+
+describe('invertBinMap', () => {
+  it ('Should convert map of arrays Map<A, B[]> to map of arrays Map<B, A[]>', () => {
+    const map1 = new Map([[5, [9, 10]], [22, [9]]]);
+
+    const ret = invertBinMap(map1);
+
+    getOrFail(ret, 9).should.deepEqual([5, 22]);
+    getOrFail(ret, 10).should.deepEqual([5]);
+    ret.has(5).should.false();
+    ret.has(22).should.false();
+  });
+});
+
+describe('keysOf', () => {
+  it ('Should convert stream of entries to stream of keys', () => {
+    const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
+
+    keysOf(map1).toArray().should.deepEqual([9, 6, 4]);
+  });
+});
+
+describe('makeEntries', () => {
+  it ('Should transform an array of values into a stream of map entries using a key function', () => {
+    const ret = makeEntries(
+      [
+        "cat",
+        "dog",
+        "squirrel",
+        "alpaca"
+      ],
+      str => str.length % 2 === 0
+        ? str.length
+        : undefined
+    );
+
+    ret.toArray().should.deepEqual(
+      [
+        [8, "squirrel"],
+        [6, "alpaca"]
+      ]
+    );
+  });
+
+  it ('Should transform an array of values into a stream of map entries using a key function and a mapper', () => {
+    const ret = makeEntries(
+      [
+        "cat",
+        "dog",
+        "squirrel",
+        "alpaca"
+      ],
+      str => str.length % 2 === 0
+        ? undefined
+        : str.length,
+      str => str.split("").reverse().join("")
+    );
+
+    ret.toArray().should.deepEqual(
+      [
+        [3, "tac"],
+        [3, "god"]
+      ]
+    )
+  });
+});
+
+describe('mapStream', () => {
+  it ('Should transform a map into a stream of values as a thin wrapper over the native function', () => {
+    const map1 = new Map([["a", 5], ["b", 6]]);
+
+    const ret = mapStream(map1);
+
+    ret.toArray().should.deepEqual(
+      [
+        ["a", 5],
+        ["b", 6]
+      ]
+    );
+  });
+});
+
+describe('mapToDictionary', () => {
+  it ('Should transform a map into a dictionary', () => {
+    const map1 = new Map([["a", 5], ["b", 6]]);
+
+    const ret = mapToDictionary(map1);
+
+    ret.should.deepEqual(
+      {
+        a: 5,
+        b: 6
+      }
+    );
+  });
+
+  it ('Should transform an array directly into a dictionary', () => {
+    const ret = mapToDictionary([["a", 5], ["b", 6]]);
+
+    ret.should.deepEqual(
+      {
+        a: 5,
+        b: 6
+      }
+    );
+  });
+});
+
+describe('mapValues', () => {
+  it ('Should transform a map into a stream of map entries with a mapper function', () => {
+    const map1 = new Map([["a", 5], ["b", 6]]);
+
+    const ret = mapValues(map1, x => Math.sqrt(x).toFixed(1));
+
+    mapToDictionary(ret).should.deepEqual(
+      {
+        a: "2.2",
+        b: "2.4"
+      }
+    );
+  });
+});
+
+describe('reverseMap', () => {
+  it ('Should transform a map Map<A, B> into its inverse Map<B, A>', () => {
+    const map1 = new Map([["a", 5], ["b", 6]]);
+
+    const ret = reverseMap(map1);
+
+    ret.toArray().should.deepEqual([
+      [5, "a"],
+      [6, "b"]
+    ])
+  });
+});
+
+describe('selectMap', () => {
+  it ('Should produce a stream of map entries without those that fail the filter function', () => {
+    const map1 = new Map([["a", 5], ["b", 6], ["a!", 9], ["b!", 10]]);
+
+    const ret = selectMap(map1, (val, key) => {
+      return key.includes("!") ? val % 2 === 0 : val % 2 === 1;
+    });
+
+    ret.toArray().should.deepEqual([
+      ["a", 5],
+      ["b!", 10]
+    ])
+  });
+});
+
+describe('squeezeDeepMap', () => {
+  it ('Should produce a stream of terminal values from a deeply nested map', () => {
+    const map1 = new Map<string, any>([
+      ["a", 1],
+      ["b", new Map<number, any>([[1, "_a"], [99, new Map([["_b", {}]])]])]
+    ]);
+
+    const ret = squeezeDeepMap(map1);
+
+    ret.toArray().should.deepEqual([
+      1,
+      "_a",
+      {}
+    ])
+  });
+});
+
+describe('uniformMap', () => {
+  it ('Should transform an array of keys into a stream of map entries all with the same value', () => {
+    const ret = uniformMap(
+      [
+        "cat",
+        "dog",
+        "squirrel",
+        "alpaca"
+      ],
+      0
+    );
+
+    ret.toArray().should.deepEqual(
+      [
+        ["cat", 0],
+        ["dog", 0],
+        ["squirrel", 0],
+        ["alpaca", 0]
+      ]
+    );
+  });
+});
+
+describe('keysOf', () => {
+  it ('Should convert stream of entries to stream of values', () => {
+    const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
+
+    valuesOf(map1).toArray().should.deepEqual(["blueberry", "almond", "plum"]);
+  });
+});
