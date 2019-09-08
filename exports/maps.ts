@@ -435,11 +435,11 @@ export function deepAccumulate<T, K, V>(
   );
 }
 
-export function appenderReconciler<T, V, K>(): Reconciler<K, T, T[]>
-export function appenderReconciler<T, V, K>(
+export function reconcileAppend<T, V, K>(): Reconciler<K, T, T[]>
+export function reconcileAppend<T, V, K>(
   mapFn: (val: T) => V
 ): Reconciler<K, T, V[]>
-export function appenderReconciler<T, V, K>(
+export function reconcileAppend<T, V, K>(
   mapFn: (val: T) => V = (val: T) => val as any as V
 ): Reconciler<K, T, V[]> {
   return function(
@@ -457,11 +457,11 @@ export function appenderReconciler<T, V, K>(
   }
 }
 
-export function adderReconciler<K>(): Reconciler<K, number, number>
-export function adderReconciler<T, K>(
+export function reconcileAdd<K>(): Reconciler<K, number, number>
+export function reconcileAdd<T, K>(
   mapFn: (val: T) => number
 ): Reconciler<K, T, number>
-export function adderReconciler<T, K>(
+export function reconcileAdd<T, K>(
   mapFn?: (val: T) => number
 ): Reconciler<K, T, number> {
   return function(
@@ -478,7 +478,7 @@ export function adderReconciler<T, K>(
   }
 }
 
-export function counterReconciler<K, T>(): Reconciler<K, T, number> {
+export function reconcileCount<K, T>(): Reconciler<K, T, number> {
   return function(
     collidingValue,
     _
@@ -491,11 +491,11 @@ export function counterReconciler<K, T>(): Reconciler<K, T, number> {
   }
 }
 
-export function appenderFlattenReconciler<T, K>(): Reconciler<K, (Possible<T | Iterable<T>>), T[]>
-export function appenderFlattenReconciler<T, V, K>(
+export function reconcileAppendFlat<T, K>(): Reconciler<K, (Possible<T | Iterable<T>>), T[]>
+export function reconcileAppendFlat<T, V, K>(
   mapFn: (val: T) => Possible<V | Iterable<V>>
 ): Reconciler<K, T, V[]>
-export function appenderFlattenReconciler<T, V, K>(
+export function reconcileAppendFlat<T, V, K>(
   mapFn: (val: T) => V[] = (val: T) => val as any as V[]
 ): Reconciler<K, T, V[]> {
   return function(
@@ -512,7 +512,7 @@ export function appenderFlattenReconciler<T, V, K>(
   }
 }
 
-export function foldReconciler<K, T, V>(
+export function reconcileFold<K, T, V>(
   mapper: (val: T) => V,
   reducer: (colliding: V, val: T) => V
 ): Reconciler<K, T, V> {
@@ -528,13 +528,33 @@ export function foldReconciler<K, T, V>(
   }
 }
 
+export function reconcileDefault<K, T>(): Reconciler<
+  K,
+  T,
+  T
+> {
+  return function(_, value) {
+    return value;
+  }
+}
+
+export function reconcileFirst<K, T>(): Reconciler<K, T, T> {
+  return function(collidingValue, incomingValue) {
+    if (collidingValue === undefined) {
+      return incomingValue;
+    } else {
+      return collidingValue;
+    }
+  }
+}
+
 export function invertBinMap<K, T>(map: Iterable<[K, T[]]>): Map<T, K[]> {
   return collect(
       wu(map)
         .concatMap(
           ([key, arr]) => arr.map(t => [t, key])
         ),
-      appenderReconciler()
+      reconcileAppend()
   );
 }
 

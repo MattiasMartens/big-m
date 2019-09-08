@@ -12,6 +12,11 @@
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-5.2.7.tgz#315d570ccb56c53452ff8638738df60726d5b6ea"
   integrity sha512-NYrtPht0wGzhwe9+/idPaBB+TqkY9AhTvOLMkThm0IoEfLaiVQZwBwyJ5puCkO3AUCWrmcoePjp2mbFocKy4SQ==
 
+"@types/node@*":
+  version "12.7.4"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.4.tgz#64db61e0359eb5a8d99b55e05c729f130a678b04"
+  integrity sha512-W0+n1Y+gK/8G2P/piTkBBN38Qc5Q1ZSO6B5H3QmPCUewaiXOo2GCAWZ4ElZCcNhjJuBSUSLGFUJnmlCn5+nxOQ==
+
 "@types/node@^12.7.3":
   version "12.7.3"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.3.tgz#27b3f40addaf2f580459fdb405222685542f907a"
@@ -839,6 +844,13 @@ ts-node@^8.3.0:
     make-error "^1.1.1"
     source-map-support "^0.5.6"
     yn "^3.0.0"
+
+ts-stream@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/ts-stream/-/ts-stream-2.0.1.tgz#d19cb421eadeaeca090713e5fedf77627dca6672"
+  integrity sha512-NSk2jKcD2uNiMR9BgHq4t4AZ6iKZaeUxoMObA4U9i+J/IqUfYjRlF1/Ui/m3duPgleIzeNN2Gpk7THj3YjuWvA==
+  dependencies:
+    "@types/node" "*"
 
 tsconfig-paths@^3.8.0:
   version "3.8.0"

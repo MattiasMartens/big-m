@@ -4,13 +4,13 @@ import { BiMap } from '../exports/bidirectional';
 import {
   accumulate,
   accumulateInto,
-  adderReconciler,
-  appenderFlattenReconciler,
-  appenderReconciler,
+  reconcileAdd,
+  reconcileAppendFlat,
+  reconcileAppend,
   collect,
   collectBiMap,
   collectInto,
-  counterReconciler,
+  reconcileCount,
   deepAccumulate,
   deepAccumulateInto,
   deepCollect,
@@ -27,7 +27,7 @@ import {
   deepMapToDictionary,
   flatMakeEntries,
   foldingGet,
-  foldReconciler,
+  reconcileFold,
   getOrElse,
   getOrFail,
   getOrVal,
@@ -44,6 +44,7 @@ import {
   valuesOf
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
+import { describeThis } from './describe-this';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
@@ -113,45 +114,43 @@ describe("accumulateInto", () => {
   });
 });
 
-describe('adderReconciler', () => {
+describeThis(reconcileAdd, (underTest) => {
   it('Should be useable to compose a map by adding numbers with matching keys', () => {
-    const reconciler = adderReconciler();
+    const reconciler = underTest();
 
     reconciler(undefined, 2, "key").should.equal(2);
     reconciler(1, 2, "key").should.equal(3);
   });
 
   it('Should be useable to compose a map by adding values with matching keys after applying a number function', () => {
-    const reconciler = adderReconciler((str: string) => str.length);
+    const reconciler = underTest((str: string) => str.length);
 
     reconciler(undefined, "cat", "key").should.equal(3);
     reconciler(1, "mouse", "key").should.equal(5 + 1);
   });
 });
 
-describe("appenderFlattenReconciler", () => {
-  it("Should be useable to append arrays of values to arrays stored in a map on collision", () => {
-    const map1 = new Map([[5, ["horse"]]]);
+describeThis(reconcileAppendFlat, () => {
+  const map1 = new Map([[5, ["horse"]]]);
 
-    const ret = collectInto(
-      [[3, ["cat", "dog"]], [5, ["mouse"]]],
-      map1,
-      appenderFlattenReconciler()
-    );
+  const ret = collectInto(
+    [[3, ["cat", "dog"]], [5, ["mouse"]]],
+    map1,
+    reconcileAppendFlat()
+  );
 
-    defined(ret.get(3)).should.deepEqual(["cat", "dog"]);
-    defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
-  });
+  defined(ret.get(3)).should.deepEqual(["cat", "dog"]);
+  defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
 });
 
-describe("appenderReconciler", () => {
+describeThis(reconcileAppend, () => {
   it("Should be useable to append individual values to arrays stored in a map on collision", () => {
     const map1 = new Map([[5, ["horse"]]]);
 
     const ret = collectInto(
       [[3, "cat"], [5, "mouse"]],
       map1,
-      appenderReconciler()
+      reconcileAppend()
     );
 
     defined(ret.get(3)).should.deepEqual(["cat"]);
@@ -284,7 +283,7 @@ describe("counterReconciler", () => {
     const ret = collectInto(
       [[3, "cat"], [5, "mouse"]],
       map1,
-      counterReconciler()
+      reconcileCount()
     );
 
     defined(ret.get(3)).should.equal(1);
@@ -554,7 +553,7 @@ describe('deepAccumulate', () => {
         "You are in my way"
       ],
       (str: string) => str.split(" ").slice(0, 2),
-      counterReconciler()
+      reconcileCount()
     );
 
     const obj = deepMapToDictionary(ret);
@@ -626,7 +625,7 @@ describe('deepCollect', () => {
   it('Should turn an array into a map and given a reconciler combine entries on key collision', function() {
     const ret = deepCollect(
       [[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]],
-      adderReconciler()
+      reconcileAdd()
     );
 
     deepMapToDictionary(ret).should.deepEqual({
@@ -657,7 +656,7 @@ describe('deepCollectInto', () => {
     const ret = deepCollectInto(
       [[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]],
       map1,
-      adderReconciler()
+      reconcileAdd()
     );
 
     ret.should.equal(map1);
@@ -749,7 +748,7 @@ describe('foldingGet', () => {
 
 describe('foldReconciler', () => {
   it ('Should allow construction of a map using one function for each case of colliding value, no colliding value', () => {
-    const reconciler = foldReconciler(
+    const reconciler = reconcileFold(
       (val: number) => 2 * val,
       (colliding: number, val: number) => colliding + val
     );

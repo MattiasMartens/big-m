@@ -3,17 +3,11 @@ import * as wu from 'wu';
 
 import { BiMap } from '../exports/bidirectional';
 import { defined, isDefined, Possible } from '../types/utils';
+import { describeThis } from './describe-this';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
 require('should');
-
-function describeThis<T>(thing: T, testFn: (underTest: T) => void) {
-  const name = defined((thing as any)["name"], "Can't call describeThis on something anonymous");
-
-  // @ts-ignore
-  describe(name, () => testFn(thing));
-}
 
 describeThis(BiMap, UnderTest => {
   it ("Should have the capabilities of a normal map", () => {
