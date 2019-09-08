@@ -37,7 +37,7 @@ describeThis(eventualMap, underTest => {
     it("Returns a promise that is fulfilled when the stream entry comes through", async () => {
       const eventual = underTest(
         Stream.from([
-          valAfterMs(tuple("A", 92), 15)
+          valAfterMs(tuple(["A", 92]), 15)
         ])
       );
 
@@ -48,9 +48,9 @@ describeThis(eventualMap, underTest => {
     it("Returns the first value to be returned with key", async () => {
       const eventual = underTest(
         Stream.from([
-          valAfterMs(tuple("A", 92), 15),
-          valAfterMs(tuple("A", 922), 20),
-          valAfterMs(tuple("A", 9222), 30)
+          valAfterMs(tuple(["A", 92]), 15),
+          valAfterMs(tuple(["A", 922]), 20),
+          valAfterMs(tuple(["A", 9222]), 30)
         ])
       );
 
@@ -69,9 +69,9 @@ describeThis(eventualMap, underTest => {
     it("With default reconcile, returns the most recent value to be returned with key, or the next value if value has not arrived yet", async () => {
       const eventual = underTest(
         Stream.from([
-          valAfterMs(tuple("A", 92), 15),
-          valAfterMs(tuple("A", 922), 20),
-          valAfterMs(tuple("A", 9222), 30)
+          valAfterMs(tuple(["A", 92]), 15),
+          valAfterMs(tuple(["A", 922]), 20),
+          valAfterMs(tuple(["A", 9222]), 30)
         ]),
         {
           reconciler: reconcileDefault()
@@ -93,14 +93,14 @@ describeThis(eventualMap, underTest => {
     it("With a provided seed, plants key-entry pairs on the seed", async () => {
       const eventual = underTest(
         Stream.from([
-          valAfterMs(tuple("A", 92), 15),
-          valAfterMs(tuple("A", 922), 20),
-          valAfterMs(tuple("B", 111), 30),
-          valAfterMs(tuple("A", 9222), 30)
+          valAfterMs(tuple(["A", 92]), 15),
+          valAfterMs(tuple(["A", 922]), 20),
+          valAfterMs(tuple(["B", 111]), 30),
+          valAfterMs(tuple(["A", 9222]), 30)
         ]),
         {
           reconciler: reconcileAppend(),
-          seed: new Map<string, number[]>([tuple("B", [0]), tuple("A", [])])
+          seed: new Map<string, number[]>([tuple(["B", [0]]), tuple(["A", []])])
         }
       );
 
@@ -117,10 +117,10 @@ describeThis(eventualMap, underTest => {
 
       const eventual = underTest(
         Stream.from([
-          valAfterMs(tuple("A", 92), 15),
-          valAfterMs(tuple("A", 922), 20),
-          valAfterMs(tuple("B", 111), 30),
-          valAfterMs(tuple("A", 9222), 30)
+          valAfterMs(tuple(["A", 92]), 15),
+          valAfterMs(tuple(["A", 922]), 20),
+          valAfterMs(tuple(["B", 111]), 30),
+          valAfterMs(tuple(["A", 9222]), 30)
         ]),
         {
           reconciler: reconcileDefault()

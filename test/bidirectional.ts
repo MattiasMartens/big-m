@@ -1,9 +1,9 @@
 import * as should from 'should';
-import * as wu from 'wu';
 
 import { BiMap } from '../exports/bidirectional';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
+import { collect } from 'exports/iterable';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
@@ -18,7 +18,7 @@ describeThis(BiMap, UnderTest => {
     instance.set("c", 3);
     instance.has("c").should.true();
     instance.has("a").should.false();
-    wu.toArray(instance.entries()).should.deepEqual([
+    collect(instance.entries()).should.deepEqual([
       ["b", 2],
       ["c", 3]
     ]);
@@ -33,7 +33,7 @@ describeThis(BiMap, UnderTest => {
       instance.set("c", 3);
       instance.reversed.has(3).should.true();
       instance.reversed.has(1).should.false();
-      wu.toArray(instance.reversed.entries()).should.deepEqual([
+      collect(instance.reversed.entries()).should.deepEqual([
         [2, "b"],
         [undefined, "?"],
         [3, "c"]
@@ -50,7 +50,7 @@ describeThis(BiMap, UnderTest => {
       instance.has("b").should.false();
       defined(instance.reversed.get(2)).should.equal("d");
       instance.reversed.has(1).should.false();
-      wu.toArray(instance.reversed.entries()).should.deepEqual([
+      collect(instance.reversed.entries()).should.deepEqual([
         [undefined, "?"],
         [2, "d"]
       ]);

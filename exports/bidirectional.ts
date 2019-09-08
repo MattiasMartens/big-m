@@ -1,5 +1,4 @@
-import { collect, reverseMap, foldingGet } from "../exports/maps";
-import { defined } from "../types/utils";
+import { mapCollect, reverseMap, foldingGet } from "../exports/maps";
 
 function getReversedBiMap<K, T>(biMap: BiMap<K, T>): BiMap<T, K> {
   return new Proxy(
@@ -61,7 +60,7 @@ export class BiMap<K, T> extends Map<K, T> {
 
     this._reverse = reverse
       ? new Map(reverse)
-      : collect(reverseMap(forward || []));
+      : mapCollect(reverseMap(forward || []));
   }
 
   set(key: K, val: T) {

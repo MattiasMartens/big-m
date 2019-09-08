@@ -1,15 +1,13 @@
-import * as wu from "wu";
 import {BiMap} from "./bidirectional";
 import {defined, Possible, tuple} from "../types/utils";
+import {map, filter, flatMap, forEach, entries} from "./iterable";
 
-export type MapStream<K, V> = wu.WuIterable<[K, V]>;
+export type MapStream<K, V> = Iterable<[K, V]>;
 
 export function mapStream<K, T>(
   map: Map<K, T>
 ) {
-  return wu(
-    map.entries()
-  );
+  return map.entries();
 }
 
 export type Reconciler<K, T, V> = (
@@ -18,16 +16,16 @@ export type Reconciler<K, T, V> = (
   key: K
 ) => V;
 
-export function collectInto<K, T>(
+export function mapCollectInto<K, T>(
   iterable: Iterable<[K, T]>,
   seed: Map<K, T>
 ): Map<K, T>
-export function collectInto<K, T, V>(
+export function mapCollectInto<K, T, V>(
   iterable: Iterable<[K, T]>,
   seed: Map<K, V>,
   reconcileFn: Reconciler<K, T, V>
 ): Map<K, V>
-export function collectInto<K, T, V>(
+export function mapCollectInto<K, T, V>(
   iterable: Iterable<[K, T]>,
   seed: Map<K, V>,
   reconcileFn?: Reconciler<K, T, V>
@@ -48,36 +46,36 @@ export function collectInto<K, T, V>(
   return seed;
 }
 
-export function collect<K, T>(
+export function mapCollect<K, T>(
   iterable: Iterable<[K, T]>
 ): Map<K, T>
-export function collect<K, T, V>(
+export function mapCollect<K, T, V>(
   iterable: Iterable<[K, T]>,
   reconcileFn: Reconciler<K, T, V>
 ): Map<K, V>
-export function collect<K, T, V>(
+export function mapCollect<K, T, V>(
   iterable: Iterable<[K, T]>,
   reconcileFn?: Reconciler<K, T, V>
 ) {
-  return collectInto(
+  return mapCollectInto(
     iterable,
     new Map<K, V>(),
     reconcileFn as any
   );
 }
 
-export function collectBiMap<K, T>(
+export function biMapCollect<K, T>(
   iterable: Iterable<[K, T]>
 ): Map<K, T>
-export function collectBiMap<K, T, V>(
+export function biMapCollect<K, T, V>(
   iterable: Iterable<[K, T]>,
   reconcileFn: Reconciler<K, T, V>
 ): Map<K, V>
-export function collectBiMap<K, T, V>(
+export function biMapCollect<K, T, V>(
   iterable: Iterable<[K, T]>,
   reconcileFn?: Reconciler<K, T, V>
 ) {
-  return collectInto(
+  return mapCollectInto(
     iterable,
     new BiMap<K, V>(),
     reconcileFn as any
@@ -87,37 +85,37 @@ export function collectBiMap<K, T, V>(
 export function reverseMap<K, T>(
   iterable: Iterable<[K, T]>
 ) {
-  return wu.map(([k, t]) => [t, k] as [T, K], iterable)
+  return map(iterable, ([k, t]) => [t, k] as [T, K])
 }
 
 export function mapValues<K, T, V>(
   iterable: Iterable<[K, T]>,
   fn: (value: T, key: K) => V
 ): MapStream<K, V> {
-  return wu.map(([key, val]) => [key, fn(val, key)], iterable);
+  return map<[K, T], [K, V]>(iterable, ([key, val]) => [key, fn(val, key)]);
 }
 
 export function keysOf<K, T>(
   iterable: Iterable<[K, T]>
 ) {
-  return wu.map(arr => arr[0], iterable);
+  return map(iterable, arr => arr[0]);
 }
 
 export function valuesOf<K, T>(
   iterable: Iterable<[K, T]>
 ) {
-  return wu.map(arr => arr[1], iterable);
+  return map(iterable, arr => arr[1]);
 }
 
 export function uniformMap<K, T>(keys: Iterable<K>, of: T) {
-  return wu.map(key => [key, of] as [K, T], keys);
+  return map(keys, key => [key, of] as [K, T]);
 }
 
 export function selectMap<K, T>(
   iterable: Iterable<[K, T]>,
   filterFn: (value: T, key: K) => boolean
 ) {
-  return wu.filter(([key, val]) => filterFn(val, key), iterable);
+  return filter(iterable, ([key, val]) => filterFn(val, key));
 }
 
 export function getOrVal<T, V>(
@@ -194,92 +192,19 @@ export function getOrFail<T, V>(
 export function flatMakeEntries<T, K, V>(
   arr: Iterable<T>,
   expandFn: (value: T) => Iterable<[K, V]>
-): wu.WuIterable<[K, V]> {
-  return wu.concatMap(function* (t) {
+): Iterable<[K, V]> {
+  return flatMap(arr, function* (t) {
     for (let entry of expandFn(t)) {
       yield entry;
     }
-  }, arr);
+  });
 }
 
 export function makeEntries<T, K, V>(
   arr: Iterable<T>,
-  keyFn: (value: T) => Possible<K>
-): wu.WuIterable<[K, T]>
-export function makeEntries<T, K, V>(
-  arr: Iterable<T>,
-  keyFn: (value: T) => Possible<K>,
-  mapFn: (value: T, key: K) => V
-): wu.WuIterable<[K, V]>
-export function makeEntries<T, K, V>(
-  arr: Iterable<T>,
-  keyFn: (value: T) => Possible<K>,
-  mapFn?: (value: T, key: K) => V
-): wu.WuIterable<[K, V]> {
-  const result = wu.concatMap(t => {
-    const key = keyFn(t);
-
-    return key ? [tuple(key, t)] : []
-  }, arr);
-
-  if (mapFn) {
-    return result.map(([key, t]) => tuple(key, mapFn(t, key)));
-  } else {
-    return result as any as wu.WuIterable<[K, V]>;
-  }
-}
-
-export function accumulate<T, K>(
-  arr: Iterable<T>,
-  keyFn: (value: T) => Possible<K>
-): Map<K, T>
-export function accumulate<T, K, V>(
-  arr: Iterable<T>,
-  keyFn: (value: T) => Possible<K>,
-  reconcileFn: Reconciler<K, T, V>
-): Map<K, V>
-export function accumulate<T, K, V>(
-  arr: Iterable<T>,
-  keyFn: (value: T) => Possible<K>,
-  reconcileFn?: Reconciler<K, T, V>
-): Map<K, V> {
-  return accumulateInto(
-    arr,
-    new Map(),
-    keyFn,
-    reconcileFn as any
-  );
-}
-
-export function accumulateInto<T, K>(
-  arr: Iterable<T>,
-  seed: Map<K, T>,
-  keyFn: (value: T) => Possible<K>
-): Map<K, T>
-export function accumulateInto<T, K, V>(
-  arr: Iterable<T>,
-  seed: Map<K, V>,
-  keyFn: (value: T) => Possible<K>,
-  reconcileFn: Reconciler<K, T, V>
-): Map<K, V>
-export function accumulateInto<T, K, V>(
-  arr: Iterable<T>,
-  seed: Map<K, V>,
-  keyFn: (value: T) => Possible<K>,
-  reconcileFn?: Reconciler<K, T, V>
-): Map<K, V> {
-  const entries = makeEntries(
-    arr,
-    keyFn
-  );
-  
-  collectInto(
-    entries,
-    seed,
-    reconcileFn as any
-  );
-
-  return seed;
+  mapFn: (value: T) => [K, V]
+): Iterable<[K, V]> {
+  return map(arr, mapFn);
 }
 
 type DeepMap1<K, T> = Map<K, T | Map<K, T>>;
@@ -292,34 +217,26 @@ type DeepMap7<K, T> = Map<K, T | DeepMap6<K, T>>;
 type DeepMap8<K, T> = Map<K, T | DeepMap7<K, T>>;
 export type DeepMap<K, T> = DeepMap8<K, T>;
 
-export type DeepMapStream<K, T> = wu.WuIterable<[K[], T]>;
+export type DeepMapStream<K, T> = Iterable<[K[], T]>;
 
-export function squeezeDeepMap<K, T>(deepMap: DeepMap<K, T>): wu.WuIterable<T> {
-  return wu(_squeezeDeepMap(deepMap));
-}
-
-function* _squeezeDeepMap<K, T>(deepMap: DeepMap<K, T>): Iterable<T> {
+export function* squeezeDeepMap<K, T>(deepMap: DeepMap<K, T>): Iterable<T> {
   for (let entry of deepMap) {
     const [_, val] = entry;
 
     if (val instanceof Map) {
-      yield* _squeezeDeepMap(val) as Iterable<T>;
+      yield* squeezeDeepMap(val) as Iterable<T>;
     } else {
       yield val;
     }
   }
 }
 
-export function deepMapStream<K, V>(deepMap: DeepMap<K, V>): MapStream<K[], V> {
-  return wu(_flattenDeepMap(deepMap));
-}
-
-function* _flattenDeepMap<K, V>(deepMap: DeepMap<K, V>): Iterable<[K[], V]> {
+export function* deepMapStream<K, V>(deepMap: DeepMap<K, V>): Iterable<[K[], V]> {
   for (let entry of deepMap) {
     const [key, val] = entry;
 
     if ((val instanceof Map)) {
-      yield* wu(_flattenDeepMap(val)).map(([keys, val]) => [[key, ...keys], val])
+      yield* (map(deepMapStream(val), ([keys, val]) => tuple([[key, ...keys], val])));
     } else {
       yield [[key], val];
     }
@@ -340,7 +257,7 @@ export function deepCollectInto<T, K, V>(
   seed: DeepMap<K, V>,
   reconcileFn?: Reconciler<K[], T, V>,
 ): DeepMap<K, V> {
-  wu(arr).forEach(([keys, value]) => {
+  forEach(arr, ([keys, value]) => {
     if (!!keys && !!keys.length) {
       let deepReferenceTemp = seed;
 
@@ -383,54 +300,6 @@ export function deepCollect<T, K, V>(
   return deepCollectInto(
     arr,
     new Map(),
-    reconcileFn as any
-  );
-}
-
-export function deepAccumulateInto<Y, T, K>(
-  arr: Iterable<T>,
-  seed: DeepMap<K, Y>,
-  keyFn: (value: T) => K[] | undefined
-): DeepMap<K, T> 
-export function deepAccumulateInto<Y, T, K, V>(
-  arr: Iterable<T>,
-  seed: Map<K, Y>,
-  keyFn: (value: T) => K[] | undefined,
-  reconcileFn: (collidingValue: Possible<V>, value: T, keys: K[]) => V
-): DeepMap<K, V> 
-export function deepAccumulateInto<T, K, V>(
-  arr: Iterable<T>,
-  seed: DeepMap<K, V>,
-  keyFn: (value: T) => K[] | undefined,
-  reconcileFn?: (collidingValue: Possible<V>, value: T, keys: K[]) => V
-): DeepMap<K, V> {
-  const entries = makeEntries(arr, keyFn);
-
-  return deepCollectInto(
-    entries,
-    seed,
-    reconcileFn as any
-  );
-}
-
-export function deepAccumulate<T, K>(
-  arr: Iterable<T>,
-  keyFn: (value: T) => K[] | undefined
-): Map<K, T>
-export function deepAccumulate<T, K, V>(
-  arr: Iterable<T>,
-  keyFn: (value: T) => K[] | undefined,
-  reconcileFn: Reconciler<K[], T, V>
-): Map<K, V>
-export function deepAccumulate<T, K, V>(
-  arr: Iterable<T>,
-  keyFn: (value: T) => K[] | undefined,
-  reconcileFn?: Reconciler<K[], T, V>
-): DeepMap<K, V> {
-  return deepAccumulateInto(
-    arr,
-    new Map(),
-    keyFn,
     reconcileFn as any
   );
 }
@@ -549,12 +418,12 @@ export function reconcileFirst<K, T>(): Reconciler<K, T, T> {
 }
 
 export function invertBinMap<K, T>(map: Iterable<[K, T[]]>): Map<T, K[]> {
-  return collect(
-      wu(map)
-        .concatMap(
-          ([key, arr]) => arr.map(t => [t, key])
-        ),
-      reconcileAppend()
+  return mapCollect(
+    flatMap(
+      map,
+      ([key, arr]) => arr.map(t => tuple([t, key]))
+    ),
+    reconcileAppend()
   );
 }
 
@@ -751,15 +620,17 @@ export function deepMapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (v
 }
 
 export function deepDictionaryToMap<Y>(dictionary: {[key: string]: Object}): DeepMapStream<string, Y> {
-  return wu.entries(dictionary)
-    .concatMap(([key, object]) => {
+  return flatMap(
+    entries(dictionary),
+    ([key, object]) => {
       if (object === null || typeof object !== "object" || Array.isArray(object) || object instanceof Date) {
-        return [[[key], object as any as Y]];
+        return [tuple([[key], object as any as Y])];
       } else {
-        return wu.map(
-          ([keys, object]) => [[key, ...keys], object],
-          deepDictionaryToMap<Y>(object as {[key: string]: Object})
+        return map(
+          deepDictionaryToMap<Y>(object as {[key: string]: Object}),
+          ([keys, object]) => tuple([[key, ...keys], object as any as Y]),
         );
       }
-    });
+    }
+  );
 }
