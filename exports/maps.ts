@@ -307,24 +307,34 @@ export function deepCollect<T, K, V>(
   );
 }
 
-export function reconcileAppend<T, V, K>(): Reconciler<K, T, T[]>
 export function reconcileAppend<T, V, K>(
-  mapFn: (val: T) => V
-): Reconciler<K, T, V[]>
-export function reconcileAppend<T, V, K>(
-  mapFn: (val: T) => V = (val: T) => val as any as V
-): Reconciler<K, T, V[]> {
-  return function(
-    collidingValue,
-    value
-  ) {
-    const val = mapFn(value);
-
-    if (collidingValue === undefined) {
-      return [val];
-    } else {
-      collidingValue.push(val);
-      return collidingValue;
+  mapFn?: (val: T) => unknown extends V ? T : V
+): Reconciler<K, T, (unknown extends V ? T : V)[]> {
+  if (mapFn) {
+    return function(
+      collidingValue,
+      value
+    ) {
+      const val = mapFn(value);
+  
+      if (collidingValue === undefined) {
+        return [val];
+      } else {
+        collidingValue.push(val);
+        return collidingValue;
+      }
+    }
+  } else {
+    return function(
+      collidingValue,
+      value
+    ) { 
+      if (collidingValue === undefined) {
+        return [value] as (unknown extends V ? T : V)[];
+      } else {
+        collidingValue.push(value as (unknown extends V ? T : V));
+        return collidingValue as (unknown extends V ? T : V)[];
+      }
     }
   }
 }

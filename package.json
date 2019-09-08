@@ -1,8 +1,8 @@
 {
-  "name": "map-builders",
+  "name": "cartographer",
   "version": "1.0.0",
-  "description": "Functions for composing, decomposing, and transforming Maps",
-  "main": "index.ts",
+  "description": "Utilities for building and transforming maps using iterables and streams.",
+  "main": "exports/index.ts",
   "author": "Mattias Martens <mattiasofmartens@gmail.com>",
   "license": "MIT",
   "dependencies": {
@@ -19,6 +19,7 @@
     "typescript": "^3.6.2"
   },
   "scripts": {
-    "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts"
+    "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts",
+    "benchmark": "node -r ts-node/register benchmarks/*.ts"
   }
 }
