@@ -30,16 +30,19 @@ export function mapCollectInto<K, T, V>(
   seed: Map<K, V>,
   reconcileFn?: Reconciler<K, T, V>
 ): Map<K, V> {
-  for (let entry of iterable) {
-    const [key, val] = entry;
-    if (reconcileFn) {
-      seed.set(key, reconcileFn(
-        seed.get(key),
-        val,
-        key
-      ));
-    } else {
-      seed.set(key, val as unknown as V);
+  if (reconcileFn) {
+    for (let entry of iterable) {
+      const [key, val] = entry;
+        seed.set(key, reconcileFn(
+          seed.get(key),
+          val,
+          key
+        ));
+    }
+  } else {
+    for (let entry of iterable) {
+      const [key, val] = entry;
+        seed.set(key, val as unknown as V);
     }
   }
 

@@ -1,21 +1,31 @@
 import { Suite } from 'benchmark';
 
-import { collect, count, take } from '../exports/iterable';
+import { collect, count, take, map } from '../exports/iterable';
+import { mapCollect } from "../exports/maps";
+import { pipe } from 'fp-ts/lib/pipeable';
 
 const suite = new Suite;
-
-const array = collect(
-  take(count(), 100000)
-);
 const mapFn = ((i: number) => [Math.round(Math.random() * 10), i] as [number, number]);
+
+const array = pipe(
+  count(),
+  a => take(a, 10000000),
+  a => map(a, v => mapFn(v)),
+  collect
+);
+
 
 suite
   .add('Collect map manual', () => {
     const map = new Map();
-    array.forEach(i => {
-      const entry = mapFn(i);
+    array.forEach(entry => {
       map.set(entry[0], entry[1]);
     });
+  })
+  .add('Collect map', () => {
+    mapCollect(
+      array
+    );
   })
   .on('cycle', function(event: any) {
     console.log(String(event.target));

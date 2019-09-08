@@ -1,4 +1,4 @@
-import { tuple } from "types/utils";
+import { tuple } from "../types/utils";
 
 export function* map<T, V>(arr: Iterable<T>, fn: (t: T) => V) {
   for (let val of arr) {
