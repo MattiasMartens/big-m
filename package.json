@@ -2,7 +2,7 @@
   "name": "cartographer",
   "version": "1.0.0",
   "description": "Utilities for building and transforming maps using iterables and streams.",
-  "main": "exports/index.ts",
+  "main": "dist/exports/index.ts",
   "author": "Mattias Martens <mattiasofmartens@gmail.com>",
   "license": "MIT",
   "dependencies": {
@@ -20,6 +20,7 @@
   },
   "scripts": {
     "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts",
-    "benchmark": "node -r ts-node/register benchmarks/*.ts"
+    "benchmark": "node -r ts-node/register benchmarks/*.ts",
+    "compile": "cd exports; tsc; cd .."
   }
 }

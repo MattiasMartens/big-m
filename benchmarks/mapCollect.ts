@@ -1,6 +1,6 @@
 import { Suite } from 'benchmark';
 
-import { collect, count, take, map } from '../exports/iterable';
+import { collect, series, take, map } from '../exports/iterable';
 import { mapCollect, reconcileAppend } from "../exports/maps";
 import { pipe } from 'fp-ts/lib/pipeable';
 
@@ -8,7 +8,7 @@ const suite = new Suite;
 const mapFn = ((i: number) => [Math.round(Math.random() * 10), i] as [number, number]);
 
 const array = pipe(
-  count(),
+  series(),
   a => take(a, 100000),
   a => map(a, v => mapFn(v)),
   collect

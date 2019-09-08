@@ -32,7 +32,7 @@ export function* entries<V>(obj: {[key: string]: V}) {
   }
 }
 
-export function* count(start = 0, step = 1) {
+export function* series(start = 0, step = 1) {
   let i = start;
   while (true) {
     yield i;

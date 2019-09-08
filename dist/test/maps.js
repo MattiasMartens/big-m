@@ -1,0 +1,586 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const should = require("should");
+const pipeable_1 = require("fp-ts/lib/pipeable");
+const bidirectional_1 = require("../exports/bidirectional");
+const maps_1 = require("../exports/maps");
+const utils_1 = require("../exports/types/utils");
+const describe_this_1 = require("./describe-this");
+const iterable_1 = require("exports/iterable");
+// Have to require should to monkey-patch it onto objects,
+// but have to import should to get the types. Yuck!
+require('should');
+describe_this_1.describeThis(maps_1.reconcileAdd, (underTest) => {
+    it('Should be useable to compose a map by adding numbers with matching keys', () => {
+        const reconciler = underTest();
+        reconciler(undefined, 2, "key").should.equal(2);
+        reconciler(1, 2, "key").should.equal(3);
+    });
+    it('Should be useable to compose a map by adding values with matching keys after applying a number function', () => {
+        const reconciler = underTest((str) => str.length);
+        reconciler(undefined, "cat", "key").should.equal(3);
+        reconciler(1, "mouse", "key").should.equal(5 + 1);
+    });
+});
+describe_this_1.describeThis(maps_1.reconcileAppendFlat, () => {
+    const map1 = new Map([[5, ["horse"]]]);
+    const ret = maps_1.mapCollectInto([[3, ["cat", "dog"]], [5, ["mouse"]]], map1, maps_1.reconcileAppendFlat());
+    utils_1.defined(ret.get(3)).should.deepEqual(["cat", "dog"]);
+    utils_1.defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
+});
+describe_this_1.describeThis(maps_1.reconcileAppend, () => {
+    it("Should be useable to append individual values to arrays stored in a map on collision", () => {
+        const map1 = new Map([[5, ["horse"]]]);
+        const ret = maps_1.mapCollectInto([[3, "cat"], [5, "mouse"]], map1, maps_1.reconcileAppend());
+        utils_1.defined(ret.get(3)).should.deepEqual(["cat"]);
+        utils_1.defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
+    });
+});
+describe('collect', function () {
+    it('Should turn an array of entries into a map', function () {
+        const ret = maps_1.mapCollect([["a", 1], ["b", 2]]);
+        utils_1.defined(ret.get("a")).should.equal(1);
+        utils_1.defined(ret.get("b")).should.equal(2);
+    });
+    it('Should turn a map into a new map', function () {
+        const map1 = new Map([["a", 7], ["b", 8]]);
+        const ret = maps_1.mapCollect(map1);
+        ret.should.not.equal(map1);
+        utils_1.defined(ret.get("a")).should.equal(7);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+    it('Should turn an iterator into a map', function () {
+        const ret = maps_1.mapCollect([["a", 7], ["b", 8]][Symbol.iterator]());
+        utils_1.defined(ret.get("a")).should.equal(7);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+    it('Should turn an array into a map and by default on key collision overwrite earlier entries', function () {
+        const ret = maps_1.mapCollect([["a", 7], ["b", 8], ["a", 65]]);
+        utils_1.defined(ret.get("a")).should.equal(65);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+    it('Should turn an array into a map and given a reconciler combine entries on key collision', function () {
+        const ret = maps_1.mapCollect([["a", 7], ["b", 8], ["a", 65]], (colliding, incoming) => (colliding || 0) + incoming);
+        utils_1.defined(ret.get("a")).should.equal(65 + 7);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+});
+describe('collectBiMap', function () {
+    it('Should turn an array of entries into a bidirectional map', function () {
+        const ret = maps_1.biMapCollect([["a", 1], ["b", 2]]);
+        ret.should.be.instanceOf(bidirectional_1.BiMap);
+        utils_1.defined(ret.get("a")).should.equal(1);
+        utils_1.defined(ret.get("b")).should.equal(2);
+    });
+    it('Should turn an array into a bidirectional map and by default on key collision overwrite earlier entries', function () {
+        const ret = maps_1.biMapCollect([["a", 7], ["b", 8], ["a", 65]]);
+        ret.should.be.instanceOf(bidirectional_1.BiMap);
+        utils_1.defined(ret.get("a")).should.equal(65);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+    it('Should turn an array into a bidirectional map and given a reconciler combine entries on key collision', function () {
+        const ret = maps_1.biMapCollect([["a", 7], ["b", 8], ["a", 65]], (colliding, incoming) => (colliding || 0) + incoming);
+        ret.should.be.instanceOf(bidirectional_1.BiMap);
+        utils_1.defined(ret.get("a")).should.equal(65 + 7);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+});
+describe('collectInto', function () {
+    it('Should add an array of entries to a map', function () {
+        const map1 = new Map();
+        const ret = maps_1.mapCollectInto([["a", 1], ["b", 2]], map1);
+        map1.should.equal(ret);
+        utils_1.defined(map1.get("a")).should.equal(1);
+        utils_1.defined(map1.get("b")).should.equal(2);
+    });
+    it('Should add the entries of a map to a new map', function () {
+        const map1 = new Map();
+        const map2 = new Map([["a", 7], ["b", 8]]);
+        const ret = maps_1.mapCollectInto(map1, map2);
+        ret.should.equal(map2);
+        utils_1.defined(ret.get("a")).should.equal(7);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+    it('Should add the entries of an iterator into a map', function () {
+        const map1 = new Map();
+        const ret = maps_1.mapCollectInto([["a", 7], ["b", 8]][Symbol.iterator](), map1);
+        ret.should.equal(map1);
+        utils_1.defined(ret.get("a")).should.equal(7);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+    it('Should add an array of entries into a map and given a reconciler combine entries on key collision', function () {
+        const map1 = new Map([["b", 1]]);
+        const ret = maps_1.mapCollectInto([["a", 7], ["b", 8], ["a", 65]], map1, (colliding, incoming) => (colliding || 0) + incoming);
+        ret.should.equal(map1);
+        utils_1.defined(ret.get("a")).should.equal(65 + 7);
+        utils_1.defined(ret.get("b")).should.equal(8 + 1);
+    });
+});
+describe("counterReconciler", () => {
+    it("Should be useable to count entries with matching keys", () => {
+        const map1 = new Map([[5, 1]]);
+        const ret = maps_1.mapCollectInto([[3, "cat"], [5, "mouse"]], map1, maps_1.reconcileCount());
+        utils_1.defined(ret.get(3)).should.equal(1);
+        utils_1.defined(ret.get(5)).should.equal(2);
+    });
+});
+describe('deepFoldingGet', () => {
+    it('Should run one function if the deep key is present', () => {
+        const map1 = new Map([[5, new Map([[8, 13]])]]);
+        const ret = maps_1.deepFoldingGet(map1, [5, 8], () => 99, () => 996);
+        ret.should.equal(99);
+    });
+    it('Should run another function if the deep key is absent', () => {
+        const map1 = new Map([[5, new Map([[9, 13]])]]);
+        const ret = maps_1.deepFoldingGet(map1, [5, 8], () => 99, () => 996);
+        ret.should.equal(996);
+    });
+});
+describe("deepGet", () => {
+    it("Should return the deeply matched value", () => {
+        const map1 = new Map([[5, new Map([[8, 13]])]]);
+        const ret = maps_1.deepGet(map1, [5, 8]);
+        utils_1.defined(ret).should.equal(13);
+    });
+    it("Should return undefined if the deeply matched value is not present", () => {
+        const map1 = new Map([[5, new Map([[9, 13]])]]);
+        const ret = maps_1.deepGet(map1, [5, 8]);
+        should.equal(ret, undefined);
+    });
+});
+describe("deepGetOrElse", () => {
+    it("Should return the deeply matched value", () => {
+        const map1 = new Map([[5, new Map([[8, 13]])]]);
+        const ret = maps_1.deepGetOrElse(map1, [5, 8], () => 99);
+        ret.should.equal(13);
+    });
+    it("Should call the substitute function if the deeply matched value is not present", () => {
+        const map1 = new Map([[5, new Map([[9, 13]])]]);
+        const ret = maps_1.deepGetOrElse(map1, [5, 8], () => 99);
+        ret.should.equal(99);
+    });
+});
+describe("deepGetOrFail", () => {
+    it("Should return the deeply matched value", () => {
+        const map1 = new Map([[5, new Map([[8, 13]])]]);
+        const ret = maps_1.deepGetOrElse(map1, [5, 8], () => 99);
+        ret.should.equal(13);
+    });
+    it("Should throw an error if the deeply matched value is not present", () => {
+        const map1 = new Map([[5, new Map([[9, 13]])]]);
+        try {
+            maps_1.deepGetOrFail(map1, [5, 8]);
+            should.fail(false, false, "Should have failed by now");
+        }
+        catch (e) {
+            e.should.have.key("message").equal("Deep lookup failed on keys [5,8], keys matched were [5]");
+        }
+    });
+    it("Should throw an error if the deeply matched value is not present with a custom error", () => {
+        const map1 = new Map([[5, new Map([[9, 13]])]]);
+        try {
+            maps_1.deepGetOrFail(map1, [5, 8], "Dag nabbit");
+            should.fail(false, false, "Should have failed by now");
+        }
+        catch (e) {
+            e.should.have.key("message").equal("Dag nabbit");
+        }
+    });
+    it("Should throw an error if the deeply matched value is not present with a custom error function", () => {
+        const map1 = new Map([[5, new Map([[9, 13]])]]);
+        try {
+            maps_1.deepGetOrFail(map1, [5, 8], (lookup, matched) => JSON.stringify({ lookup, matched }));
+            should.fail(false, false, "Should have failed by now");
+        }
+        catch (e) {
+            JSON.parse(e.message).should.deepEqual({
+                lookup: [5, 8],
+                matched: [5]
+            });
+        }
+    });
+});
+describe("deepGetOrElse", () => {
+    it("Should return the deeply matched value", () => {
+        const map1 = new Map([[5, new Map([[8, 13]])]]);
+        const ret = maps_1.deepGetOrVal(map1, [5], new Map([[99, 999]]));
+        utils_1.defined(ret.get(8)).should.equal(13);
+    });
+    it("Should return a default value if the deeply matched value is not present", () => {
+        const map1 = new Map([[5, new Map([[8, 13]])]]);
+        const ret = maps_1.deepGetOrVal(map1, [7], new Map([[99, 999]]));
+        should.equal(ret.get(8), undefined);
+        utils_1.defined(ret.get(99)).should.equal(999);
+    });
+});
+describe("deepGet", () => {
+    it("Should return true if lookup succeeds", () => {
+        const map1 = new Map([[5, new Map([[8, 13]])]]);
+        const ret = maps_1.deepHas(map1, [5, 8]);
+        ret.should.true();
+    });
+    it("Should return true if deeper lookup succeeds", () => {
+        const map2 = new Map([
+            [
+                5,
+                new Map([
+                    [
+                        8,
+                        new Map([[12, 13]])
+                    ]
+                ])
+            ]
+        ]);
+        const ret2 = maps_1.deepHas(map2, [5, 8, 12]);
+        ret2.should.true();
+    });
+    it("Should return false if lookup fails", () => {
+        const map1 = new Map([[5, new Map([[9, 13]])]]);
+        const ret = maps_1.deepHas(map1, [5, 8]);
+        ret.should.false();
+    });
+});
+describe('deepMapToDictionary', () => {
+    it('Should convert a deeply nested map to a nested dictionary object', () => {
+        const doublyNestedMap = new Map([["a", 1], ["b", 2]]);
+        const singlyNestedMap = new Map([["I", doublyNestedMap], ["II", { "xX": 972 }]]);
+        const map1 = new Map([["myMap", singlyNestedMap]]);
+        const ret = maps_1.deepMapToDictionary(map1);
+        ret.should.deepEqual({
+            myMap: {
+                I: {
+                    a: 1,
+                    b: 2
+                },
+                II: {
+                    xX: 972
+                }
+            }
+        });
+    });
+    it('Should convert a deeply nested map to a nested dictionary object with a custom key stringifier', () => {
+        const doublyNestedMap = new Map([["a", 1], ["b", 2]]);
+        const singlyNestedMap = new Map([["I", doublyNestedMap], ["II", { "xX": 972 }]]);
+        const map1 = new Map([["myMap", singlyNestedMap]]);
+        const ret = maps_1.deepMapToDictionary(map1, (val, depth) => `${val}_${depth}`);
+        ret.should.deepEqual({
+            myMap_0: {
+                I_1: {
+                    a_2: 1,
+                    b_2: 2
+                },
+                II_1: {
+                    xX: 972
+                }
+            }
+        });
+    });
+});
+describe('deepCollect', () => {
+    it('Should turn an array of entries into a deeply nested map', function () {
+        const ret = maps_1.deepCollect([[["a", "c"], 1], [["b"], 2]]);
+        maps_1.deepMapToDictionary(ret).should.deepEqual({
+            a: {
+                c: 1
+            },
+            b: 2
+        });
+    });
+    it('Should turn an iterator into a map', function () {
+        const ret = maps_1.deepCollect([[["a"], 7], [["b"], 8]][Symbol.iterator]());
+        utils_1.defined(ret.get("a")).should.equal(7);
+        utils_1.defined(ret.get("b")).should.equal(8);
+    });
+    it('Should turn an array into a map and by default on key collision overwrite earlier entries', function () {
+        const ret = maps_1.deepCollect([[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]]);
+        maps_1.deepMapToDictionary(ret).should.deepEqual({
+            x: {
+                a: 65
+            },
+            b: 8
+        });
+    });
+    it('Should turn an array into a map and given a reconciler combine entries on key collision', function () {
+        const ret = maps_1.deepCollect([[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]], maps_1.reconcileAdd());
+        maps_1.deepMapToDictionary(ret).should.deepEqual({
+            x: {
+                a: 65 + 7
+            },
+            b: 8
+        });
+    });
+});
+describe('deepCollectInto', () => {
+    it('Should add an array of entries to a deeply nested map', function () {
+        const map1 = new Map();
+        const ret = maps_1.deepCollectInto([[["a", "c"], 1], [["b"], 2]], map1);
+        ret.should.equal(map1);
+        maps_1.deepMapToDictionary(ret).should.deepEqual({
+            a: {
+                c: 1
+            },
+            b: 2
+        });
+    });
+    it('Should turn an array into a map and given a reconciler combine entries on key collision', function () {
+        const map1 = new Map();
+        const ret = maps_1.deepCollectInto([[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]], map1, maps_1.reconcileAdd());
+        ret.should.equal(map1);
+        maps_1.deepMapToDictionary(ret).should.deepEqual({
+            x: {
+                a: 65 + 7
+            },
+            b: 8
+        });
+    });
+});
+describe('deepDictionaryToMap', () => {
+    it('Should transform a deeply nested object into a stream of key-lists and values', () => {
+        const ret = maps_1.deepDictionaryToMap({
+            a: 1,
+            b: {
+                a: 2
+            }
+        });
+        iterable_1.collect(ret).should.deepEqual([[["a"], 1], [["b", "a"], 2]]);
+    });
+});
+describe('deepMapStream', () => {
+    it('Should transform a deeply nested map into a stream of key-lists and values', () => {
+        const ret = maps_1.deepMapStream(new Map([
+            ["a", 1],
+            ["b", new Map([[1, "_a"], [99, new Map([["_b", {}]])]])]
+        ]));
+        iterable_1.collect(ret).should.deepEqual([
+            [["a"], 1],
+            [["b", 1], "_a"],
+            [["b", 99, "_b"], {}]
+        ]);
+    });
+});
+describe('flatMakeEntries', () => {
+    it('Should transform a stream of inputs into a sequence of arbitrary length using a key-list function', () => {
+        const ret = maps_1.flatMakeEntries([
+            "cat",
+            "dog",
+            "squirrel",
+            "alpaca"
+        ], str => str.slice(0, str.length % 3).split("").map((c, i) => [c, str.length]));
+        iterable_1.collect(ret).should.deepEqual([
+            ["s", 8],
+            ["q", 8]
+        ]);
+    });
+});
+describe('foldingGet', () => {
+    it('Should run one function if the key is present', () => {
+        const map1 = new Map([[5, 9]]);
+        const ret = maps_1.foldingGet(map1, 5, (val) => val + 99, () => 996);
+        ret.should.equal(9 + 99);
+    });
+    it('Should run another function if the key is absent', () => {
+        const map1 = new Map([[5, 9]]);
+        const ret = maps_1.foldingGet(map1, 7, () => 99, () => 996);
+        ret.should.equal(996);
+    });
+});
+describe('foldReconciler', () => {
+    it('Should allow construction of a map using one function for each case of colliding value, no colliding value', () => {
+        const reconciler = maps_1.reconcileFold((val) => 2 * val, (colliding, val) => colliding + val);
+        const ret = maps_1.mapCollect([
+            ["a", 1],
+            ["b", 2],
+            ["b", 3]
+        ], reconciler);
+        utils_1.defined(ret.get("a")).should.equal(2);
+        utils_1.defined(ret.get("b")).should.equal(7);
+    });
+});
+describe('getOrElse', () => {
+    it('Should return value if the key is present', () => {
+        const map1 = new Map([[5, 9]]);
+        const ret = maps_1.getOrElse(map1, 5, () => 99);
+        ret.should.equal(9);
+    });
+    it('Should run a function if the key is absent', () => {
+        const map1 = new Map([[5, 9]]);
+        const ret = maps_1.getOrElse(map1, 7, () => 99);
+        ret.should.equal(99);
+    });
+});
+describe('getOrFail', () => {
+    it('Should return value if the key is present', () => {
+        const map1 = new Map([[5, 9]]);
+        const ret = maps_1.getOrFail(map1, 5);
+        ret.should.equal(9);
+    });
+    it('Should throw error if key is absent', () => {
+        const map1 = new Map([[5, 9]]);
+        try {
+            maps_1.getOrFail(map1, 6);
+            should.fail(false, false, "Should have failed by now");
+        }
+        catch (e) {
+            e.should.key("message").equal("Map has no entry 6");
+        }
+    });
+    it('Should throw custom function error if key is absent', () => {
+        const map1 = new Map([[5, 9]]);
+        try {
+            maps_1.getOrFail(map1, 6, key => JSON.stringify({ key }));
+            should.fail(false, false, "Should have failed by now");
+        }
+        catch (e) {
+            JSON.parse(e.message).should.deepEqual({
+                key: 6
+            });
+        }
+    });
+    it('Should throw custom error if key is absent', () => {
+        const map1 = new Map([[5, 9]]);
+        try {
+            maps_1.getOrFail(map1, 6, "Dag nabbit");
+            should.fail(false, false, "Should have failed by now");
+        }
+        catch (e) {
+            e.should.have.key("message").equal("Dag nabbit");
+        }
+    });
+});
+describe('getOrVal', () => {
+    it('Should return value if the key is present', () => {
+        const map1 = new Map([[5, 9]]);
+        const ret = maps_1.getOrVal(map1, 5, 777);
+        ret.should.equal(9);
+    });
+    it('Should return substitute if the key is absent', () => {
+        const map1 = new Map([[5, 9]]);
+        const ret = maps_1.getOrVal(map1, 7, 777);
+        ret.should.equal(777);
+    });
+});
+describe('invertBinMap', () => {
+    it('Should convert map of arrays Map<A, B[]> to map of arrays Map<B, A[]>', () => {
+        const map1 = new Map([[5, [9, 10]], [22, [9]]]);
+        const ret = maps_1.invertBinMap(map1);
+        maps_1.getOrFail(ret, 9).should.deepEqual([5, 22]);
+        maps_1.getOrFail(ret, 10).should.deepEqual([5]);
+        ret.has(5).should.false();
+        ret.has(22).should.false();
+    });
+});
+describe('keysOf', () => {
+    it('Should convert stream of entries to stream of keys', () => {
+        const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
+        iterable_1.collect(maps_1.keysOf(map1)).should.deepEqual([9, 6, 4]);
+    });
+});
+describe('makeEntries', () => {
+    it('Should transform an array of values into a stream of map entries using a key function', () => {
+        const ret = pipeable_1.pipe(maps_1.makeEntries([
+            "cat",
+            "dog",
+            "squirrel",
+            "alpaca"
+        ], str => [str.length, str]), (arr) => iterable_1.filter(arr, ([key]) => key % 2 === 0), iterable_1.collect);
+        ret.should.deepEqual([
+            [8, "squirrel"],
+            [6, "alpaca"]
+        ]);
+    });
+});
+describe('mapStream', () => {
+    it('Should transform a map into a stream of values as a thin wrapper over the native function', () => {
+        const map1 = new Map([["a", 5], ["b", 6]]);
+        const ret = pipeable_1.pipe(maps_1.mapStream(map1), iterable_1.collect);
+        ret.should.deepEqual([
+            ["a", 5],
+            ["b", 6]
+        ]);
+    });
+});
+describe('mapToDictionary', () => {
+    it('Should transform a map into a dictionary', () => {
+        const map1 = new Map([["a", 5], ["b", 6]]);
+        const ret = maps_1.mapToDictionary(map1);
+        ret.should.deepEqual({
+            a: 5,
+            b: 6
+        });
+    });
+    it('Should transform an array directly into a dictionary', () => {
+        const ret = maps_1.mapToDictionary([["a", 5], ["b", 6]]);
+        ret.should.deepEqual({
+            a: 5,
+            b: 6
+        });
+    });
+});
+describe('mapValues', () => {
+    it('Should transform a map into a stream of map entries with a mapper function', () => {
+        const map1 = new Map([["a", 5], ["b", 6]]);
+        const ret = maps_1.mapValues(map1, x => Math.sqrt(x).toFixed(1));
+        maps_1.mapToDictionary(ret).should.deepEqual({
+            a: "2.2",
+            b: "2.4"
+        });
+    });
+});
+describe('reverseMap', () => {
+    it('Should transform a map Map<A, B> into its inverse Map<B, A>', () => {
+        const map1 = new Map([["a", 5], ["b", 6]]);
+        const ret = pipeable_1.pipe(maps_1.reverseMap(map1), iterable_1.collect);
+        ret.should.deepEqual([
+            [5, "a"],
+            [6, "b"]
+        ]);
+    });
+});
+describe('selectMap', () => {
+    it('Should produce a stream of map entries without those that fail the filter function', () => {
+        const map1 = new Map([["a", 5], ["b", 6], ["a!", 9], ["b!", 10]]);
+        const ret = pipeable_1.pipe(maps_1.selectMap(map1, (val, key) => {
+            return key.includes("!") ? val % 2 === 0 : val % 2 === 1;
+        }), iterable_1.collect);
+        ret.should.deepEqual([
+            ["a", 5],
+            ["b!", 10]
+        ]);
+    });
+});
+describe('squeezeDeepMap', () => {
+    it('Should produce a stream of terminal values from a deeply nested map', () => {
+        const map1 = new Map([
+            ["a", 1],
+            ["b", new Map([[1, "_a"], [99, new Map([["_b", {}]])]])]
+        ]);
+        const ret = pipeable_1.pipe(maps_1.squeezeDeepMap(map1), iterable_1.collect);
+        ret.should.deepEqual([
+            1,
+            "_a",
+            {}
+        ]);
+    });
+});
+describe('uniformMap', () => {
+    it('Should transform an array of keys into a stream of map entries all with the same value', () => {
+        const ret = pipeable_1.pipe(maps_1.uniformMap([
+            "cat",
+            "dog",
+            "squirrel",
+            "alpaca"
+        ], 0), iterable_1.collect);
+        ret.should.deepEqual([
+            ["cat", 0],
+            ["dog", 0],
+            ["squirrel", 0],
+            ["alpaca", 0]
+        ]);
+    });
+});
+describe('keysOf', () => {
+    it('Should convert stream of entries to stream of values', () => {
+        const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
+        iterable_1.collect(maps_1.valuesOf(map1)).should.deepEqual(["blueberry", "almond", "plum"]);
+    });
+});
