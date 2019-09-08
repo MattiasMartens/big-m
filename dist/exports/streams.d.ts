@@ -1,6 +1,6 @@
 import { ReadableStream } from "ts-stream";
 import { Reconciler } from "./maps";
-import { Possible } from "exports/types/utils";
+import { Possible } from "types/utils";
 declare type EventualMap<K, V> = {
     get: (key: K) => Promise<Possible<V>>;
     has: (key: K) => Promise<boolean>;

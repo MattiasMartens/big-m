@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("./types/utils");
+const utils_1 = require("../types/utils");
 function* map(arr, fn) {
     for (let val of arr) {
         yield fn(val);
@@ -33,14 +33,14 @@ function* entries(obj) {
     }
 }
 exports.entries = entries;
-function* count(start = 0, step = 1) {
+function* series(start = 0, step = 1) {
     let i = start;
     while (true) {
         yield i;
         i += step;
     }
 }
-exports.count = count;
+exports.series = series;
 function* take(arr, num = 1) {
     let i = 0;
     for (let val of arr) {
