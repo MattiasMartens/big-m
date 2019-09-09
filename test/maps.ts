@@ -42,7 +42,7 @@ import {
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
-import { collect, filter } from 'exports/iterable';
+import { collect, filter } from 'iterable';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!

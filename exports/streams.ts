@@ -1,6 +1,7 @@
 import { ReadableStream } from "ts-stream";
 import { Reconciler } from "./maps";
 import { defined, Possible } from "types/utils";
+import { BiMap } from "exports";
 
 type Option<T> = {
   isSome: true,
@@ -25,10 +26,10 @@ function foldOption<T, V>(
   }
 }
 
-async function queryMapper<K, V, W>(
+async function queryMapper<K, V, W, P extends Map<K, V>>(
   {finalized}: { finalized: boolean },
   switchboard: Map<K, ((opt: Option<V>) => void)[]>,
-  underlyingMap: Map<K, V>,
+  underlyingMap: P,
   some: (v: V) => W,
   none: () => W,
   key: K
@@ -66,8 +67,33 @@ type EventualMap<K, V> = {
   finalMap: Promise<Map<K, V>>
 };
 
-type x = unknown extends {} ? "Yes" : "No";
+type EventualBiMap<K, V> = {
+  get: (key: K) => Promise<Possible<V>>,
+  has: (key: K) => Promise<boolean>,
+  getOrElse: (key: K, substitute: (key: K) => V) => Promise<V>,
+  getOrVal: (key: K, substitute: V) => Promise<V>,
+  getOrFail: (key: K, error: (string | ((key: K) => string))) => Promise<V>,
+  foldingGet<W>(key: K, some: (v: V) => W, none: () => W): Promise<W>,
+  getNow: (key: K) => Possible<V>,
+  hasNow: (key: K) => boolean,
+  underlyingMap: BiMap<K, V>,
+  finalMap: Promise<BiMap<K, V>>
+};
 
+export function eventualMap<K, T, V>(
+  stream: ReadableStream<[K, T]>,
+  opts: {
+    reconciler?: Reconciler<K, T, V>,
+    seed: BiMap<K, V>
+  }
+): EventualBiMap<K, V>
+export function eventualMap<K, T, V>(
+  stream: ReadableStream<[K, T]>,
+  opts?: {
+    reconciler?: Reconciler<K, T, V>,
+    seed?: Map<K, V>
+  }
+): EventualMap<K, unknown extends V ? T : V>
 export function eventualMap<K, T, V>(
   stream: ReadableStream<[K, T]>,
   {

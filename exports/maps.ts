@@ -1,6 +1,6 @@
 import {BiMap} from "./bidirectional";
 import {defined, Possible, tuple} from "../types/utils";
-import {map, filter, flatMap, forEach, entries} from "./iterable";
+import {map, filter, flatMap, forEach, entries} from "../iterable";
 
 export type MapStream<K, V> = Iterable<[K, V]>;
 

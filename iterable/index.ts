@@ -51,6 +51,12 @@ export function* take<T>(arr: Iterable<T>, num = 1) {
   }
 }
 
+export function* repeat<T>(arr: Iterable<T>) {
+  while (true) {
+    yield* arr;
+  }
+}
+
 export function* slice<T>(arr: Iterable<T>, start = 0, end = Infinity) {
   let i = 0;
   for (let val of arr) {

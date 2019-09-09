@@ -3,7 +3,7 @@ import * as should from 'should';
 import { BiMap } from '../exports/bidirectional';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
-import { collect } from 'exports/iterable';
+import { collect } from 'iterable';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!

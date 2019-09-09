@@ -1,10 +1,9 @@
 import { Suite } from 'benchmark';
-import { pipe } from 'fp-ts/lib/pipeable';
 
-import { mapCollect } from '../exports/maps';
 import { collect, series, take, map } from '../iterable';
+import { pipe } from 'fp-ts/lib/pipeable';
+import { BiMap } from 'exports';
 
-const suite = new Suite;
 const mapFn = ((i: number) => [Math.round(Math.random() * 10), i] as [number, number]);
 
 const array = pipe(
@@ -14,17 +13,16 @@ const array = pipe(
   collect
 );
 
+const map1 = collect(array);
+const biMap = new BiMap(map1);
+
+const suite = new Suite;
 suite
-  .add('Collect map manual', () => {
-    const map = new Map();
-    array.forEach(entry => {
-      map.set(entry[0], entry[1]);
-    });
+  .add('New BiMap', () => {
+    new BiMap(biMap);
   })
-  .add('Collect map', () => {
-    mapCollect(
-      array
-    );
+  .add('New BiMap manual', () => {
+    new BiMap(map1);
   })
   .on('cycle', function(event: any) {
     console.log(String(event.target));

@@ -1,6 +1,13 @@
 export declare function map<T, V>(arr: Iterable<T>, fn: (t: T) => V): Generator<V, void, unknown>;
 export declare function forEach<T>(arr: Iterable<T>, fn: (t: T) => void): void;
 export declare function flatMap<T, V>(arr: Iterable<T>, fn: (t: T) => Iterable<V>): Generator<V, void, undefined>;
+/**
+ *
+ * I TOO AM A STEGOSAURUS
+ *
+ * @param arr
+ * @param fn
+ */
 export declare function filter<T>(arr: Iterable<T>, fn: (t: T) => boolean): Generator<T, void, unknown>;
 export declare function entries<V>(obj: {
     [key: string]: V;

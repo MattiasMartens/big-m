@@ -7,6 +7,7 @@ import {
 import { describeThis } from "./describe-this";
 import { defined, isDefined, Possible, tuple } from '../types/utils';
 import { reconcileDefault, reconcileAppend } from 'exports/maps';
+import { BiMap } from 'exports';
 
 let tick: number;
 
@@ -33,6 +34,20 @@ function afterMs<T> (fn: () => T, ms = 0): Promise<T> {
 }
 
 describeThis(eventualMap, underTest => {
+  describe("constructor", () => {
+    it("Returns a BiMap when initialized with one", async () => {
+      const eventual = underTest(
+        Stream.from([
+          valAfterMs(tuple(["A", 92]), 15)
+        ]),
+        { seed: new BiMap<string, number>() }
+      );
+
+      const result = (await eventual.finalMap).getKey(92);
+      should.equal(result, "A");
+    });
+  });
+
   describe("get", () => {
     it("Returns a promise that is fulfilled when the stream entry comes through", async () => {
       const eventual = underTest(

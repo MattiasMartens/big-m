@@ -2,7 +2,7 @@
   "name": "cartographer",
   "version": "1.0.0",
   "description": "Utilities for building and transforming maps using iterables and streams.",
-  "main": "dist/exports/index.ts",
+  "main": "dist/exports/index.js",
   "author": "Mattias Martens <mattiasofmartens@gmail.com>",
   "license": "MIT",
   "dependencies": {
@@ -11,7 +11,10 @@
     "@types/node": "^12.7.3",
     "benchmark": "^2.1.4",
     "fp-ts": "^2.0.5",
+    "jsdoc": "^3.6.3",
     "mocha": "^6.2.0",
+    "promise-fs": "^2.1.1",
+    "promisify": "^0.0.3",
     "should": "^13.2.3",
     "ts-node": "^8.3.0",
     "ts-stream": "^2.0.1",
@@ -20,7 +23,8 @@
   },
   "scripts": {
     "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts",
-    "benchmark": "node -r ts-node/register benchmarks/*.ts",
-    "compile": "cd exports; tsc; cd .."
+    "benchmark": "node -r ts-node/register -r tsconfig-paths/register benchmarks",
+    "compile": "rm -rf dist; cd exports; tsc; cd ..",
+    "docs": "rm -rf docs; ./node_modules/.bin/jsdoc dist/exports/* -c .jsdoc.config.json; mv out docs; open docs/index.html"
   }
 }

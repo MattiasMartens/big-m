@@ -1,10 +1,11 @@
 import { Suite } from 'benchmark';
 import { pipe } from 'fp-ts/lib/pipeable';
 
-import { mapCollect } from '../exports/maps';
+import { mapCollect, reconcileAppend } from '../exports/maps';
 import { collect, series, take, map } from '../iterable';
 
 const suite = new Suite;
+
 const mapFn = ((i: number) => [Math.round(Math.random() * 10), i] as [number, number]);
 
 const array = pipe(
@@ -15,15 +16,18 @@ const array = pipe(
 );
 
 suite
-  .add('Collect map manual', () => {
+  .add('Collect map reconciling manual', () => {
     const map = new Map();
     array.forEach(entry => {
-      map.set(entry[0], entry[1]);
+      map.has(entry[0])
+        ? (map.get(entry[0]) as number[]).push(entry[1])
+        : map.set(entry[0], [entry[1]]);
     });
   })
-  .add('Collect map', () => {
+  .add('Collect map reconcile', () => {
     mapCollect(
-      array
+      array,
+      reconcileAppend()
     );
   })
   .on('cycle', function(event: any) {
