@@ -1,8 +1,8 @@
 import { Suite } from 'benchmark';
-
-import { collect, series, take, map } from '../iterable';
-import { pipe } from 'fp-ts/lib/pipeable';
 import { BiMap } from 'exports';
+import { pipe } from 'fp-ts/lib/pipeable';
+
+import { collect, map, series, take } from '../iterable';
 
 const mapFn = ((i: number) => [Math.round(Math.random() * 10), i] as [number, number]);
 

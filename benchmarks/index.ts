@@ -1,7 +1,9 @@
-import * as fs from "fs";
-import {join} from "path";
-import {repeat, take, collect} from "../iterable";
-import { pipe } from "fp-ts/lib/pipeable";
+import { pipe } from 'fp-ts/lib/pipeable';
+import * as fs from 'fs';
+import { join } from 'path';
+
+import { collect, repeat, take } from '../iterable';
+
 
 function chars (chars: string, num = 1) {
   return pipe(
