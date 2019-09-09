@@ -4,12 +4,6 @@ import {map, filter, flatMap, forEach, entries} from "../iterable";
 
 export type MapStream<K, V> = Iterable<[K, V]>;
 
-export function mapStream<K, T>(
-  map: Map<K, T>
-) {
-  return map.entries();
-}
-
 export type Reconciler<K, T, V> = (
   colliding: Possible<V>,
   incoming: T,

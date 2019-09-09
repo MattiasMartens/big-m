@@ -31,7 +31,6 @@ import {
   invertBinMap,
   keysOf,
   makeEntries,
-  mapStream,
   mapToDictionary,
   mapValues,
   reverseMap,
@@ -768,10 +767,7 @@ describe('mapStream', () => {
   it ('Should transform a map into a stream of values as a thin wrapper over the native function', () => {
     const map1 = new Map([["a", 5], ["b", 6]]);
 
-    const ret = pipe(
-      mapStream(map1),
-      collect
-    );
+    const ret = collect(map1);
 
     ret.should.deepEqual(
       [
