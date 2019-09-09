@@ -3,6 +3,67 @@ import { Reconciler } from "./maps";
 import { defined, Possible } from "types/utils";
 import { BiMap } from "exports";
 
+
+/**
+ * Inserts the entries in the iterable into
+ * 
+ * @returns The updated Map. 
+ */
+export function streamCollectInto<K, T>(
+  iterable: ReadableStream<[K, T]>,
+  seed: Map<K, T>
+): Promise<Map<K, T>>
+export function streamCollectInto<K, T, V>(
+  iterable: ReadableStream<[K, T]>,
+  seed: Map<K, V>,
+  reconcileFn: Reconciler<K, T, V>
+): Promise<Map<K, V>>
+export async function streamCollectInto<K, T, V>(
+  iterable: ReadableStream<[K, T]>,
+  seed: Map<K, V>,
+  reconcileFn?: Reconciler<K, T, V>
+): Promise<Map<K, V>> {
+  if (reconcileFn) {
+    await iterable.forEach(
+      entry => {
+        const [key, val] = entry;
+        seed.set(key, reconcileFn(
+          seed.get(key),
+          val,
+          key
+        ));
+      }
+    );
+  } else {
+    await iterable.forEach(
+      entry => {
+        const [key, val] = entry;
+        seed.set(key, val as unknown as V);
+      }
+    );
+  }
+
+  return seed;
+}
+
+export function streamCollect<K, T>(
+  iterable: ReadableStream<[K, T]>
+): Promise<Map<K, T>>
+export function streamCollect<K, T, V>(
+  iterable: ReadableStream<[K, T]>,
+  reconcileFn: Reconciler<K, T, V>
+): Promise<Map<K, V>>
+export function streamCollect<K, T, V>(
+  iterable: ReadableStream<[K, T]>,
+  reconcileFn?: Reconciler<K, T, V>
+) {
+  return streamCollectInto(
+    iterable,
+    new Map<K, V>(),
+    reconcileFn as any
+  );
+}
+
 type Option<T> = {
   isSome: true,
   value: T

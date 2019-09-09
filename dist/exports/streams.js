@@ -1,6 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("types/utils");
+async function streamCollectInto(iterable, seed, reconcileFn) {
+    if (reconcileFn) {
+        await iterable.forEach(entry => {
+            const [key, val] = entry;
+            seed.set(key, reconcileFn(seed.get(key), val, key));
+        });
+    }
+    else {
+        await iterable.forEach(entry => {
+            const [key, val] = entry;
+            seed.set(key, val);
+        });
+    }
+    return seed;
+}
+exports.streamCollectInto = streamCollectInto;
+function streamCollect(iterable, reconcileFn) {
+    return streamCollectInto(iterable, new Map(), reconcileFn);
+}
+exports.streamCollect = streamCollect;
 const none = {
     isSome: false
 };

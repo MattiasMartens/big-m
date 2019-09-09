@@ -2,14 +2,44 @@ import {BiMap} from "./bidirectional";
 import {defined, Possible, tuple} from "../types/utils";
 import {map, filter, flatMap, forEach, entries} from "../iterable";
 
+/**
+ * Any iterable of entries, regardless of origin.
+ * Note that `Map<K, V>` is in this type.
+ */
 export type MapStream<K, V> = Iterable<[K, V]>;
 
+/**
+ * A function for dealing with collisions when an iterable has two entries of the same key to insert into a Map, or the Map already has a value at that key.
+ * 
+ * @param  {Possible<V>} colliding
+ * The value that was previously present at `key` in some Map, or `undefined` if there was no such value.
+ * @param {T} incoming
+ * A value from an iterator that is being pumped into the Map.
+ * @param {K} key
+ * The `key` at which the value is being inserted.
+ * @returns The updated value.
+ */
 export type Reconciler<K, T, V> = (
   colliding: Possible<V>,
   incoming: T,
   key: K
 ) => V;
 
+/**
+ * Inserts the entries in the iterable into the provided map.
+ * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ * 
+ * @param {Iterable} iterable The entries to add.
+ * @param {Map} seed The Map to add them to.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The updated Map. 
+ */
 export function mapCollectInto<K, T>(
   iterable: Iterable<[K, T]>,
   seed: Map<K, T>
@@ -43,6 +73,21 @@ export function mapCollectInto<K, T, V>(
   return seed;
 }
 
+/**
+ * Converts an Iterable of Map entries into a brand new map.
+ * When called on a map, the result will be a new Map with the same entries as the previous one.
+ * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ * 
+ * @param {Iterable} iterable The entries to add.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The newly created Map. 
+ */
 export function mapCollect<K, T>(
   iterable: Iterable<[K, T]>
 ): Map<K, T>
@@ -61,6 +106,22 @@ export function mapCollect<K, T, V>(
   );
 }
 
+/**
+ * Converts an Iterable of Map entries into a brand new BiMap.
+ * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ * 
+ * Note that BiMaps do not allow two values to share a key. The reconciler plays no role in this case.
+ * 
+ * @param {Iterable} iterable The entries to add.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The newly created BiMap. 
+ */
 export function biMapCollect<K, T>(
   iterable: Iterable<[K, T]>
 ): Map<K, T>
@@ -79,12 +140,21 @@ export function biMapCollect<K, T, V>(
   );
 }
 
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
+ * @returns An iterable representing the entries of a Map from value to key.
+ */
 export function reverseMap<K, T>(
   iterable: Iterable<[K, T]>
 ) {
   return map(iterable, ([k, t]) => [t, k] as [T, K])
 }
 
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
+ * @param {Function} fn A function mapping the values of the Map to a transformed value.
+ * @returns An iterable representing the entries of a map from key to the transformed value.
+ */
 export function mapValues<K, T, V>(
   iterable: Iterable<[K, T]>,
   fn: (value: T, key: K) => V
@@ -92,29 +162,53 @@ export function mapValues<K, T, V>(
   return map<[K, T], [K, V]>(iterable, ([key, val]) => [key, fn(val, key)]);
 }
 
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
+ * @returns An iterable representing the keys of the map.
+ */
 export function keysOf<K, T>(
   iterable: Iterable<[K, T]>
 ) {
   return map(iterable, arr => arr[0]);
 }
 
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
+ * @returns An iterable representing the values of the map.
+ */
 export function valuesOf<K, T>(
   iterable: Iterable<[K, T]>
 ) {
   return map(iterable, arr => arr[1]);
 }
 
+/**
+ * @param {Iterable} iterable An iterable representing the keys of a Map.
+ * @param {T} of The fixed value to set all keys to.
+ * @returns An iterable representing the entries of a Map from the keys each to the same fixed value.
+ */
 export function uniformMap<K, T>(keys: Iterable<K>, of: T) {
   return map(keys, key => [key, of] as [K, T]);
 }
 
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map.
+ * @param {Function} filterFn A function that returns true if the entry is to be included, false otherwise.
+ * @returns An iterable representing the entries of a Map without all those entries for which `filterFn` returned `false`.
+ */
 export function selectMap<K, T>(
   iterable: Iterable<[K, T]>,
   filterFn: (value: T, key: K) => boolean
 ) {
   return filter(iterable, ([key, val]) => filterFn(val, key));
 }
-
+/**
+ * 
+ * @param  {Map} map The map on which to perform the lookup.
+ * @param  {T} key The key to look up.
+ * @param  {V} substitute The value to return if the key is not present.
+ * @returns The value at the key in the map, or the substitute if that key is not present.
+ */
 export function getOrVal<T, V>(
   map: Map<T, V>,
   key: T,
@@ -138,6 +232,14 @@ export function foldingGet<T, V, W>(
   ifPresent: (val: V, key: T) => W,
   ifAbsent: (key: T) => W
 ): W
+/** 
+ * 
+ * @param  {Map} map The map on which to perform the lookup.
+ * @param  {T} key The key to look up.
+ * @param  {Function} ifPresent The function to call on the value and `key` if the value is present.
+ * @param  {Function} ifAbsent? The function to call on `key` if the value is absent, by default a noop returning `undefined`.
+ * @returns the result of calling `ifPresent` on a value if that value is at `key` in `map`, the result of calling `ifAbsent` otherwise.
+ */
 export function foldingGet<T, V, W>(
   map: Map<T, V>,
   key: T,
@@ -154,10 +256,17 @@ export function foldingGet<T, V, W>(
   }
 }
 
-export function getOrElse<T, V>(
+/** 
+ * 
+ * @param  {Map} map The map on which to perform the lookup.
+ * @param  {T} key The key to look up.
+ * @param  {Function} substitute The function to call on `key` if the value is not present.
+ * @returns the value at `key` in `map` if that value exists, the result of calling `substitute` otherwise.
+ */
+export function getOrElse<T, V, W>(
   map: Map<T, V>,
   key: T,
-  substitute: (key: T) => V
+  substitute: (key: T) => W
 ) {
   if (map.has(key)) {
     return map.get(key) as V;
@@ -166,6 +275,14 @@ export function getOrElse<T, V>(
   }
 }
 
+/** 
+ * 
+ * @param  {Map} map The map on which to perform the lookup.
+ * @param  {T} key The key to look up.
+ * @param  {string | Function} error? The error to generate if the key is not present. Can be a function taking the key as a parameter, or an explicit string.
+ * @returns the value at `key` in `map` if that value exists, the result of calling `substitute` otherwise.
+ * @throws The specified error if an error string or function is provided, a default error message if not.
+ */
 export function getOrFail<T, V>(
   map: Map<T, V>,
   key: T,
