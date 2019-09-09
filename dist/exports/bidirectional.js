@@ -52,32 +52,31 @@ function getReversedBiMap(biMap) {
 class BiMap extends Map {
     /**
      *
+     * Initialize a bidirectional map.
+     *
      * @example
      * const biMap1 = new BiMap(existingMap);
-     * const biMap2 = new BiMap([["a", 1]]);
-     * const biMap3 = new BiMap(Object.entries({"a": 1}))
+     * const biMap2 = new BiMap(existingBiMap);
+     * const biMap3 = new BiMap([["a", 1]]);
+     * const biMap4 = new BiMap(Object.entries({"a": 1}));
      *
      * @typeparam K Key type
      * @typeparam T Value type
-     * @param forward? {Iterable}
+     * @param entries? {Iterable}
      * An iterable yielding all key-value tuples that will be fed into the Map.
      * Without this, the Map is initialized to empty.
-     * @param reverse? {Iterable}
-     * An iterable yielding all value-key tuples that will be fed into the reversed Map.
-     * If this is provided, it must be the exact reverse of {@link BiMap.constructor.forward}.
-     * If it is not provided, BiMap generates it manually.
      */
-    constructor(forward, reverse) {
+    constructor(entries) {
         super();
-        if (forward) {
-            for (let entry of forward) {
+        if (entries) {
+            for (let entry of entries) {
                 const [key, value] = entry;
                 super.set(key, value);
             }
         }
-        this._reverse = reverse
-            ? new Map(reverse)
-            : maps_1.mapCollect(maps_1.reverseMap(forward || []));
+        this._reverse = entries instanceof BiMap
+            ? new Map(entries._reverse)
+            : maps_1.mapCollect(maps_1.reverseMap(entries || []));
     }
     /**
      * Access the reversed map.
@@ -91,6 +90,16 @@ class BiMap extends Map {
     get reversed() {
         return this._reversedProxy || (this._reversedProxy = getReversedBiMap(this));
     }
+    /**
+     * Sets the value for the key in the BiMap object.
+     * Returns the BiMap object.
+     *
+     * @remarks
+     * Because values and keys have a one-to-one pairing in a bidirectional map, any key that was previously associated with that value will be overwritten as well.
+     *
+     * @param {K} key The key to set.
+     * @param {T} val The value to set at that key.
+     */
     set(key, val) {
         if (this._reverse.has(val)) {
             this.delete(this._reverse.get(val));
@@ -99,10 +108,21 @@ class BiMap extends Map {
         this._reverse.set(val, key);
         return this;
     }
+    /**
+     * Removes all key/value pairs from the BiMap object.
+     */
     clear() {
         super.clear();
         this._reverse.clear();
     }
+    /**
+     *
+     * Deletes the key-value pair associated with `key`.
+     * Does nothing if that entry is not present.
+     *
+     * @param {K} key The key to delete.
+     * @returns `true` if an element in the Map object existed and has been removed, `false` if the element does not exist.
+     */
     delete(key) {
         if (super.has(key)) {
             const valueAt = super.get(key);
@@ -110,12 +130,31 @@ class BiMap extends Map {
         }
         return super.delete(key);
     }
+    /**
+     *
+     * Returns the key associated to `value`, or `undefined` if there is none.
+     *
+     * @param {T} val The value to look up.
+     */
     getKey(val) {
         return this._reverse.get(val);
     }
+    /**
+     *
+     * Deletes the key-value pair associated with `val`.
+     * Does nothing if that entry is not present.
+     *
+     * @param {T} val The value to delete.
+     * @returns `true` if an element in the Map object existed and has been removed, `false` if the element does not exist.
+     */
     deleteVal(val) {
         return maps_1.foldingGet(this._reverse, val, key => this.delete(key), () => false);
     }
+    /**
+     *
+     * @param val The value to look up.
+     * @returns A boolean asserting whether a key has been associated to `val` in the Map object or not.
+     */
     hasVal(val) {
         return this._reverse.has(val);
     }

@@ -100,6 +100,16 @@ export class BiMap<K, T> extends Map<K, T> {
       : mapCollect(reverseMap(entries || []));
   }
 
+  /**
+   * Sets the value for the key in the BiMap object.
+   * Returns the BiMap object.
+   * 
+   * @remarks
+   * Because values and keys have a one-to-one pairing in a bidirectional map, any key that was previously associated with that value will be overwritten as well.
+   * 
+   * @param {K} key The key to set.
+   * @param {T} val The value to set at that key.
+   */
   set(key: K, val: T) {
     if (this._reverse.has(val)) {
       this.delete(this._reverse.get(val) as K);
@@ -111,11 +121,22 @@ export class BiMap<K, T> extends Map<K, T> {
     return this;
   }
 
+  /**
+   * Removes all key/value pairs from the BiMap object.
+   */
   clear() {
     super.clear();
     this._reverse.clear();
   }
 
+  /**
+   * 
+   * Deletes the key-value pair associated with `key`.
+   * Does nothing if that entry is not present.
+   * 
+   * @param {K} key The key to delete.
+   * @returns `true` if an element in the Map object existed and has been removed, `false` if the element does not exist.
+   */
   delete(key: K) {
     if (super.has(key)) {
       const valueAt = super.get(key) as T;
@@ -124,11 +145,25 @@ export class BiMap<K, T> extends Map<K, T> {
 
     return super.delete(key);
   }
-
+  
+  /**
+   * 
+   * Returns the key associated to `value`, or `undefined` if there is none.
+   * 
+   * @param {T} val The value to look up.
+   */
   getKey(val: T) {
     return this._reverse.get(val);
   }
 
+  /**
+   * 
+   * Deletes the key-value pair associated with `val`.
+   * Does nothing if that entry is not present.
+   * 
+   * @param {T} val The value to delete.
+   * @returns `true` if an element in the Map object existed and has been removed, `false` if the element does not exist.
+   */
   deleteVal(val: T) {
     return foldingGet(
       this._reverse,
@@ -138,6 +173,11 @@ export class BiMap<K, T> extends Map<K, T> {
     );
   }
 
+  /**
+   * 
+   * @param val The value to look up.
+   * @returns A boolean asserting whether a key has been associated to `val` in the Map object or not.
+   */
   hasVal(val: T) {
     return this._reverse.has(val);
   }

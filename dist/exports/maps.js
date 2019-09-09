@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const bidirectional_1 = require("./bidirectional");
 const utils_1 = require("../types/utils");
-const iterable_1 = require("./iterable");
+const iterable_1 = require("../iterable");
 function mapStream(map) {
     return map.entries();
 }

@@ -19,13 +19,6 @@ function* flatMap(arr, fn) {
     }
 }
 exports.flatMap = flatMap;
-/**
- *
- * I TOO AM A STEGOSAURUS
- *
- * @param arr
- * @param fn
- */
 function* filter(arr, fn) {
     for (let val of arr) {
         if (fn(val)) {
@@ -60,6 +53,12 @@ function* take(arr, num = 1) {
     }
 }
 exports.take = take;
+function* repeat(arr) {
+    while (true) {
+        yield* arr;
+    }
+}
+exports.repeat = repeat;
 function* slice(arr, start = 0, end = Infinity) {
     let i = 0;
     for (let val of arr) {
