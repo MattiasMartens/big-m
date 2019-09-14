@@ -1,6 +1,6 @@
 import {BiMap} from "./bidirectional";
 import {defined, Possible, tuple} from "../types/utils";
-import {map, filter, flatMap, forEach, entries} from "../iterable";
+import {map, filter, flatMap, forEach, entries, collect, collectInto} from "../iterable";
 
 /**
  * Any iterable of entries, regardless of origin.
@@ -416,16 +416,16 @@ export function* deepMapStream<K, V>(deepMap: DeepMap<K, V>): Iterable<[K[], V]>
  * @param {Reconciler} reconcileFn? The function that transforms entry values using the colliding value at that key-list, if any.
  * @returns The seed, updated with the new deep entries.
  */
-export function deepCollectInto<T, K>(
+export function deepMapCollectInto<T, K>(
   arr: Iterable<[K[], T]>,
   seed: DeepMap<K, T>,
 ): DeepMap<K, T>
-export function deepCollectInto<T, K, V>(
+export function deepMapCollectInto<T, K, V>(
   arr: Iterable<[K[], T]>,
   seed: DeepMap<K, V>,
   reconcileFn: Reconciler<K[], T, V>
 ): DeepMap<K, V>
-export function deepCollectInto<T, K, V>(
+export function deepMapCollectInto<T, K, V>(
   arr: MapStream<K[], T>,
   seed: DeepMap<K, V>,
   reconcileFn?: Reconciler<K[], T, V>,
@@ -463,24 +463,24 @@ export function deepCollectInto<T, K, V>(
  * 
  * Pump a DeepMap entry Iterable into a brand new DeepMap.
  * The entries will create nested Maps along their paths until they reach the end of the key-list, at which point the value will be deposited in that Map.
- * As with #{@link deepCollect}, collisions can be resolved with a reconciler.
+ * As with #{@link deepCollectInto}, collisions can be resolved with a reconciler.
  * 
   * @param {Iterable} arr The DeepMap entries.
   * @param {Reconciler} reconcileFn? The function that transforms entry values using the colliding value at that key-list, if any.
   * @returns A new DeepMap with the entries.
   */
-export function deepCollect<T, K>(
+export function deepMapCollect<T, K>(
   arr: Iterable<[K[], T]>,
 ): DeepMap<K, T>
-export function deepCollect<T, K, V>(
+export function deepMapCollect<T, K, V>(
   arr: Iterable<[K[], T]>,
   reconcileFn: Reconciler<K[], T, V>
 ): DeepMap<K, V>
-export function deepCollect<T, K, V>(
+export function deepMapCollect<T, K, V>(
   arr: Iterable<[K[], T]>,
   reconcileFn?: Reconciler<K[], T, V>
 ): DeepMap<K, V> {
-  return deepCollectInto(
+  return deepMapCollectInto(
     arr,
     new Map(),
     reconcileFn as any
@@ -761,7 +761,11 @@ export function deepGetOrFail<K, T>(map: DeepMap<K, T>, lookup: K[], error?: str
   });
 }
 
-export function deepHas<K, T>(map: DeepMap<K, T>, lookup: K[], error?: string | ((follow: K[], matched: K[]) => string)) {
+/**
+ * @param  {DeepMap} map
+ * @param  {Array} lookup The series of keys to use to dig into the nested Maps.
+ */
+export function deepHas<K, T>(map: DeepMap<K, T>, lookup: K[]) {
   const follow = lookup.slice();
   const matched: K[] = [];
   let innerMap = map;
@@ -790,40 +794,170 @@ export function deepHas<K, T>(map: DeepMap<K, T>, lookup: K[], error?: string | 
   return false;
 }
 
-function deepMapToDictionaryRecurse<K, T, Y>(map: Iterable<[K, T]>, depth: number, stringifier: (val: K, depth: number) => string) {
-  const ret: { [key: string]: Y } = {};
-
-  for (let entry of map) {
-    const [key, val] = entry;
-    
-    const outVal = val instanceof Map ? deepMapToDictionaryRecurse(val, depth + 1, stringifier)
-      : val;
-    ret[stringifier(key, depth)] = outVal as any as Y;
-  }
-
-  return ret;
-}
-
-export function deepMapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (val: K, depth: number) => string = String) {
-  return deepMapToDictionaryRecurse(
-    map,
-    0,
-    stringifier
-  );
-}
-
-export function deepDictionaryToMap<Y>(dictionary: {[key: string]: Object}): DeepMapStream<string, Y> {
+/**
+ *  Convert a deeply nested object into a deeply nested Map.
+ * 
+ * @param {object} dictionary The deeply nested object to transform.
+ * @param {number} maxDepth The maximum number of levels to dig into the dictionary.
+ * @returns {Iterable} A stream of entries representing a deeply nested Map.
+ * This can be turned into the real Map with {@link deepMapCollect}.
+ */
+export function deepDictionaryToMap<Y>(dictionary: {[key: string]: Y}, maxDepth: number = Infinity): DeepMapStream<string, Y> {
   return flatMap(
     entries(dictionary),
     ([key, object]) => {
-      if (object === null || typeof object !== "object" || Array.isArray(object) || object instanceof Date) {
+      if (maxDepth === 1 || object === null || typeof object !== "object" || Array.isArray(object) || object instanceof Date) {
         return [tuple([[key], object as any as Y])];
       } else {
         return map(
-          deepDictionaryToMap<Y>(object as {[key: string]: Object}),
+          deepDictionaryToMap<Y>(object as any as {[key: string]: Y}, maxDepth - 1),
           ([keys, object]) => tuple([[key, ...keys], object as any as Y]),
         );
       }
     }
   );
+}
+
+/**
+ * 
+ * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap], [valueInSecondMap]]`.
+ * Any key that is not contained in both input Maps will not be represented in the output.
+ * To include them, use {@link zipMapsUnion}.
+ * 
+ * @remarks
+ * Internally, `zipMapsIntersection` turns `map2` into a Map if it isn't one already.
+ * This is because it needs random access into `map2` while looping over `map1` to get the values to zip.
+ * 
+ * @param map1 
+ * @param map2
+ * @returns {Iterable} An iterable of the form `Map<commonKeyType, [valueInFirstMap, valueInSecondMap]>` containing all keys that `map1` and `map2` have in common.
+ */
+export function* zipMapsIntersection<K, T1, T2>(map1: Iterable<[K, T1]>, map2: Iterable<[K, T2]>): Iterable<[K, [T1, T2]]> {
+  const map2Collect: Map<K, T2> = map2 instanceof Map ? map2 : mapCollect(map2);
+  
+  for (let [key, value1] of map1) {
+    if (map2Collect.has(key)) {
+      yield [key, [value1, getOrFail(map2Collect, key)]];
+    }
+  }
+}
+
+/**
+ * 
+ * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap | undefined], [valueInSecondMap | undefined]]`.
+ * If a key is in one Map but not the other, the output tuple will contain `undefined` in place of the missing value.
+ * To exclude them instead, use {@link zipMapsUnion}.
+ * 
+ * @remarks
+ * Internally, `zipMapsUnion` must collect all non-Map Iterables into Maps so it can look up what keys exist in `map2` during the initial pass over `map1`, and then to determine which keys have already been yielded during the second pass over `map2`.
+ * This probably makes it slower than {@link zipMapsIntersection} in this case.
+ * 
+ * @param map1 
+ * @param map2
+ * @returns {Iterable} An iterable of the form `Map<commonKeyType, [valueInFirstMap | undefined, valueInSecondMap | undefined]>` containing all keys that exist in either `map1` or `map2`.
+ */
+export function* zipMapsUnion<K, T1, T2>(map1: Iterable<[K, T1]>, map2: Iterable<[K, T2]>): Iterable<[K, [Possible<T1>, Possible<T2>]]> {
+  const map1Collect: Map<K, T1> = map1 instanceof Map ? map1 : mapCollect(map1);
+  const map2Collect: Map<K, T2> = map2 instanceof Map ? map2 : mapCollect(map2);
+
+  for (let [key, value1] of map1Collect) {
+    yield [key, [value1, map2Collect.get(key)]];
+  }
+
+  for (let [key, value2] of map2Collect) {
+    if (!map1Collect.has(key)) {
+      yield [key, [undefined, value2]];
+    } 
+  }
+}
+
+/**
+ * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
+ * If the new key collides too, keep calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
+ * 
+ * @param  {Iterable} mapStream An entry stream with duplicate keys.
+ * @param  {BumperFn} bumper A function to be called each time a key would overwrite a key that has already been set in `seed`.
+ * @param  {Map} seed The Map to insert values into.
+ * @returns {{Map}} The finalized Map. 
+ */
+export function bumpDuplicateKeys<K, T>(
+  mapStream: Iterable<[K, T]>,
+  bumper: BumperFn<K, T>
+): Map<K, T> {
+  return collectIntoBumpingDuplicateKeys(
+    mapStream,
+    bumper,
+    new Map()
+  );
+}
+/**
+ * 
+ * Function to resolve bumping keys.
+ * {@link bumpDuplicateKeys} and {@link collectIntoBumpingDuplicateKeys} take one of these as an argument and call it every time they fail to insert an entry into a Map because of a duplicate key.
+ * If the BumperFn returns a key, the caller will use that as the new insertion key.
+ * If the BumperFn returns `undefined`, the caller will treat this as a failure and skip it.
+ * 
+ * @remarks
+ * The `priorBumps` parameter can be used to fail key generation if too many collisions occur, either by returning `undefined` or by throwing an appropriate error (see {@link throwOnBump}).
+ * For complex functions, this is the only guaranteed way to avoid entering an infinite loop.
+ * 
+ * @param  {K} collidingKey The key that would have been set in a Map if it did not already exist in the Map.
+ * @param  {number} priorBumps The number of times the caller has already attempted to insert the key.
+ * @param  {T} collidingValue The value that is currently set at the key in a Map.
+ * @param  {T} incomingValue The value that would have been set at the key in a Map.
+ * @returns {K | undefined} The key if a key was successfully generated, `undefined` otherwise.
+ */
+export type BumperFn<K, T> = (collidingKey: K, priorBumps: number, collidingValue: T, incomingValue: T) => Possible<K>;
+
+/**
+ * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
+ * If the new key collides too, keep calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
+ * 
+ * @param  {Iterable} mapStream An entry stream with duplicate keys.
+ * @param  {BumperFn} bumper A function to be called each time a key would overwrite a key that has already been set in `seed`.
+ * @param  {Map} seed The Map to insert values into.
+ * @returns {{Map}} The finalized Map. 
+ */
+export function collectIntoBumpingDuplicateKeys<K, T>(
+  mapStream: Iterable<[K, T]>,
+  bumper: BumperFn<K, T>,
+  seed: Map<K, T>
+): Map<K, T> {
+  for (let [key, value] of mapStream) {
+    if (seed.has(key)) {
+      let newKey = key;
+      let attempts = 0;
+
+      do {
+        attempts++;
+        const innerNewKey = bumper(newKey, attempts, getOrFail(seed, key), value);
+
+        if (innerNewKey === undefined) {
+          // Failed to set
+          break;
+        } else if (!seed.has(newKey)) {
+          seed.set(innerNewKey, value);
+          break;
+        } else {
+          newKey = innerNewKey;
+        }
+      } while (!!newKey);
+    } else {
+      seed.set(key, value);
+    }
+  }
+
+  return seed;
+}
+
+/**
+ * 
+ * Function that a caller of bumpDuplicateKeys() can use to produce a handy generic error message on failure to resolve.
+ * 
+ * @param collidingKey The key that could not be resolved.
+ * @param priorBumps The number of attempts made before the bumper gave up.
+ */
+export function throwOnBump<K, T>(collidingKey: K, priorBumps: number): never {
+  const pluralize = (n: number) => n === 1 ? "try" : "tries";
+  throw new Error(`Failed to resolve key "${collidingKey}" to a unique value after ${priorBumps} ${pluralize(priorBumps)}`);
 }

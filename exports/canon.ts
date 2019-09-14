@@ -7,34 +7,27 @@ import { Possible } from "types/utils";
  * A fallible canonizer.
  * Primitives are mapped to themselves.
  * Arrays and objects are mapped to a stringification of them that goes only one level deep.
- * Maps are mapped to a series of key-value pairs in insertion order and remain distinguishable from their equivalent dictionaries.
- * Sets are mapped to their entries and remain distinguishable from arrays.
+ * Dates are mapped to their millisecond value.
  * 
  * @param  {K} lookup The key to canonize.
  */
 export function naiveCanonizer<K>(lookup: K) {
   if (typeof lookup === 'object' && lookup !== null) {
-    const [ first, last ] = Array.isArray(lookup) ? ["[", "]"] : ["{", "}"];
-    return first +
-      (
-        (Symbol.iterator in lookup)
-          ? pipe(
-            lookup as any as Iterable<any>,
-            x => map(x, x => Array.isArray(x)
-              ? x.join("->>")
-              : String(x)
-            ),
-            collect,
-            x => x.join()
-          )
-          : pipe(
+    if (Array.isArray(lookup)) {
+      return "[" + lookup.join() + "]";
+    } else if (lookup instanceof Date) {
+      return lookup.valueOf();
+    } else {
+      // Non-recursive stringify
+      return "{"
+        + pipe(
             entries(lookup as any) as any,
             (x: Iterable<any>) => map(x, entry => entry.join(":")),
             collect,
             x => x.join()
           )
-      )
-      + last;
+        + "}";
+    }
   } else {
     return lookup;
   }

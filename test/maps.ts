@@ -10,8 +10,8 @@ import {
   biMapCollect,
   mapCollectInto,
   reconcileCount,
-  deepCollect,
-  deepCollectInto,
+  deepMapCollect,
+  deepMapCollectInto,
   deepDictionaryToMap,
   deepFoldingGet,
   deepGet,
@@ -21,7 +21,6 @@ import {
   deepHas,
   DeepMap,
   deepMapStream,
-  deepMapToDictionary,
   flatMakeEntries,
   foldingGet,
   reconcileFold,
@@ -433,7 +432,7 @@ describe('deepMapToDictionary', () => {
 
 describe('deepCollect', () => {
   it('Should turn an array of entries into a deeply nested map', function() {
-    const ret = deepCollect([[["a", "c"], 1], [["b"], 2]]);
+    const ret = deepMapCollect([[["a", "c"], 1], [["b"], 2]]);
 
     deepMapToDictionary(ret).should.deepEqual({
       a: {
@@ -444,14 +443,14 @@ describe('deepCollect', () => {
   });
 
   it('Should turn an iterator into a map', function() {
-    const ret = deepCollect(([[["a"], 7], [["b"], 8]] as [string[], number][])[Symbol.iterator]());
+    const ret = deepMapCollect(([[["a"], 7], [["b"], 8]] as [string[], number][])[Symbol.iterator]());
 
     defined(ret.get("a")).should.equal(7);
     defined(ret.get("b")).should.equal(8);
   });
 
   it('Should turn an array into a map and by default on key collision overwrite earlier entries', function() {
-    const ret = deepCollect([[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]]);
+    const ret = deepMapCollect([[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]]);
 
     deepMapToDictionary(ret).should.deepEqual({
       x: {
@@ -462,7 +461,7 @@ describe('deepCollect', () => {
   });
 
   it('Should turn an array into a map and given a reconciler combine entries on key collision', function() {
-    const ret = deepCollect(
+    const ret = deepMapCollect(
       [[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]],
       reconcileAdd()
     );
@@ -479,7 +478,7 @@ describe('deepCollect', () => {
 describe('deepCollectInto', () => {
   it('Should add an array of entries to a deeply nested map', function() {
     const map1 = new Map();
-    const ret = deepCollectInto([[["a", "c"], 1], [["b"], 2]], map1);
+    const ret = deepMapCollectInto([[["a", "c"], 1], [["b"], 2]], map1);
 
     ret.should.equal(map1);
     deepMapToDictionary(ret).should.deepEqual({
@@ -492,7 +491,7 @@ describe('deepCollectInto', () => {
 
   it('Should turn an array into a map and given a reconciler combine entries on key collision', function() {
     const map1 = new Map();
-    const ret = deepCollectInto(
+    const ret = deepMapCollectInto(
       [[["x", "a"], 7], [["b"], 8], [["x", "a"], 65]],
       map1,
       reconcileAdd()

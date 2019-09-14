@@ -5,26 +5,26 @@ import { BiMap } from "exports";
 
 
 /**
- * Inserts the entries in the iterable into
+ * Inserts the entries of a ReadableStream into `seed`, or generates a new map from the ReadableStream if `seed` is not provided.
  * 
- * @returns The updated Map. 
+ * @returns A promise of the updated or generated map, to be returned when the ReadableStream closes.
  */
 export function streamCollectInto<K, T>(
-  iterable: ReadableStream<[K, T]>,
+  stream: ReadableStream<[K, T]>,
   seed: Map<K, T>
 ): Promise<Map<K, T>>
 export function streamCollectInto<K, T, V>(
-  iterable: ReadableStream<[K, T]>,
+  stream: ReadableStream<[K, T]>,
   seed: Map<K, V>,
   reconcileFn: Reconciler<K, T, V>
 ): Promise<Map<K, V>>
 export async function streamCollectInto<K, T, V>(
-  iterable: ReadableStream<[K, T]>,
+  stream: ReadableStream<[K, T]>,
   seed: Map<K, V>,
   reconcileFn?: Reconciler<K, T, V>
 ): Promise<Map<K, V>> {
   if (reconcileFn) {
-    await iterable.forEach(
+    await stream.forEach(
       entry => {
         const [key, val] = entry;
         seed.set(key, reconcileFn(
@@ -35,7 +35,7 @@ export async function streamCollectInto<K, T, V>(
       }
     );
   } else {
-    await iterable.forEach(
+    await stream.forEach(
       entry => {
         const [key, val] = entry;
         seed.set(key, val as unknown as V);
