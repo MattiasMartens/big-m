@@ -13,19 +13,24 @@ const pipeable_1 = require("fp-ts/lib/pipeable");
  * @param {number} maxDepth? The maximum number of levels to descend into nested objects and arrays when stringifying.
  * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
  */
-function naiveCanonize(lookup, maxDepth = 1) {
+function naiveCanonize(lookup, maxDepth = 2) {
     if (typeof lookup === 'object' && lookup !== null) {
-        if (Array.isArray(lookup)) {
-            return "Array: [" + lookup.map(l => maxDepth === 0 ? String(l) : naiveCanonize(l, maxDepth - 1)).join() + "]";
-        }
-        else if (lookup instanceof Date) {
-            return "Date: " + lookup.valueOf();
+        if (maxDepth === 0) {
+            return String(lookup);
         }
         else {
-            // Non-recursive stringify
-            return "Object: {"
-                + pipeable_1.pipe(iterable_1.entries(lookup), (x) => iterable_1.map(x, ([key, val]) => key + (maxDepth === 0 ? String(val) : naiveCanonize(val, maxDepth - 1))), iterable_1.collect, x => x.join())
-                + "}";
+            if (Array.isArray(lookup)) {
+                return "[" + lookup.map(l => naiveCanonize(l, maxDepth - 1)).join(", ") + "]";
+            }
+            else if (lookup instanceof Date) {
+                return "Date: " + lookup.valueOf();
+            }
+            else {
+                // Non-recursive stringify
+                return "{"
+                    + pipeable_1.pipe(iterable_1.entries(lookup), (x) => iterable_1.map(x, ([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1)), iterable_1.collect, x => x.join(", "))
+                    + "}";
+            }
         }
     }
     else if (typeof lookup === 'string') {
@@ -156,6 +161,12 @@ class CanonMap extends Map {
     }
 }
 exports.CanonMap = CanonMap;
+/**
+ * Create a CanonMap that canonizes using `JSON.stringify`.
+ *
+ * @param entries? The entries with which to initialize the map.
+ * By default, creates an empty map.
+ */
 function JsonCanonMap(entries) {
     return new CanonMap(entries, jsonCanonize);
 }

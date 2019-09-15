@@ -41,7 +41,7 @@ export declare class BiMap<K, T> extends Map<K, T> {
      */
     constructor(entries?: Iterable<[K, T]>);
     /**
-     * Sets the value for the key in the BiMap object.
+     * Set the value for the key in the BiMap object.
      * Returns the BiMap object.
      *
      * @remarks
@@ -57,7 +57,7 @@ export declare class BiMap<K, T> extends Map<K, T> {
     clear(): void;
     /**
      *
-     * Deletes the key-value pair associated with `key`.
+     * Delete the key-value pair associated with `key`.
      * Does nothing if that entry is not present.
      *
      * @param {K} key The key to delete.
@@ -66,15 +66,15 @@ export declare class BiMap<K, T> extends Map<K, T> {
     delete(key: K): boolean;
     /**
      *
-     * Returns the key associated to `value`, or `undefined` if there is none.
+     * Return the key associated to `value`, or `undefined` if there is none.
      *
      * @param {T} val The value to look up.
      */
     getKey(val: T): K | undefined;
     /**
      *
-     * Deletes the key-value pair associated with `val`.
-     * Does nothing if that entry is not present.
+     * Delete the key-value pair associated with `val`.
+     * Do nothing if that entry is not present.
      *
      * @param {T} val The value to delete.
      * @returns `true` if an element in the Map object existed and has been removed, `false` if the element does not exist.

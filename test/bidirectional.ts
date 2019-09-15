@@ -22,6 +22,15 @@ describeThis(BiMap, subject => {
       ["b", 2],
       ["c", 3]
     ]);
+    instance.clear();
+    collect(instance.entries()).should.deepEqual([]);
+  });
+
+  it ("Should be instantiable from another BiMap", () => {
+    const instance = new subject([["a", 1], ["b", 2]]);
+    const newInstance = new subject(instance);
+    instance.should.not.equal(newInstance);
+    collect(newInstance).should.deepEqual(collect(instance));
   });
 
   describe("reversed", () => {
@@ -38,6 +47,11 @@ describeThis(BiMap, subject => {
         [undefined, "?"],
         [3, "c"]
       ]);
+      instance.reversed.set(1, "xx");
+      defined(instance.reversed.get(1)).should.equal("xx")
+      defined(instance.get("xx")).should.equal(1)
+      instance.reversed.clear();
+      collect(instance.entries()).should.deepEqual(collect(instance.reversed.entries()));
     });
 
     it ("On collision of values, should retain whichever entry's value was specified last", () => {

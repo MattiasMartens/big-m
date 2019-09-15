@@ -296,7 +296,7 @@ export function getOrFail<T, V>(
         typeof error === "function"
           ? error(key)
           : typeof error === "undefined"
-            ? `Map has no entry ${key}`
+            ? `Map has no entry "${key}"`
             : error
       );
     }
@@ -617,11 +617,11 @@ export function* zipMapsUnion<K, T1, T2>(map1: Iterable<[K, T1]>, map2: Iterable
  * @param  {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map. 
  */
-export function bumpDuplicateKeys<K, T>(
+export function mapCollectBumping<K, T>(
   mapEnumeration: Iterable<[K, T]>,
   bumper: BumperFn<K, T>
 ): Map<K, T> {
-  return collectIntoBumpingDuplicateKeys(
+  return mapCollectIntoBumping(
     mapEnumeration,
     bumper,
     new Map()
@@ -641,11 +641,12 @@ export function bumpDuplicateKeys<K, T>(
  * 
  * @param  {K} collidingKey The key that would have been set in a Map if it did not already exist in the Map.
  * @param  {number} priorBumps The number of times the caller has already attempted to insert the key.
+ * @param  {K} originalKey The key that was initially attempted to be set when the resolution process began.
  * @param  {T} collidingValue The value that is currently set at the key in a Map.
  * @param  {T} incomingValue The value that would have been set at the key in a Map.
  * @returns {K | undefined} The key if a key was successfully generated, `undefined` otherwise.
  */
-export type BumperFn<K, T> = (collidingKey: K, priorBumps: number, collidingValue: T, incomingValue: T) => Possible<K>;
+export type BumperFn<K, T> = (collidingKey: K, priorBumps: number, originalKey: K, collidingValue: T, incomingValue: T) => Possible<K>;
 
 /**
  * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
@@ -656,7 +657,7 @@ export type BumperFn<K, T> = (collidingKey: K, priorBumps: number, collidingValu
  * @param  {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map. 
  */
-export function collectIntoBumpingDuplicateKeys<K, T>(
+export function mapCollectIntoBumping<K, T>(
   mapEnumeration: Iterable<[K, T]>,
   bumper: BumperFn<K, T>,
   seed: Map<K, T>
@@ -666,20 +667,19 @@ export function collectIntoBumpingDuplicateKeys<K, T>(
       let newKey = key;
       let attempts = 0;
 
-      do {
-        attempts++;
-        const innerNewKey = bumper(newKey, attempts, getOrFail(seed, key), value);
+      while (true) {
+        const innerNewKey = bumper(newKey, attempts++, key, getOrFail(seed, key), value);
 
         if (innerNewKey === undefined) {
           // Failed to set
           break;
-        } else if (!seed.has(newKey)) {
+        } else if (!seed.has(innerNewKey)) {
           seed.set(innerNewKey, value);
           break;
         } else {
           newKey = innerNewKey;
         }
-      } while (!!newKey);
+      }
     } else {
       seed.set(key, value);
     }

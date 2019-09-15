@@ -211,7 +211,7 @@ export type EventualBiMap<K, V> = {
   has: (key: K) => Promise<boolean>,
   getOrElse: (key: K, substitute: (key: K) => V) => Promise<V>,
   getOrVal: (key: K, substitute: V) => Promise<V>,
-  getOrFail: (key: K, error: (string | ((key: K) => string))) => Promise<V>,
+  getOrFail: (key: K, error?: (string | ((key: K) => string))) => Promise<V>,
   foldingGet<W>(key: K, some: (v: V) => W, none: () => W): Promise<W>,
   getNow: (key: K) => Possible<V>,
   hasNow: (key: K) => boolean,
@@ -328,12 +328,12 @@ export function EventualMap<K, T>(
 
         do {
           attempts++;
-          const innerNewKey = bumper(newKey, attempts, getOrFail(_underlyingMap, key), value);
+          const innerNewKey = bumper(newKey, attempts, key, getOrFail(_underlyingMap, key), value);
 
           if (innerNewKey === undefined) {
             // Failed to set
             break;
-          } else if (!_underlyingMap.has(newKey)) {
+          } else if (!_underlyingMap.has(innerNewKey)) {
             _underlyingMap.set(innerNewKey, value);
             break;
           } else {
@@ -397,7 +397,7 @@ export function EventualMap<K, T>(
       () => substitute,
       key
     ),
-    getOrFail: (key: K, error: (string | ((key: K) => string))) => queryMap(
+    getOrFail: (key: K, error?: (string | ((key: K) => string))) => queryMap(
       finalizedWrapper,
       switchboard,
       _underlyingMap,
@@ -407,7 +407,7 @@ export function EventualMap<K, T>(
           typeof error === "function"
           ? error(key)
           : typeof error === "undefined"
-            ? `Map has no entry ${key}`
+            ? `Map has no entry "${key}"`
             : error
         );
       },

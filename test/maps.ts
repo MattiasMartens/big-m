@@ -24,7 +24,13 @@ import {
   reverseMap,
   selectMap,
   uniformMap,
-  valuesOf
+  valuesOf,
+  reconcileDefault,
+  reconcileFirst,
+  zipMapsIntersection,
+  zipMapsUnion,
+  mapCollectBumping,
+  resolutionFailureMessage
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
@@ -75,6 +81,51 @@ describeThis(reconcileAppend, () => {
 
     defined(ret.get(3)).should.deepEqual(["cat"]);
     defined(ret.get(5)).should.deepEqual(["horse", "mouse"]);
+  });
+
+  it("Should be useable to append individual values to arrays with a mapper", () => {
+    const map1 = new Map([[5, ["horse"]]]);
+
+    const ret = mapCollectInto(
+      [[3, "cat"], [5, "mouse"]],
+      map1,
+      reconcileAppend(
+        val => val.split("").reverse().join("")
+      )
+    );
+
+    defined(ret.get(3)).should.deepEqual(["tac"]);
+    defined(ret.get(5)).should.deepEqual(["horse", "esuom"]);
+  });
+});
+
+describeThis(reconcileDefault, () => {
+  it("Should emulate default Map behaviour by overwriting existing values at keys", () => {
+    const map1 = new Map([[5, ["horse"]]]);
+
+    const ret = mapCollectInto(
+      [[3, "cat"], [5, "mouse"]],
+      map1,
+      reconcileDefault()
+    );
+
+    defined(ret.get(3)).should.deepEqual("cat");
+    defined(ret.get(5)).should.deepEqual("mouse");
+  });
+});
+
+describeThis(reconcileFirst, () => {
+  it("Should reverse default Map behaviour by never overwriting existing values at keys", () => {
+    const map1 = new Map([[5, "horse"]]);
+
+    const ret = mapCollectInto(
+      [[3, "cat"], [5, "mouse"]],
+      map1,
+      reconcileFirst()
+    );
+
+    defined(ret.get(3)).should.deepEqual("cat");
+    defined(ret.get(5)).should.deepEqual("horse");
   });
 });
 
@@ -329,7 +380,7 @@ describe('getOrFail', () => {
       );
       should.fail(false, false, "Should have failed by now");
     } catch (e) {
-      (e as Object).should.key("message").equal("Map has no entry 6");
+      (e as Object).should.key("message").equal("Map has no entry \"6\"");
     }
   });
 
@@ -559,5 +610,133 @@ describe('keysOf', () => {
     const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
 
     collect(valuesOf(map1)).should.deepEqual(["blueberry", "almond", "plum"]);
+  });
+});
+
+describeThis(zipMapsIntersection, subject => {
+  it('Should convert two maps into an iterable of entries including only keys they share and combining their values into tuples', () => {
+    const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
+    const map2 = new Map([[5, "a"], [6, "b"], [9, "a!"], [10, "b!"]]);
+
+    const result = subject(map1, map2);
+    const resultAsMap = mapCollect(result);
+
+    should.equal(undefined, resultAsMap.get(4));
+    should.equal(undefined, resultAsMap.get(10));
+    getOrFail(resultAsMap, 6).should.deepEqual(["almond", "b"]);
+    getOrFail(resultAsMap, 9).should.deepEqual(["blueberry", "a!"]);
+  });
+
+  it('Should convert two iterables of maps as above', () => {
+    const map1: [number, string][] = [[9, "blueberry"], [6, "almond"], [4, "plum"]];
+    const map2: [number, string][] = [[5, "a"], [6, "b"], [9, "a!"], [10, "b!"]];
+
+    const result = subject(map1, map2);
+    const resultAsMap = mapCollect(result);
+
+    should.equal(undefined, resultAsMap.get(4));
+    should.equal(undefined, resultAsMap.get(10));
+    getOrFail(resultAsMap, 6).should.deepEqual(["almond", "b"]);
+    getOrFail(resultAsMap, 9).should.deepEqual(["blueberry", "a!"]);
+  });
+});
+
+describeThis(zipMapsUnion, subject => {
+  it('Should convert two maps into an iterable of entries including all common keys and combining their values into tuples', () => {
+    const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
+    const map2 = new Map([[5, "a"], [6, "b"], [9, "a!"], [10, "b!"]]);
+
+    const result = subject(map1, map2);
+    const resultAsMap = mapCollect(result);
+
+    getOrFail(resultAsMap, 4).should.deepEqual(["plum", undefined]);
+    getOrFail(resultAsMap, 6).should.deepEqual(["almond", "b"]);
+    getOrFail(resultAsMap, 9).should.deepEqual(["blueberry", "a!"]);
+    getOrFail(resultAsMap, 5).should.deepEqual([undefined, "a"]);
+    getOrFail(resultAsMap, 10).should.deepEqual([undefined, "b!"]);
+  });
+
+  it('Should convert two iterables of maps as above', () => {
+    const map1: [number, string][] = [[9, "blueberry"], [6, "almond"], [4, "plum"]];
+    const map2: [number, string][] = [[5, "a"], [6, "b"], [9, "a!"], [10, "b!"]];
+
+    const result = subject(map1, map2);
+    const resultAsMap = mapCollect(result);
+
+    getOrFail(resultAsMap, 4).should.deepEqual(["plum", undefined]);
+    getOrFail(resultAsMap, 6).should.deepEqual(["almond", "b"]);
+    getOrFail(resultAsMap, 9).should.deepEqual(["blueberry", "a!"]);
+    getOrFail(resultAsMap, 5).should.deepEqual([undefined, "a"]);
+    getOrFail(resultAsMap, 10).should.deepEqual([undefined, "b!"]);
+  });
+});
+
+describeThis(mapCollectBumping, subject => {
+  it('Should accumulate a map by bumping colliding keys to new keys', () => {
+    const result = mapCollectBumping(
+      [
+        [1, "me"],
+        [2, "too"],
+        [1, "it"],
+        [2, "is"],
+        [3, "true"]
+      ],
+      colliding => colliding + 1
+    );
+
+    getOrFail(result, 1).should.equal("me");
+    getOrFail(result, 2).should.equal("too");
+    getOrFail(result, 3).should.equal("it");
+    getOrFail(result, 4).should.equal("is");
+    getOrFail(result, 5).should.equal("true");
+  });
+
+  it('Should accumulate a map by bumping colliding keys to new keys but giving up if bumper returns undefined', () => {
+    const result = mapCollectBumping(
+      [
+        [1, "me"],
+        [2, "too"],
+        [1, "it"],
+        [2, "is"],
+        [3, "true"]
+      ],
+      colliding => colliding % 2 === 0 ? colliding + 1 : undefined
+    );
+
+    getOrFail(result, 1).should.equal("me");
+    getOrFail(result, 2).should.equal("too");
+    getOrFail(result, 3).should.equal("is");
+    result.has(4).should.be.false();
+  });
+
+  it('Should accumulate a map by bumping colliding keys and throwing an error if the bumper throws an error', () => {
+    try {
+      const result = mapCollectBumping(
+        [
+          [1, "me"],
+          [2, "too"],
+          [1, "it"],
+          [2, "is"],
+          [2, "quite"]
+        ],
+        (colliding, priorBumps, original) => {
+          if (priorBumps < 2) {
+            return colliding + 1;
+          } else {
+            throw new Error(resolutionFailureMessage(original, priorBumps))
+          }
+        }
+      );
+      true.should.be.false("Should have thrown an error");
+    } catch (e) {
+      const msg = e.message;
+      msg.should.equal("Failed to resolve key \"2\" to a unique value after 2 tries");
+    }
+  });
+});
+
+describeThis(resolutionFailureMessage, subject => {
+  it("Should produce a generic error message on key resolution failure", () => {
+    subject("B", 1).should.equal("Failed to resolve key \"B\" to a unique value after 1 try");
   });
 });

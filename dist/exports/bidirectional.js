@@ -91,7 +91,7 @@ class BiMap extends Map {
         return this._reversedProxy || (this._reversedProxy = getReversedBiMap(this));
     }
     /**
-     * Sets the value for the key in the BiMap object.
+     * Set the value for the key in the BiMap object.
      * Returns the BiMap object.
      *
      * @remarks
@@ -117,7 +117,7 @@ class BiMap extends Map {
     }
     /**
      *
-     * Deletes the key-value pair associated with `key`.
+     * Delete the key-value pair associated with `key`.
      * Does nothing if that entry is not present.
      *
      * @param {K} key The key to delete.
@@ -132,7 +132,7 @@ class BiMap extends Map {
     }
     /**
      *
-     * Returns the key associated to `value`, or `undefined` if there is none.
+     * Return the key associated to `value`, or `undefined` if there is none.
      *
      * @param {T} val The value to look up.
      */
@@ -141,8 +141,8 @@ class BiMap extends Map {
     }
     /**
      *
-     * Deletes the key-value pair associated with `val`.
-     * Does nothing if that entry is not present.
+     * Delete the key-value pair associated with `val`.
+     * Do nothing if that entry is not present.
      *
      * @param {T} val The value to delete.
      * @returns `true` if an element in the Map object existed and has been removed, `false` if the element does not exist.

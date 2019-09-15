@@ -34,13 +34,13 @@
     "all": true
   },
   "scripts": {
-    "test": "nyc mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts",
+    "test": "nyc mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts && open coverage/index.html",
+    "debug": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts --inspect-brk",
     "benchmark": "node -r ts-node/register -r tsconfig-paths/register benchmarks",
     "compile": "rm -rf dist; cd exports; tsc; cd ..",
     "docs": "rm -rf docs; ./node_modules/.bin/jsdoc dist/exports/* -c .jsdoc.config.json; mv out docs; open docs/index.html"
   },
   "devDependencies": {
-    "nyc": "^14.1.1",
-    "source-map-support": "^0.5.13"
+    "nyc": "^14.1.1"
   }
 }

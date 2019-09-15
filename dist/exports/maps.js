@@ -34,10 +34,41 @@ function mapCollectInto(iterable, seed, reconcileFn) {
     return seed;
 }
 exports.mapCollectInto = mapCollectInto;
+/**
+ * Converts an Iterable of Map entries into a brand new map.
+ * When called on a map, the result will be a new Map with the same entries as the previous one.
+ * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ *
+ * @param {Iterable} iterable The entries to add.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The newly created Map.
+ */
 function mapCollect(iterable, reconcileFn) {
     return mapCollectInto(iterable, new Map(), reconcileFn);
 }
 exports.mapCollect = mapCollect;
+/**
+ * Converts an Iterable of Map entries into a brand new BiMap.
+ * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ *
+ * Note that BiMaps do not allow two values to share a key. The reconciler plays no role in this case.
+ *
+ * @param {Iterable} iterable The entries to add.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The newly created BiMap.
+ */
 function biMapCollect(iterable, reconcileFn) {
     return mapCollectInto(iterable, new bidirectional_1.BiMap(), reconcileFn);
 }
@@ -220,6 +251,12 @@ function reconcileAppend(mapFn) {
     }
 }
 exports.reconcileAppend = reconcileAppend;
+/**
+ * Generate a Reconciler that either adds a numeric input value to a colliding numeric value, or maps the input value to a number before doing so.
+ *
+ * @param {Function} mapFn A function that maps incoming values to numbers so they can be reconciled by adding.
+ * @returns {Reconciler} A summing Reconciler.
+ */
 function reconcileAdd(mapFn) {
     return function (collidingValue, value) {
         const val = mapFn ? mapFn(value) : value;
@@ -248,6 +285,13 @@ function reconcileCount() {
     };
 }
 exports.reconcileCount = reconcileCount;
+/**
+ * Generate a Reconciler that concatenates input values together when they collide, optionally transforming them first with a mapper.
+ *
+ * @param {Function} mapFn? A function to call on the inputs.
+ * Regardless of the input type, the output must be an Iterable.
+ * @returns {Reconciler} A Reconciler that concatenates input values together.
+ */
 function reconcileConcat(mapFn = (val) => val) {
     return function (collidingValue, value) {
         const val = mapFn(value);
@@ -413,10 +457,10 @@ exports.zipMapsUnion = zipMapsUnion;
  * @param  {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map.
  */
-function bumpDuplicateKeys(mapEnumeration, bumper) {
-    return collectIntoBumpingDuplicateKeys(mapEnumeration, bumper, new Map());
+function mapCollectBumping(mapEnumeration, bumper) {
+    return mapCollectIntoBumping(mapEnumeration, bumper, new Map());
 }
-exports.bumpDuplicateKeys = bumpDuplicateKeys;
+exports.mapCollectBumping = mapCollectBumping;
 /**
  * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
  * If the new key collides too, keep calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
@@ -426,7 +470,7 @@ exports.bumpDuplicateKeys = bumpDuplicateKeys;
  * @param  {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map.
  */
-function collectIntoBumpingDuplicateKeys(mapEnumeration, bumper, seed) {
+function mapCollectIntoBumping(mapEnumeration, bumper, seed) {
     for (let [key, value] of mapEnumeration) {
         if (seed.has(key)) {
             let newKey = key;
@@ -453,16 +497,16 @@ function collectIntoBumpingDuplicateKeys(mapEnumeration, bumper, seed) {
     }
     return seed;
 }
-exports.collectIntoBumpingDuplicateKeys = collectIntoBumpingDuplicateKeys;
+exports.mapCollectIntoBumping = mapCollectIntoBumping;
 /**
- *
- * Function that a caller of bumpDuplicateKeys() can use to produce a handy generic error message on failure to resolve.
+ * Function that a caller of `bumpDuplicateKeys()` can use to produce a generic error message when a key collision cannot be resolved.
  *
  * @param collidingKey The key that could not be resolved.
  * @param priorBumps The number of attempts made before the bumper gave up.
+ * @returns {string} A message describing the error
  */
-function throwOnBump(collidingKey, priorBumps) {
+function resolutionFailureMessage(collidingKey, priorBumps) {
     const pluralize = (n) => n === 1 ? "try" : "tries";
-    throw new Error(`Failed to resolve key "${collidingKey}" to a unique value after ${priorBumps} ${pluralize(priorBumps)}`);
+    return `Failed to resolve key "${collidingKey}" to a unique value after ${priorBumps} ${pluralize(priorBumps)}`;
 }
-exports.throwOnBump = throwOnBump;
+exports.resolutionFailureMessage = resolutionFailureMessage;

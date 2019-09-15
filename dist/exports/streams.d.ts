@@ -26,28 +26,48 @@ export declare function streamCollect<K, T, V>(iterable: ReadableStream<[K, T]>,
  * A Map that is in the process of being built from a Stream.
  * Supports async lookups that return Promises that resolve either immediately, if the key is already present in the Map, or eventually when the key arrives in the input Stream or the input Stream ends.
  *
- * @method get Return the value that will eventually be at the key.
- * @method has Return `true` if the key is eventually set, `false` if it is not set before the input stream ends.
- * @method getOrElse Return the value that will eventually be at the key, or the result of calling the argument function `substitute` if the key is not set before the input stream ends.
- * @method getOrVal Return the value that will eventually be at the key, or `substitute` if the key is not set before the input stream ends.
- * @method getOrFail Return the value that will eventually be at the key or throw an error if the key is not set before the input stream ends.
- * @method foldingGet Return the result of calling `some` on the input value when the key is set, the result of calling `none` if the result is not set before the input stream ends.
- * @method getNow Immediately return the value that is at the key whether the input stream has ended or not.
- * @method hasNow Return `true` if the key is set now, `false` otherwise.
- * @field _underlyingMap The Map that is being populated with Stream entries.
- * This must be accessed with caution as mutating operations on `_underlyingMap`, like `set` and `delete`, destroy all correctness guarantees for the other methods.
- * @field finalMap A Promise resolving to `underlyingMap` when the input stream ends.
  */
 export declare type EventualMap<K, V> = {
+    /**
+     * @method get Return the value that will eventually be at the key.
+     */
     get: (key: K) => Promise<Possible<V>>;
+    /**
+     * @method get Return the value that will eventually be at the key.
+     */
     has: (key: K) => Promise<boolean>;
+    /**
+     * @method getOrElse Return the value that will eventually be at the key, or the result of calling the argument function
+     */
     getOrElse: (key: K, substitute: (key: K) => V) => Promise<V>;
+    /**
+     * @method getOrVal Return the value that will eventually be at the key, or `substitute` if the key is not set before the input stream ends.
+     */
     getOrVal: (key: K, substitute: V) => Promise<V>;
+    /**
+     * getOrFail Return the value that will eventually be at the key or throw an error if the key is not set before the input stream ends.
+     */
     getOrFail: (key: K, error: (string | ((key: K) => string))) => Promise<V>;
+    /**
+     * @method foldingGet Return the result of calling `some` on the input value when the key is set, the result of calling `none` if the result is not set before the input stream ends.
+     */
     foldingGet<W>(key: K, some: (v: V) => W, none: () => W): Promise<W>;
+    /**
+     * @method getNow Immediately return the value that is at the key whether the input stream has ended or not.
+     */
     getNow: (key: K) => Possible<V>;
+    /**
+     * @method hasNow Return `true` if the key is set now, `false` otherwise.
+     */
     hasNow: (key: K) => boolean;
+    /**
+     * @field _underlyingMap The Map that is being populated with Stream entries.
+   * This must be accessed with caution as mutating operations on `_underlyingMap`, like `set` and `delete`, destroy all correctness guarantees for the other methods.
+     */
     _underlyingMap: Map<K, V>;
+    /**
+     * @field finalMap A Promise resolving to `underlyingMap` when the input stream ends.
+     */
     finalMap: Promise<Map<K, V>>;
 };
 /**

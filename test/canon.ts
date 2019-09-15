@@ -1,6 +1,6 @@
 import * as should from 'should';
 
-import { CanonMap, naiveCanonize } from '../exports/canon';
+import { CanonMap, naiveCanonize, jsonCanonize, JsonCanonMap } from '../exports/canon';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
 import { collect } from 'iterable';
@@ -50,20 +50,14 @@ describeThis(CanonMap, subject => {
 });
 
 describeThis(naiveCanonize, () => {
-  it("Should resolve values to canonical keys in such a way that unintended collisions are unlikely", () => {
+  it("Should resolve values to canonical keys without collision in most typical cases", () => {
     should.notEqual(naiveCanonize("[]"), naiveCanonize([]));
+    should.notEqual(naiveCanonize("[1]"), naiveCanonize([1]));
     should.notEqual(naiveCanonize(null), naiveCanonize(NaN));
     should.notStrictEqual(naiveCanonize(undefined), naiveCanonize(null));
     should.notEqual(naiveCanonize(0), naiveCanonize(""));
     should.notEqual(naiveCanonize({}), naiveCanonize([]));
-  });
-
-  it("Should resolve values without collision with depth 0 for most primitives", () => {
-    should.notEqual(naiveCanonize("[]"), naiveCanonize([]));
-    should.notEqual(naiveCanonize(null), naiveCanonize(NaN));
-    should.notStrictEqual(naiveCanonize(undefined), naiveCanonize(null));
-    should.notEqual(naiveCanonize(0), naiveCanonize(""));
-    should.notEqual(naiveCanonize({}), naiveCanonize([]));
+    should.notEqual(naiveCanonize(new Date(0)), naiveCanonize(0));
   });
 
   it("Should conflate objects at level 0", () => {
@@ -109,3 +103,24 @@ describeThis(naiveCanonize, () => {
     );
   });
 });
+
+describeThis(jsonCanonize, (subject) => {
+  it ("Should canonize using JSON", () => {
+    should.equal(jsonCanonize({}), JSON.stringify({}));
+  });
+})
+
+describeThis(JsonCanonMap, (subject) => {
+  it ("Should create a map that canonizes using JSON", () => {
+    const newCanonMap = subject<any, any>();
+    (newCanonMap instanceof CanonMap).should.true();
+
+    const getDeepNestedObject = () => ({
+      a: { a: { a: { a: { a: { a: {}} }}} }
+    })
+
+    newCanonMap.set(getDeepNestedObject(), 700);
+    defined(newCanonMap.get(getDeepNestedObject())).should.equal(700);
+    should.equal(newCanonMap.get({}), undefined);
+  });
+})

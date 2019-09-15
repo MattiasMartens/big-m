@@ -18,39 +18,8 @@ export declare type mapEnumeration<K, V> = Iterable<[K, V]>;
 export declare type Reconciler<K, T, V> = (colliding: Possible<V>, incoming: T, key: K) => V;
 export declare function mapCollectInto<K, T>(iterable: Iterable<[K, T]>, seed: Map<K, T>): Map<K, T>;
 export declare function mapCollectInto<K, T, V>(iterable: Iterable<[K, T]>, seed: Map<K, V>, reconcileFn: Reconciler<K, T, V>): Map<K, V>;
-/**
- * Converts an Iterable of Map entries into a brand new map.
- * When called on a map, the result will be a new Map with the same entries as the previous one.
- * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
- *
- * @param {Iterable} iterable The entries to add.
- * @param {Reconciler} reconcileFn?
- * A function specifying what value to set when two keys map to the same value.
- * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
- * Called with:
- * 1. The value previously set at this key, or `undefined` if no value was set;
- * 2. The new value arriving from the Iterable;
- * 3. The key where the output will be entered.
- * @returns The newly created Map.
- */
 export declare function mapCollect<K, T>(iterable: Iterable<[K, T]>): Map<K, T>;
 export declare function mapCollect<K, T, V>(iterable: Iterable<[K, T]>, reconcileFn: Reconciler<K, T, V>): Map<K, V>;
-/**
- * Converts an Iterable of Map entries into a brand new BiMap.
- * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
- *
- * Note that BiMaps do not allow two values to share a key. The reconciler plays no role in this case.
- *
- * @param {Iterable} iterable The entries to add.
- * @param {Reconciler} reconcileFn?
- * A function specifying what value to set when two keys map to the same value.
- * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
- * Called with:
- * 1. The value previously set at this key, or `undefined` if no value was set;
- * 2. The new value arriving from the Iterable;
- * 3. The key where the output will be entered.
- * @returns The newly created BiMap.
- */
 export declare function biMapCollect<K, T>(iterable: Iterable<[K, T]>): Map<K, T>;
 export declare function biMapCollect<K, T, V>(iterable: Iterable<[K, T]>, reconcileFn: Reconciler<K, T, V>): Map<K, V>;
 /**
@@ -140,12 +109,6 @@ export declare function flatMakeEntries<T, K, V>(arr: Iterable<T>, expandFn: (va
  * @returns {Reconciler} A Reconciler that combines input values into an Array.
  */
 export declare function reconcileAppend<T, V, K>(mapFn?: (val: T) => unknown extends V ? T : V): Reconciler<K, T, (unknown extends V ? T : V)[]>;
-/**
- * Generate a Reconciler that either adds a numeric input value to a colliding numeric value, or maps the input value to a number before doing so.
- *
- * @param {Function} mapFn A function that maps incoming values to numbers so they can be reconciled by adding.
- * @returns {Reconciler} A summing Reconciler.
- */
 export declare function reconcileAdd<K>(): Reconciler<K, number, number>;
 export declare function reconcileAdd<T, K>(mapFn: (val: T) => number): Reconciler<K, T, number>;
 /**
@@ -154,13 +117,6 @@ export declare function reconcileAdd<T, K>(mapFn: (val: T) => number): Reconcile
  * @returns {Reconciler} A Reconciler that counts entries that has the same key.
  */
 export declare function reconcileCount<K, T>(): Reconciler<K, T, number>;
-/**
- * Generate a Reconciler that concatenates input values together when they collide, optionally transforming them first with a mapper.
- *
- * @param {Function} mapFn? A function to call on the inputs.
- * Regardless of the input type, the output must be an Iterable.
- * @returns {Reconciler} A Reconciler that concatenates input values together.
- */
 export declare function reconcileConcat<T, K>(): Reconciler<K, (Possible<Iterable<T>>), T[]>;
 /**
  * Generate a Reconciler by specifying a function to run by default, and a second function to run if a value already exists in the Map at the specified key.
@@ -261,7 +217,7 @@ export declare function zipMapsUnion<K, T1, T2>(map1: Iterable<[K, T1]>, map2: I
  * @param  {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map.
  */
-export declare function bumpDuplicateKeys<K, T>(mapEnumeration: Iterable<[K, T]>, bumper: BumperFn<K, T>): Map<K, T>;
+export declare function mapCollectBumping<K, T>(mapEnumeration: Iterable<[K, T]>, bumper: BumperFn<K, T>): Map<K, T>;
 /**
  *
  * Function to resolve bumping keys.
@@ -270,7 +226,7 @@ export declare function bumpDuplicateKeys<K, T>(mapEnumeration: Iterable<[K, T]>
  * If the BumperFn returns `undefined`, the caller will treat this as a failure and skip it.
  *
  * @remarks
- * The `priorBumps` parameter can be used to fail key generation if too many collisions occur, either by returning `undefined` or by throwing an appropriate error (see {@link throwOnBump}).
+ * The `priorBumps` parameter can be used to fail key generation if too many collisions occur, either by returning `undefined` or by throwing an appropriate error (see {@link resolutionFailureMessage}).
  * For complex functions, this is the only guaranteed way to avoid entering an infinite loop.
  *
  * @param  {K} collidingKey The key that would have been set in a Map if it did not already exist in the Map.
@@ -289,12 +245,12 @@ export declare type BumperFn<K, T> = (collidingKey: K, priorBumps: number, colli
  * @param  {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map.
  */
-export declare function collectIntoBumpingDuplicateKeys<K, T>(mapEnumeration: Iterable<[K, T]>, bumper: BumperFn<K, T>, seed: Map<K, T>): Map<K, T>;
+export declare function mapCollectIntoBumping<K, T>(mapEnumeration: Iterable<[K, T]>, bumper: BumperFn<K, T>, seed: Map<K, T>): Map<K, T>;
 /**
- *
- * Function that a caller of bumpDuplicateKeys() can use to produce a handy generic error message on failure to resolve.
+ * Function that a caller of `bumpDuplicateKeys()` can use to produce a generic error message when a key collision cannot be resolved.
  *
  * @param collidingKey The key that could not be resolved.
  * @param priorBumps The number of attempts made before the bumper gave up.
+ * @returns {string} A message describing the error
  */
-export declare function throwOnBump<K, T>(collidingKey: K, priorBumps: number): never;
+export declare function resolutionFailureMessage<K, T>(collidingKey: K, priorBumps: number): string;
