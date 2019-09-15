@@ -143,9 +143,9 @@ pipe(
 
 It would be nicer to call functions directly on their first argument, i.e. `map1.mapValues()`, but this is not implemented yet - see the Contributing section below.
 
-## [Contributing](https://github.com/MattiasMartens/cartographer)
+## [Contributing](https://github.com/MattiasMartens/big-m)
 
-Source code is hosted at <https://github.com/MattiasMartens/cartographer>.
+Source code is hosted at <https://github.com/MattiasMartens/big-m>.
 
 To set up locally (assuming you have Yarn installed and you've forked the repo):
 ```
