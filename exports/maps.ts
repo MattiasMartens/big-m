@@ -6,7 +6,7 @@ import {map, filter, flatMap, forEach, entries, collect, collectInto} from "../i
  * Any iterable of entries, regardless of origin.
  * Note that `Map<K, V>` is in this type.
  */
-export type MapStream<K, V> = Iterable<[K, V]>;
+export type mapEnumeration<K, V> = Iterable<[K, V]>;
 
 /**
  * A function for dealing with collisions when an iterable has two entries of the same key to insert into a Map, or the Map already has a value at that key.
@@ -158,7 +158,7 @@ export function reverseMap<K, T>(
 export function mapValues<K, T, V>(
   iterable: Iterable<[K, T]>,
   fn: (value: T, key: K) => V
-): MapStream<K, V> {
+): mapEnumeration<K, V> {
   return map<[K, T], [K, V]>(iterable, ([key, val]) => [key, fn(val, key)]);
 }
 
@@ -337,6 +337,12 @@ export function* flatMakeEntries<T, K, V>(
   }
 }
 
+/**
+ * Generate a Reconciler that pushes input values onto an array of previously colliding values, optionally transforming them first with a mapper.
+ * 
+ * @param {Function} mapFn? A function to call on the inputs.
+ * @returns {Reconciler} A Reconciler that combines input values into an Array.
+ */
 export function reconcileAppend<T, V, K>(
   mapFn?: (val: T) => unknown extends V ? T : V
 ): Reconciler<K, T, (unknown extends V ? T : V)[]> {
@@ -369,6 +375,12 @@ export function reconcileAppend<T, V, K>(
   }
 }
 
+/**
+ * Generate a Reconciler that either adds a numeric input value to a colliding numeric value, or maps the input value to a number before doing so.
+ * 
+ * @param {Function} mapFn A function that maps incoming values to numbers so they can be reconciled by adding.
+ * @returns {Reconciler} A summing Reconciler.
+ */
 export function reconcileAdd<K>(): Reconciler<K, number, number>
 export function reconcileAdd<T, K>(
   mapFn: (val: T) => number
@@ -390,6 +402,11 @@ export function reconcileAdd<T, K>(
   }
 }
 
+/**
+ * Generate a Reconciler that bumps up a count on each collision, ultimately yielding the total number of entries that collided on a key.
+ * 
+ * @returns {Reconciler} A Reconciler that counts entries that had the same key.
+ */
 export function reconcileCount<K, T>(): Reconciler<K, T, number> {
   return function(
     collidingValue,
@@ -403,12 +420,16 @@ export function reconcileCount<K, T>(): Reconciler<K, T, number> {
   }
 }
 
-export function reconcileAppendFlat<T, K>(): Reconciler<K, (Possible<T | Iterable<T>>), T[]>
-export function reconcileAppendFlat<T, V, K>(
-  mapFn: (val: T) => Possible<V | Iterable<V>>
-): Reconciler<K, T, V[]>
-export function reconcileAppendFlat<T, V, K>(
-  mapFn: (val: T) => V[] = (val: T) => val as any as V[]
+/**
+ * Generate a Reconciler that concatenates input values together when they collide, optionally transforming them first with a mapper.
+ * 
+ * @param {Function} mapFn? A function to call on the inputs.
+ * Regardless of the input type, the output must be an Iterable.
+ * @returns {Reconciler} A Reconciler that concatenates input values together.
+ */
+export function reconcileConcat<T, K>(): Reconciler<K, (Possible<Iterable<T>>), T[]>
+export function reconcileConcat<T, V, K>(
+  mapFn: (val: T) => Iterable<V> = (val: T) => val as any as V[]
 ): Reconciler<K, T, V[]> {
   return function(
     collidingValue,
@@ -417,13 +438,24 @@ export function reconcileAppendFlat<T, V, K>(
     const val = mapFn(value);
 
     if (collidingValue === undefined) {
-      return val;
+      return Array.from(val);
     } else {
       return [...collidingValue, ...val];
     }
   }
 }
 
+/**
+ * Generate a Reconciler by specifying a function to run by default, and a second function to run if a value already exists in the Map at the specified key.
+ * 
+ * @remarks
+ * This is an alternate dialect for generating a Reconciler that saves the boilerplate of `if () {} else {}` at the cost of having to define two different functions.
+ * 
+ * @param mapper A function that takes an incoming value and returns the value to set.
+ * @param reducer A function that takes the colliding value and an incoming value and returns the value to set.
+ * 
+ * @returns A Reconciler that calls `mapper` if a collidingValue exists (even if it is `undefined`!), calls `reducer` otherwise.
+ */
 export function reconcileFold<K, T, V>(
   mapper: (val: T) => V,
   reducer: (colliding: V, val: T) => V
@@ -440,6 +472,10 @@ export function reconcileFold<K, T, V>(
   }
 }
 
+/**
+ * Generates a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on `set`.
+ * @returns {Reconciler} A Reconciler that always returns the `incomingValue`. 
+ */
 export function reconcileDefault<K, T>(): Reconciler<
   K,
   T,
@@ -450,6 +486,10 @@ export function reconcileDefault<K, T>(): Reconciler<
   }
 }
 
+/**
+ * Generates a reconciler that reverses the default behaviour of setting Maps: instead of overwriting what's already at a key, the `set` operation is ignored if a value is already present at that key.
+ * @returns {Reconciler} A Reconciler that returns the `collidingValue` if it is defined, the `incomingValue` otherwise. 
+ */
 export function reconcileFirst<K, T>(): Reconciler<K, T, T> {
   return function(collidingValue, incomingValue) {
     if (collidingValue === undefined) {
@@ -460,6 +500,31 @@ export function reconcileFirst<K, T>(): Reconciler<K, T, T> {
   }
 }
 
+/**
+ * Convert a map from keys to arrays of values (i.e., of the form Map<K, T[]>) to a map of values from arrays of keys (i.e., of the form Map<T, K[]>).
+ * 
+ * @example
+ * const peopleToFlavours = new Map([
+ *   ["Alex", ["vanilla"]],
+ *   ["Desdemona", ["banana", "chocolate"],
+ *   ["Henrietta", ["vanilla", "chocolate", "cherry"]
+ * ]);
+ * 
+ * const flavoursToPeople = new Map([
+ *   ["vanilla", ["Alex", "Henrietta"]],
+ *   ["banana", ["Desdemona"]],
+ *   ["chocolate", ["Desdemona", "Henrietta"]],
+ *   ["cherry", ["Henrietta"]]
+ * ]);
+ * 
+ * assert(deepEquals(
+ *   Array.from(flavoursToPeople),
+ *   Array.from(invertBinMap(peopleToFlavours))
+ * ));
+ * 
+ * @param {Iterable} map An Iterable representing a Map of entries where the values are arrays.
+ * @returns {Map} A Map containing, for each member value that appears in any of the arrays, an entry where the key is the value in the array and the value is a list of all the keys in the input Map that included it.
+ */
 export function invertBinMap<K, T>(map: Iterable<[K, T[]]>): Map<T, K[]> {
   return mapCollect(
     flatMap(
@@ -470,6 +535,15 @@ export function invertBinMap<K, T>(map: Iterable<[K, T[]]>): Map<T, K[]> {
   );
 }
 
+/**
+ * Convert a Map into a dictionary.
+ * 
+ * @remarks This is handy when the contents of map need to be serialized to JSON.
+ * 
+ * @param {Iterable} map An iterable of Map entries.
+ * @param {Function} stringifier? A function to convert a Map key into a string key that is suitable for use in a dictionary. If excluded, `mapToDictionary` will use the default String constructor.
+ * @returns The new dictionary object.
+ */
 export function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (val: K) => string = String) {
   const ret: { [key: string]: T } = {};
 
@@ -538,17 +612,17 @@ export function* zipMapsUnion<K, T1, T2>(map1: Iterable<[K, T1]>, map2: Iterable
  * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
  * If the new key collides too, keep calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
  * 
- * @param  {Iterable} mapStream An entry stream with duplicate keys.
+ * @param  {Iterable} mapEnumeration An entry stream with duplicate keys.
  * @param  {BumperFn} bumper A function to be called each time a key would overwrite a key that has already been set in `seed`.
  * @param  {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map. 
  */
 export function bumpDuplicateKeys<K, T>(
-  mapStream: Iterable<[K, T]>,
+  mapEnumeration: Iterable<[K, T]>,
   bumper: BumperFn<K, T>
 ): Map<K, T> {
   return collectIntoBumpingDuplicateKeys(
-    mapStream,
+    mapEnumeration,
     bumper,
     new Map()
   );
@@ -576,17 +650,17 @@ export type BumperFn<K, T> = (collidingKey: K, priorBumps: number, collidingValu
  * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
  * If the new key collides too, keep calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
  * 
- * @param  {Iterable} mapStream An entry stream with duplicate keys.
+ * @param  {Iterable} mapEnumeration An entry stream with duplicate keys.
  * @param  {BumperFn} bumper A function to be called each time a key would overwrite a key that has already been set in `seed`.
  * @param  {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map. 
  */
 export function collectIntoBumpingDuplicateKeys<K, T>(
-  mapStream: Iterable<[K, T]>,
+  mapEnumeration: Iterable<[K, T]>,
   bumper: BumperFn<K, T>,
   seed: Map<K, T>
 ): Map<K, T> {
-  for (let [key, value] of mapStream) {
+  for (let [key, value] of mapEnumeration) {
     if (seed.has(key)) {
       let newKey = key;
       let attempts = 0;

@@ -4,7 +4,7 @@ import {pipe} from "fp-ts/lib/pipeable";
 import { BiMap } from '../exports/bidirectional';
 import {
   reconcileAdd,
-  reconcileAppendFlat,
+  reconcileConcat,
   reconcileAppend,
   mapCollect,
   biMapCollect,
@@ -50,13 +50,13 @@ describeThis(reconcileAdd, (underTest) => {
   });
 });
 
-describeThis(reconcileAppendFlat, () => {
+describeThis(reconcileConcat, () => {
   const map1 = new Map([[5, ["horse"]]]);
 
   const ret = mapCollectInto(
     [[3, ["cat", "dog"]], [5, ["mouse"]]],
     map1,
-    reconcileAppendFlat()
+    reconcileConcat()
   );
 
   defined(ret.get(3)).should.deepEqual(["cat", "dog"]);

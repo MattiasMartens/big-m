@@ -1,13 +1,17 @@
 import { ReadableStream } from "ts-stream";
-import { Reconciler } from "./maps";
+import { Reconciler, BumperFn as Bumper, getOrFail, foldingGet } from "./maps";
 import { defined, Possible } from "types/utils";
 import { BiMap } from "exports";
+import { CanonMap } from "./canon";
 
 
 /**
- * Inserts the entries of a ReadableStream into `seed`, or generates a new map from the ReadableStream if `seed` is not provided.
+ * Insert the entries of a ReadableStream into `seed` with an optional Reconciler.
  * 
- * @returns A promise of the updated or generated map, to be returned when the ReadableStream closes.
+ * @param {ReadableStream} stream The input stream.
+ * @param {Map} seed The Map to update with the contents of `stream`.
+ * @param {Reconciler} reconcileFn Function to call to resolve collisions.
+ * @returns A promise of the updated map, to be returned when the ReadableStream closes.
  */
 export function streamCollectInto<K, T>(
   stream: ReadableStream<[K, T]>,
@@ -46,6 +50,13 @@ export async function streamCollectInto<K, T, V>(
   return seed;
 }
 
+/**
+ * Generate a new map from the ReadableStream of entries using an optional Reconciler.
+ * 
+ * @param {ReadableStream} stream The input stream.
+ * @param {Reconciler} reconcileFn Function to call to resolve collisions.
+ * @returns A promise of the generated map, to be returned when the ReadableStream closes.
+ */
 export function streamCollect<K, T>(
   iterable: ReadableStream<[K, T]>
 ): Promise<Map<K, T>>
@@ -54,11 +65,11 @@ export function streamCollect<K, T, V>(
   reconcileFn: Reconciler<K, T, V>
 ): Promise<Map<K, V>>
 export function streamCollect<K, T, V>(
-  iterable: ReadableStream<[K, T]>,
+  stream: ReadableStream<[K, T]>,
   reconcileFn?: Reconciler<K, T, V>
 ) {
   return streamCollectInto(
-    iterable,
+    stream,
     new Map<K, V>(),
     reconcileFn as any
   );
@@ -75,6 +86,13 @@ const none: Option<any> = {
   isSome: false
 };
 
+function some<V>(val: V) {
+  return {
+    isSome: true,
+    value: val
+  }
+}
+
 function foldOption<T, V>(
   opt: Option<T>,
   some: (t: T) => V,
@@ -87,35 +105,72 @@ function foldOption<T, V>(
   }
 }
 
-async function queryMapper<K, V, W, P extends Map<K, V>>(
+type Switchboard<K, T> = Map<K, [Promise<Option<T>>, (resolution: Option<T>) => void]>;
+
+async function getGetOrHasPromise<K, V, W, P extends Map<K, V>>(
   {finalized}: { finalized: boolean },
-  switchboard: Map<K, ((opt: Option<V>) => void)[]>,
+  switchboard: Switchboard<K, V>,
   underlyingMap: P,
-  some: (v: V) => W,
-  none: () => W,
   key: K
-) {
+): Promise<Option<V>> {
   if (finalized || underlyingMap.has(key)) {
     return underlyingMap.has(key) ? some(underlyingMap.get(key) as V)
-      : none();
+      : none;
+  } else if (switchboard.has(key)) {
+    return getOrFail(
+      switchboard,
+      key
+    )[0];
   } else {
-    const resolvers = switchboard.get(key) || [];
+    let resolver: Possible<(resolution: Option<any>) => void>;
+    const newPromise = new Promise<Option<V>>(resolve => resolver = resolve);
 
-    const promise = new Promise(resolve => resolvers.push((opt: Option<V>) => resolve(
-      foldOption(
-        opt,
-        some,
-        none
-      )
-    )));
+    switchboard.set(key, [newPromise, defined(resolver, "Resolver not properly captured from Promise, this might be due to an unexpected implementation of Promises")]);
 
-    switchboard.set(key, resolvers);
-
-    return promise as Promise<Possible<W>>;
+    return newPromise;
   }
 }
 
-type EventualMap<K, V> = {
+
+async function queryMap<K, V, W, P extends Map<K, V>>(
+  {finalized}: { finalized: boolean },
+  switchboard: Switchboard<K, V>,
+  underlyingMap: P,
+  onSome: (v: V) => W,
+  onNone: () => W,
+  key: K
+) {
+  const ret = await getGetOrHasPromise(
+    {finalized},
+    switchboard,
+    underlyingMap,
+    key
+  );
+
+  return foldOption(
+    ret,
+    onSome,
+    onNone
+  );
+}
+
+/**
+ * A Map that is in the process of being built from a Stream.
+ * Supports async lookups that return Promises that resolve either immediately, if the key is already present in the Map, or eventually when the key arrives in the input Stream or the input Stream ends.
+ * 
+ * @method get Return the value that will eventually be at the key.
+ * @method has Return `true` if the key is eventually set, `false` if it is not set before the input stream ends.
+ * @method getOrElse Return the value that will eventually be at the key, or the result of calling the argument function `substitute` if the key is not set before the input stream ends.
+ * @method getOrVal Return the value that will eventually be at the key, or `substitute` if the key is not set before the input stream ends.
+ * @method getOrFail Return the value that will eventually be at the key or throw an error if the key is not set before the input stream ends.
+ * @method foldingGet Return the result of calling `some` on the input value when the key is set, the result of calling `none` if the result is not set before the input stream ends.
+ * @method getNow Immediately return the value that is at the key whether the input stream has ended or not.
+ * @method hasNow Return `true` if the key is set now, `false` otherwise.
+ * @field _underlyingMap The Map that is being populated with Stream entries.
+ * This must be accessed with caution as mutating operations on `_underlyingMap`, like `set` and `delete`, destroy all correctness guarantees for the other methods.
+ * @field finalMap A Promise resolving to `underlyingMap` when the input stream ends.
+ */
+export type EventualMap<K, V> = {
   get: (key: K) => Promise<Possible<V>>,
   has: (key: K) => Promise<boolean>,
   getOrElse: (key: K, substitute: (key: K) => V) => Promise<V>,
@@ -124,11 +179,14 @@ type EventualMap<K, V> = {
   foldingGet<W>(key: K, some: (v: V) => W, none: () => W): Promise<W>,
   getNow: (key: K) => Possible<V>,
   hasNow: (key: K) => boolean,
-  underlyingMap: Map<K, V>,
+  _underlyingMap: Map<K, V>,
   finalMap: Promise<Map<K, V>>
 };
 
-type EventualBiMap<K, V> = {
+/**
+ * {@link EventualMap} Map, but for BiMaps.
+ */
+export type EventualBiMap<K, V> = {
   get: (key: K) => Promise<Possible<V>>,
   has: (key: K) => Promise<boolean>,
   getOrElse: (key: K, substitute: (key: K) => V) => Promise<V>,
@@ -137,44 +195,98 @@ type EventualBiMap<K, V> = {
   foldingGet<W>(key: K, some: (v: V) => W, none: () => W): Promise<W>,
   getNow: (key: K) => Possible<V>,
   hasNow: (key: K) => boolean,
-  underlyingMap: BiMap<K, V>,
+  _underlyingMap: BiMap<K, V>,
   finalMap: Promise<BiMap<K, V>>
 };
 
-export function eventualMap<K, T, V>(
-  stream: ReadableStream<[K, T]>,
-  opts: {
-    reconciler?: Reconciler<K, T, V>,
-    seed: BiMap<K, V>
-  }
-): EventualBiMap<K, V>
-export function eventualMap<K, T, V>(
-  stream: ReadableStream<[K, T]>,
-  opts?: {
-    reconciler?: Reconciler<K, T, V>,
-    seed?: Map<K, V>
-  }
-): EventualMap<K, unknown extends V ? T : V>
-export function eventualMap<K, T, V>(
+/**
+ * {@link EventualMap}, but for CanonMaps.
+ */
+export type EventualCanonMap<K, V> = {
+  get: (key: K) => Promise<Possible<V>>,
+  has: (key: K) => Promise<boolean>,
+  getOrElse: (key: K, substitute: (key: K) => V) => Promise<V>,
+  getOrVal: (key: K, substitute: V) => Promise<V>,
+  getOrFail: (key: K, error: (string | ((key: K) => string))) => Promise<V>,
+  foldingGet<W>(key: K, some: (v: V) => W, none: () => W): Promise<W>,
+  getNow: (key: K) => Possible<V>,
+  hasNow: (key: K) => boolean,
+  _underlyingMap: CanonMap<K, V>,
+  finalMap: Promise<CanonMap<K, V>>
+};
+/**
+ * 
+ * Initialize an EventualMap from a stream of entries.
+ * An EventualMap is a Map-like object that returns Promises which resolve as soon as possible.
+ * If a request comes in for a key that has already been loaded in from the stream, it resolves immediately with that value.
+ * If a request comes in before the corresponding entry arrives, it is added to a queue.
+ * When the entry with the request key comes in, the Promise resolves with that value.
+ * If the stream ends, and the requested key has not arrived in the stream, the Promise resolves with `undefined`.
+ * 
+ * To ensure the correctness of early `get` calls, the eventualMap does not allow existing values to be overwritten.
+ * Instead, collisions can be resolved by modifying the incoming key using the `bumper` option.
+ * If the `bumper` returns `undefined`, the second entry to arrive is simply ignored.
+ * 
+ * @param {Stream.ReadableStream} stream The input stream to draw the entries from.
+ * @param {{bumper?: Bumper, seed: Map}} opts
+ * - bumper The function to call on key collisions to get a new key for the colliding entry.
+ * By default, after a key arrives, subsequent entries with the same key will be discarded.
+ * - seed The Map to load entries into. By default, generates a new Map.
+ * 
+ * @returns  A Map that is in the process of being built from a Stream.
+ * 
+ * @method get Return the value that will eventually be at the key.
+ * @method has Return `true` if the key is eventually set, `false` if it is not set before the input stream ends.
+ * @method getOrElse Return the value that will eventually be at the key, or the result of calling the argument function `substitute` if the key is not set before the input stream ends.
+ * @method getOrVal Return the value that will eventually be at the key, or `substitute` if the key is not set before the input stream ends.
+ * @method getOrFail Return the value that will eventually be at the key or throw an error if the key is not set before the input stream ends.
+ * @method foldingGet Return the result of calling `some` on the input value when the key is set, the result of calling `none` if the result is not set before the input stream ends.
+ * @method getNow Immediately return the value that is at the key whether the input stream has ended or not.
+ * @method hasNow Return `true` if the key is set now, `false` otherwise.
+ * @field _underlyingMap The Map that is being populated with Stream entries.
+ * This must be accessed with caution as mutating operations on `_underlyingMap`, like `set` and `delete`, destroy all correctness guarantees for the other methods.
+ * @field finalMap A Promise resolving to `underlyingMap` when the input stream ends.
+ */
+export function eventualMap<K, T>(
   stream: ReadableStream<[K, T]>,
   {
-    reconciler,
+    bumper,
     seed
   }: {
-    reconciler?: Reconciler<K, T, V>,
-    seed?: Map<K, V>
+    bumper?: Bumper<K, T>,
+    seed?: BiMap<K, T>
+  }
+): EventualBiMap<K, T>
+export function eventualMap<K, T>(
+  stream: ReadableStream<[K, T]>,
+  {
+    bumper,
+    seed
+  }: {
+    bumper?: Bumper<K, T>,
+    seed?: CanonMap<K, T>
+  }
+): EventualCanonMap<K, T>
+export function eventualMap<K, T>(
+  stream: ReadableStream<[K, T]>,
+  {
+    bumper,
+    seed
+  }: {
+    bumper?: Bumper<K, T>,
+    seed?: Map<K, T>
   } = {}
-): EventualMap<K, unknown extends V ? T : V> {
-  const underlyingMap = seed || new Map<K, V>();
+): EventualMap<K, T> {
+  const _underlyingMap = seed || new Map<K, T>();
 
-  const switchboard = new Map<K, ((opt: Option<V>) => void)[]>();
+  const switchboard: Switchboard<K, T> = new Map();
 
-  let resolveFinalMapPromise: (val: Map<K, V>) => void;
+  let resolveFinalMapPromise: (val: Map<K, T>) => void;
   let finalizedWrapper = {
     finalized: false
   };
 
-  const finalMapPromise: Promise<Map<K, V>> = new Promise((resolve, _) => {
+  const finalMapPromise: Promise<Map<K, T>> = new Promise((resolve, _) => {
     resolveFinalMapPromise = (val) => {
       finalizedWrapper.finalized = true;
       resolve(val);
@@ -182,73 +294,83 @@ export function eventualMap<K, T, V>(
   });
 
   stream.forEach(([key, value]) => {
-    const newValue = reconciler
-    ? reconciler(
-      underlyingMap.get(key) as Possible<V>,
-      value,
-      key
-    )
-    : underlyingMap.has(key)
-      ? underlyingMap.get(key) as V
-      : value;
+    let keyToUse;
+    if (bumper && _underlyingMap.has(key)) {
+      let newKey = key;
+      let attempts = 0;
 
-    underlyingMap.set(key, newValue as V);
-    if (switchboard.has(key)) {
-      defined(switchboard.get(key)).map(resolver => resolver({
-        isSome: true,
-        value: newValue as V
-      }));
+      do {
+        attempts++;
+        const innerNewKey = bumper(newKey, attempts, getOrFail(_underlyingMap, key), value);
+
+        if (innerNewKey === undefined) {
+          // Failed to set
+          break;
+        } else if (!_underlyingMap.has(newKey)) {
+          _underlyingMap.set(innerNewKey, value);
+          break;
+        } else {
+          newKey = innerNewKey;
+        }
+      } while (!!newKey);
+    } else {
+      keyToUse = key;
+    }
+
+    if (!!keyToUse) {
+      _underlyingMap.set(keyToUse, value);
+      foldingGet(
+        switchboard,
+        keyToUse,
+        ([_, resolver]) => resolver(some(value))
+      );
     }
   }).then(
       () => {
         switchboard.forEach(
-          (resolvers) => {
-            resolvers.map(
-              resolver => resolver(none)
-            )
-          }
+          ([_, resolver]) => resolver(none)
         );
-        resolveFinalMapPromise(underlyingMap);
+        resolveFinalMapPromise(_underlyingMap);
       }
     );
 
   return {
-    get: (key: K) => queryMapper(
+    get: (key: K) => queryMap(
       finalizedWrapper,
       switchboard,
-      underlyingMap,
+      _underlyingMap,
       some => some,
       () => undefined,
       key
     ),
-    has: (key: K) => queryMapper(
+    has: (key: K) => queryMap(
       finalizedWrapper,
       switchboard,
-      underlyingMap,
+      _underlyingMap,
       () => true,
       () => false,
       key
     ),
-    getOrElse: (key: K, substitute: (key: K) => V) => queryMapper(
+    getOrElse: (key: K, substitute: (key: K) => T) => queryMap(
       finalizedWrapper,
       switchboard,
-      underlyingMap,
+      _underlyingMap,
       (val) => val,
       () => substitute(key),
       key
     ),
-    getOrVal: (key: K, substitute: V) => queryMapper(
+    getOrVal: (key: K, substitute: T) => queryMap(
       finalizedWrapper,
       switchboard,
-      underlyingMap,
+      _underlyingMap,
       (val) => val,
       () => substitute,
       key
     ),
-    getOrFail: (key: K, error: (string | ((key: K) => string))) => queryMapper(
+    getOrFail: (key: K, error: (string | ((key: K) => string))) => queryMap(
       finalizedWrapper,
       switchboard,
-      underlyingMap,
+      _underlyingMap,
       (val) => val,
       () => {
         throw new Error(
@@ -261,23 +383,23 @@ export function eventualMap<K, T, V>(
       },
       key
     ),
-    foldingGet<W>(key: K, some: (v: V) => W, none: () => W) {
-      return queryMapper(
+    foldingGet<W>(key: K, some: (v: T) => W, none: () => W) {
+      return queryMap(
         finalizedWrapper,
         switchboard,
-        underlyingMap,
+        _underlyingMap,
         some,
         none,
         key
       );
     },
     getNow(key: K) {
-      return underlyingMap.get(key);
+      return _underlyingMap.get(key);
     },
     hasNow(key: K) {
-      return underlyingMap.has(key);
+      return _underlyingMap.has(key);
     },
-    underlyingMap,
+    _underlyingMap,
     finalMap: finalMapPromise
-  } as EventualMap<K, unknown extends V ? T : V>;
+  } as EventualMap<K, T>;
 }

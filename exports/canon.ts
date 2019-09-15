@@ -1,38 +1,61 @@
-import { mapCollect, reverseMap, foldingGet } from "../exports/maps";
 import { entries, map, collect } from "../iterable";
 import { pipe } from "fp-ts/lib/pipeable";
 import { Possible } from "types/utils";
+
 /**
  * 
- * A fallible canonizer.
+ * A fallible Canonizer.
  * Primitives are mapped to themselves.
  * Arrays and objects are mapped to a stringification of them that goes only one level deep.
- * Dates are mapped to their millisecond value.
+ * Dates are mapped to their numeric value as milliseconds from epoch.
  * 
- * @param  {K} lookup The key to canonize.
+ * @param {K} lookup The key to canonize.
+ * @param {number} maxDepth? The maximum number of levels to descend into nested objects and arrays when stringifying.
+ * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
  */
-export function naiveCanonizer<K>(lookup: K) {
+export function naiveCanonize<K>(lookup: K, maxDepth = 1): string | null | undefined | number | boolean {
   if (typeof lookup === 'object' && lookup !== null) {
     if (Array.isArray(lookup)) {
-      return "[" + lookup.join() + "]";
+      return "Array: [" + lookup.map(l => maxDepth === 0 ? String(l) : naiveCanonize(l, maxDepth - 1)).join() + "]";
     } else if (lookup instanceof Date) {
-      return lookup.valueOf();
+      return "Date: " + lookup.valueOf();
     } else {
       // Non-recursive stringify
-      return "{"
+      return "Object: {"
         + pipe(
             entries(lookup as any) as any,
-            (x: Iterable<any>) => map(x, entry => entry.join(":")),
+            (x: Iterable<any>) => map(x, ([key, val]) => key + (maxDepth === 0 ? String(val) : naiveCanonize(val, maxDepth - 1))),
             collect,
             x => x.join()
           )
         + "}";
     }
+  } else if (typeof lookup === 'string') {
+    return "String: " + lookup;
   } else {
-    return lookup;
+    return lookup as any;
   }
 }
 
+/**
+ * Canonize using `JSON.stringify()`.
+ * 
+ * @remarks
+ * This canonization algorithm works better than the naïve one for nested objects, but it is subject to all the gotchas of JSON, e.g.:
+ * - `undefined` mapped to `null` when it appears in arrays, not mapped at all when it appears in an object
+ * - `NaN` mapped to `null`
+ * 
+ * @param  {K} lookup The key to canonize.
+ * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
+ */
+export function jsonCanonize<K>(lookup: K) {
+  return JSON.stringify(lookup);
+}
+
+/**
+ * Function that converts input keys, which may be complex objects that can usually only be compared by equality of reference, to primitive types that can be compared by equality of value.
+ * Depending on user needs, some inputs may remain as reference-comparable objects, hence the lack of restriction on the output type.
+ */
 type Canonizer<C, K> = (lookup: K) => C;
 
 /**
@@ -42,10 +65,10 @@ type Canonizer<C, K> = (lookup: K) => C;
  * 
  * @remarks
  * In use cases that call for Maps, developers will often want to map by some combination of values instead of a single value.
- * If they use an object or array for this, however, each one will be unique, and so a lookup attempted with a newly initialized object or array will fail.
- * The solution is to initialize the map with a "canonizer" that, for any key, creates a canonical equivalent that other values can map to.
+ * If they use an object or array for this, however, lookups won't work because objects or arrays are compared by reference rather than value.
+ * The solution is to initialize the map with a "canonizer" that, for any key, creates a canonical equivalent that other referentially unique objects and arrays can map to.
  * 
- * This gives the user total control over what matches to what.
+ * This gives the user total control over the equality algorithm. Under the hood, CanonMap maintains a Map between canonized keys and values. As far as TypeScript's type system is concerned, though, it is a Map from the desired key type to the desired value type that just happens to compare by equality.
  * 
  * @extends Map
  */
@@ -53,17 +76,18 @@ export class CanonMap<K, T> extends Map<K, T> {
   canonizer: Canonizer<any, K>;
 
   /**
-   * 
    * Initialize a CanonMap.
    * 
-   * 
-   * @typeparam K Key type
-   * @typeparam T Value type
+   * @typeparam K Key type.
+   * @typeparam T Value type.
    * @param entries? {Iterable}
    * An iterable yielding all key-value tuples that will be fed into the Map.
    * Without this, the Map is initialized to empty.
+   * @param {Canonizer} canonizer? Function to map keys to suitable primitives.
+   * If not provided, the CanonMap will use a default canonizer.
+   * 
    */
-  constructor(canonizer: Canonizer<any, K>, entries?: Iterable<[K, T]>) {
+  constructor(entries?: Iterable<[K, T]>, canonizer: Canonizer<any, K> = naiveCanonize) {
     super();
     this.canonizer = canonizer;
 
@@ -77,7 +101,7 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * Gets the value at the canonization of the key in the CanonMap object.
+   * Gets the value at the canonized key in the CanonMap object.
    * Returns the CanonMap object.
    * 
    * 
@@ -90,9 +114,8 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * Gets the value at the canonization of the key in the CanonMap object.
+   * Gets the value at the canonized key in the CanonMap object.
    * Returns the CanonMap object.
-   * 
    * 
    * @param {K} key The key to look up.
    * @returns {boolean} `true` if the canonization of the key is present in the CanonMap, `false` otherwise.
@@ -102,9 +125,8 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * Sets the value for the canonization of the key in the CanonMap object.
+   * Sets the value for the canonized key in the CanonMap object.
    * Returns the CanonMap object.
-   * 
    * 
    * @param {K} key The key to set.
    * @param {T} val The value to set at that key.
@@ -118,7 +140,7 @@ export class CanonMap<K, T> extends Map<K, T> {
 
   /**
    * 
-   * Deletes the key-value pair associated with the canonization of `key`.
+   * Deletes the key-value pair associated with the canonized `key`.
    * Does nothing if that entry is not present.
    * 
    * @param {K} key The key to delete the canonization of.
@@ -153,6 +175,6 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 }
 
-export function NaiveCanonMap<K, T>(entries?: Iterable<[K, T]>) {
-  return new CanonMap(naiveCanonizer, entries);
+export function JsonCanonMap<K, T>(entries?: Iterable<[K, T]>) {
+  return new CanonMap(entries, jsonCanonize);
 }
