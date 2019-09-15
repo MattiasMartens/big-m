@@ -636,7 +636,7 @@ export function bumpDuplicateKeys<K, T>(
  * If the BumperFn returns `undefined`, the caller will treat this as a failure and skip it.
  * 
  * @remarks
- * The `priorBumps` parameter can be used to fail key generation if too many collisions occur, either by returning `undefined` or by throwing an appropriate error (see {@link throwOnBump}).
+ * The `priorBumps` parameter can be used to fail key generation if too many collisions occur, either by returning `undefined` or by throwing an appropriate error (see {@link resolutionFailureMessage}).
  * For complex functions, this is the only guaranteed way to avoid entering an infinite loop.
  * 
  * @param  {K} collidingKey The key that would have been set in a Map if it did not already exist in the Map.
@@ -689,13 +689,13 @@ export function collectIntoBumpingDuplicateKeys<K, T>(
 }
 
 /**
- * 
- * Function that a caller of bumpDuplicateKeys() can use to produce a handy generic error message on failure to resolve.
+ * Function that a caller of `bumpDuplicateKeys()` can use to produce a generic error message when a key collision cannot be resolved.
  * 
  * @param collidingKey The key that could not be resolved.
  * @param priorBumps The number of attempts made before the bumper gave up.
+ * @returns {string} A message describing the error
  */
-export function throwOnBump<K, T>(collidingKey: K, priorBumps: number): never {
+export function resolutionFailureMessage<K, T>(collidingKey: K, priorBumps: number): string {
   const pluralize = (n: number) => n === 1 ? "try" : "tries";
-  throw new Error(`Failed to resolve key "${collidingKey}" to a unique value after ${priorBumps} ${pluralize(priorBumps)}`);
+  return `Failed to resolve key "${collidingKey}" to a unique value after ${priorBumps} ${pluralize(priorBumps)}`);
 }
