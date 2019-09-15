@@ -79,12 +79,12 @@ function EventualMap(stream, { bumper, seed } = {}) {
                 let attempts = 0;
                 do {
                     attempts++;
-                    const innerNewKey = bumper(newKey, attempts, maps_1.getOrFail(_underlyingMap, key), value);
+                    const innerNewKey = bumper(newKey, attempts, key, maps_1.getOrFail(_underlyingMap, key), value);
                     if (innerNewKey === undefined) {
                         // Failed to set
                         break;
                     }
-                    else if (!_underlyingMap.has(newKey)) {
+                    else if (!_underlyingMap.has(innerNewKey)) {
                         _underlyingMap.set(innerNewKey, value);
                         break;
                     }
@@ -117,7 +117,7 @@ function EventualMap(stream, { bumper, seed } = {}) {
             throw new Error(typeof error === "function"
                 ? error(key)
                 : typeof error === "undefined"
-                    ? `Map has no entry ${key}`
+                    ? `Map has no entry "${key}"`
                     : error);
         }, key),
         foldingGet(key, some, none) {

@@ -92,6 +92,15 @@ function mapValues(iterable, fn) {
 exports.mapValues = mapValues;
 /**
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
+ * @param {Function} fn A function mapping the keys of the Map to a transformed key.
+ * @returns An iterable representing the entries of a map from the transformed key to value.
+ */
+function mapKeys(iterable, fn) {
+    return iterable_1.map(iterable, ([key, val]) => [fn(key, val), val]);
+}
+exports.mapKeys = mapKeys;
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the keys of the map.
  */
 function keysOf(iterable) {
@@ -186,7 +195,7 @@ function getOrFail(map, key, error) {
         throw new Error(typeof error === "function"
             ? error(key)
             : typeof error === "undefined"
-                ? `Map has no entry ${key}`
+                ? `Map has no entry "${key}"`
                 : error);
     });
 }
@@ -475,21 +484,20 @@ function mapCollectIntoBumping(mapEnumeration, bumper, seed) {
         if (seed.has(key)) {
             let newKey = key;
             let attempts = 0;
-            do {
-                attempts++;
-                const innerNewKey = bumper(newKey, attempts, getOrFail(seed, key), value);
+            while (true) {
+                const innerNewKey = bumper(newKey, attempts++, key, getOrFail(seed, key), value);
                 if (innerNewKey === undefined) {
                     // Failed to set
                     break;
                 }
-                else if (!seed.has(newKey)) {
+                else if (!seed.has(innerNewKey)) {
                     seed.set(innerNewKey, value);
                     break;
                 }
                 else {
                     newKey = innerNewKey;
                 }
-            } while (!!newKey);
+            }
         }
         else {
             seed.set(key, value);

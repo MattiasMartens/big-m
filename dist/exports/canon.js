@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iterable_1 = require("../iterable");
-const pipeable_1 = require("fp-ts/lib/pipeable");
 /**
  *
  * A fallible Canonizer.
@@ -28,13 +27,16 @@ function naiveCanonize(lookup, maxDepth = 2) {
             else {
                 // Non-recursive stringify
                 return "{"
-                    + pipeable_1.pipe(iterable_1.entries(lookup), (x) => iterable_1.map(x, ([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1)), iterable_1.collect, x => x.join(", "))
+                    + iterable_1.collect(iterable_1.map(iterable_1.entries(lookup), ([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1))).join(", ")
                     + "}";
             }
         }
     }
     else if (typeof lookup === 'string') {
         return "String: " + lookup;
+    }
+    else if (Number.isNaN(lookup)) {
+        return "Number: NaN";
     }
     else {
         return lookup;

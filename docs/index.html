@@ -44,9 +44,145 @@
 
     <section>
         <article><h1>Cartographer</h1>
-<p>Cartographer is a library for c</p>
+<p>Cartographer is a library of utility functions for efficiently working with Maps: composing them, decomposing them, recomposing them, and chaining operations without having to loop over the data structure more than once.
+It includes some Map sub-classes for special use cases: EventualMap, BiMap, and CanonizedMap.</p>
+<h1>maps.ts</h1>
+<p>Pure function library.
+Most functions in this library can be used not only on Maps, but on anything that implements the Iterable interface.
+This includes arrays of key-value tuples and Iterables created by libraries like <a href="https://fitzgen.github.io/wu.js/">wu.js</a> and <a href="http://danieltao.com/lazy.js/">lazy.js</a>.</p>
+<p>To allow efficient composition of operations, most functions return an Iterable of entries instead of an actual Map.
+To get to a Map from one of these Iterables, just call <code>collectMap</code> on it or use the <code>Map</code> constructor:</p>
+<pre class="prettyprint source"><code>const myIterable = selectMap(myMap, a => isWorthKeeping(a));
+
+// this works
+const myNewMap = mapCollect(myIterable);
+
+// this works, too
+const myNewMap2 = new Map(myIterable);
+</code></pre>
+<h1>streams.ts</h1>
+<h2>EventualMap</h2>
+<p>The main use case for EventualMap is when you are loading data from two remote sources and joining them together - say you're getting a user IDs from one source and a user metadata table from another - and you want to front-load as much of the work as possible, continuing processing on each user ID the moment it arrives in your system.</p>
+<p>With EventualMap, you can perform async lookups on a Stream (note that this is from <a href="https://github.com/poelstra/ts-stream">ts-stream</a>, not the Node implementation) that return as soon as the value arrives.
+This simplifies the work of combining multiple incoming data streams while minimizing unnecessary awaiting.</p>
+<h2>StreamCollectInto</h2>
+<p>For the more straightforward case where you have a Stream of key-value pairs and you want it to be a Map, but don't care about it until it's complete, there's also <code>streamCollectInto</code>.
+This simply returns a Promise of the completed Map.</p>
+<h1>bidirectional.ts</h1>
+<h2>BiMap</h2>
+<p>A subclass of Map which, for every key-value pair, maintains a corresponding value-key pair in another Map.
+Lookups can then be performed in either direction, from a key to a value or from a value to a key.</p>
+<p>BiMap also exposes a reversed version of itself with <code>.reverse</code>, which behaves exactly like the original except that the key set and value set are flipped.
+The map can be reversed and re-reversed indefinitely without the data structure being rebuilt.</p>
+<h1>canon.ts</h1>
+<h2>CanonMap</h2>
+<p>Normally Maps don't provide an effective way of doing things like this:</p>
+<pre class="prettyprint source"><code>const myMap = new Map();
+myMap.set(
+  [&quot;Farooq&quot;, &quot;867-5309&quot;],
+  36.59
+);
+
+// ???
+myMap.get(
+  [&quot;Farooq&quot;, &quot;867-5309&quot;]
+) === undefined;
+
+// Oh right, it's compare-by-reference and those two arrays were declared separately so they can't be considered as the same key.
+
+</code></pre>
+<p>But with CanonMap, the above actually works:</p>
+<pre class="prettyprint source"><code>const myMap = new Map();
+myMap.set(
+  [&quot;Farooq&quot;, &quot;867-5309&quot;],
+  36.59
+);
+
+myMap.get(
+  [&quot;Farooq&quot;, &quot;867-5309&quot;]
+) === 36.59;
+
+// Yay!
+
+</code></pre>
+<p>CanonMap behaves exactly <em>as if</em> it were mapping complex objects to values by the values in the objects, instead of their references.
+What it's actually doing is mapping these complex values to primitives such as strings, using a function called a canonizer.
+The default canonizer is pretty effective at recognizing when two values ought to be considered the same:</p>
+<pre class="prettyprint source"><code>const myCanonMap = new CanonMap();
+
+const indexable = (val1, val2) => {
+  myCanonMap.set(val1, &quot;TEST&quot;);
+  const indexable = myCanonMap.get(val2) === &quot;TEST&quot;;
+  myCanonmMp.delete(val1);
+  return indexable;
+}
+
+indexable(
+  [&quot;Farooq&quot;, &quot;867-5309&quot;],
+  [&quot;Farooq&quot;, &quot;867-5309&quot;]
+);
+
+indexable(
+  {
+    a: 1,
+    b: [9, 10]
+  },
+  {
+    a: 1,
+    b: [9, 10]
+  }
+);
+
+!indexable(
+  [&quot;1&quot;],
+  [1]
+);
+</code></pre>
+<p>But it only looks two levels deep into deeply nested objects.
+However, users can have complete control over how the canonizer works using the canonizer argument, allowing them to adapt the class to their own particular use case.</p>
+<h1>Chaining</h1>
+<p>Chaining operations together can be done readably with <a href="https:%5C/%5C/github.com/gcanti/fp-ts">https://github.com/gcanti/fp-ts</a>'s pipe function:</p>
+<pre class="prettyprint source"><code>pipe(
+  makeEntries(fibonacci, fib => [fib, romanNumerals(fib)]),
+  x => selectMap(x, fib => fib % 2 === 1),
+  x => mapKeys(fib => fib % 7),
+  x => mapCollectBumping(fib => fib * 2)
+);
+</code></pre>
+<p>It would be nicer to call functions directly on their first argument, i.e. <code>map1.mapValues()</code>, but this is not implemented yet - see the Contributing section below.</p>
 <h2><a href="https://github.com/MattiasMartens/cartographer">Contributing</a></h2>
-<p>Source code is hosted at [https://github.com/MattiasMartens/cartographer].</p></article>
+<p>Source code is hosted at <a href="https:%5C/%5C/github.com/MattiasMartens/cartographer">https://github.com/MattiasMartens/cartographer</a>.</p>
+<p>To set up locally (assuming you have Yarn installed and you've forked the repo):</p>
+<pre class="prettyprint source"><code>yarn install
+
+# To ensure tests pass and to see coverage report
+yarn test
+
+# To see performance benchmarks
+yarn benchmark
+</code></pre>
+<p>To submit changes as a PR, before committing:</p>
+<pre class="prettyprint source"><code>yarn test
+yarn compile
+yarn docs
+</code></pre>
+<h3>Monkey-Patching</h3>
+<p>Currently the utility functions must be called as pure functions:</p>
+<pre class="prettyprint source"><code>mapCollectInto(myListOfEntries, myNewMap);
+</code></pre>
+<p>It would be nicer to call them like this:</p>
+<pre class="prettyprint source"><code>myListOfEntries.mapCollectInto(myNewMap)
+</code></pre>
+<p>But modifying the existing native classes is not recommended.
+Instead the plan is to patch them on using Symbols, which a user can import:</p>
+<pre class="prettyprint source"><code>import { mapCollectInto } from &quot;cartographer/monkey&quot;;
+
+myListOfEntries[mapCollectInto](myNewMap);
+</code></pre>
+<p>This is not implemented yet, however.
+TypeScript makes it pretty laborious to monkey-patch a large number of symbols onto various prototypes and communicate through declarations that you've done so.
+I'm thinking of writing a macro to generate the code that does this.
+PRs welcome.</p></article>
     </section>
 
 
@@ -57,13 +193,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#biMapCollect">biMapCollect</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#biMapCollect">biMapCollect</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapKeys">mapKeys</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 15 2019 01:07:33 GMT-0700 (Pacific Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 15 2019 02:19:17 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

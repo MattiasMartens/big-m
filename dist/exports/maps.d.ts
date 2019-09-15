@@ -35,6 +35,12 @@ export declare function reverseMap<K, T>(iterable: Iterable<[K, T]>): Generator<
 export declare function mapValues<K, T, V>(iterable: Iterable<[K, T]>, fn: (value: T, key: K) => V): mapEnumeration<K, V>;
 /**
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
+ * @param {Function} fn A function mapping the keys of the Map to a transformed key.
+ * @returns An iterable representing the entries of a map from the transformed key to value.
+ */
+export declare function mapKeys<K, T, V>(iterable: Iterable<[K, T]>, fn: (key: K, value: T) => V): mapEnumeration<V, T>;
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the keys of the map.
  */
 export declare function keysOf<K, T>(iterable: Iterable<[K, T]>): Generator<K, void, unknown>;
@@ -231,11 +237,12 @@ export declare function mapCollectBumping<K, T>(mapEnumeration: Iterable<[K, T]>
  *
  * @param  {K} collidingKey The key that would have been set in a Map if it did not already exist in the Map.
  * @param  {number} priorBumps The number of times the caller has already attempted to insert the key.
+ * @param  {K} originalKey The key that was initially attempted to be set when the resolution process began.
  * @param  {T} collidingValue The value that is currently set at the key in a Map.
  * @param  {T} incomingValue The value that would have been set at the key in a Map.
  * @returns {K | undefined} The key if a key was successfully generated, `undefined` otherwise.
  */
-export declare type BumperFn<K, T> = (collidingKey: K, priorBumps: number, collidingValue: T, incomingValue: T) => Possible<K>;
+export declare type BumperFn<K, T> = (collidingKey: K, priorBumps: number, originalKey: K, collidingValue: T, incomingValue: T) => Possible<K>;
 /**
  * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
  * If the new key collides too, keep calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.

@@ -120,6 +120,15 @@ function mapValues(iterable, fn) {
 exports.mapValues = mapValues;
 /**
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
+ * @param {Function} fn A function mapping the keys of the Map to a transformed key.
+ * @returns An iterable representing the entries of a map from the transformed key to value.
+ */
+function mapKeys(iterable, fn) {
+    return iterable_1.map(iterable, ([key, val]) => [fn(key, val), val]);
+}
+exports.mapKeys = mapKeys;
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the keys of the map.
  */
 function keysOf(iterable) {
@@ -214,7 +223,7 @@ function getOrFail(map, key, error) {
         throw new Error(typeof error === "function"
             ? error(key)
             : typeof error === "undefined"
-                ? `Map has no entry ${key}`
+                ? `Map has no entry "${key}"`
                 : error);
     });
 }
@@ -503,21 +512,20 @@ function mapCollectIntoBumping(mapEnumeration, bumper, seed) {
         if (seed.has(key)) {
             let newKey = key;
             let attempts = 0;
-            do {
-                attempts++;
-                const innerNewKey = bumper(newKey, attempts, getOrFail(seed, key), value);
+            while (true) {
+                const innerNewKey = bumper(newKey, attempts++, key, getOrFail(seed, key), value);
                 if (innerNewKey === undefined) {
                     // Failed to set
                     break;
                 }
-                else if (!seed.has(newKey)) {
+                else if (!seed.has(innerNewKey)) {
                     seed.set(innerNewKey, value);
                     break;
                 }
                 else {
                     newKey = innerNewKey;
                 }
-            } while (!!newKey);
+            }
         }
         else {
             seed.set(key, value);
@@ -548,13 +556,13 @@ exports.resolutionFailureMessage = resolutionFailureMessage;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#biMapCollect">biMapCollect</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#biMapCollect">biMapCollect</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapKeys">mapKeys</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 15 2019 01:07:33 GMT-0700 (Pacific Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 15 2019 02:19:17 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

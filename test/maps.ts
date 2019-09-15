@@ -30,7 +30,8 @@ import {
   zipMapsIntersection,
   zipMapsUnion,
   mapCollectBumping,
-  resolutionFailureMessage
+  resolutionFailureMessage,
+  mapKeys
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
@@ -540,6 +541,21 @@ describe('mapValues', () => {
       {
         a: "2.2",
         b: "2.4"
+      }
+    );
+  });
+});
+
+describe('mapKeys', () => {
+  it ('Should transform a map into a stream of map entries with a mapper function', () => {
+    const map1 = new Map([["a", 5], ["b", 6]]);
+
+    const ret = mapKeys(map1, x => "_" + x);
+
+    mapToDictionary(ret).should.deepEqual(
+      {
+        _a: 5,
+        _b: 6
       }
     );
   });

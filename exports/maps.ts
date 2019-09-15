@@ -164,6 +164,18 @@ export function mapValues<K, T, V>(
 
 /**
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
+ * @param {Function} fn A function mapping the keys of the Map to a transformed key.
+ * @returns An iterable representing the entries of a map from the transformed key to value.
+ */
+export function mapKeys<K, T, V>(
+  iterable: Iterable<[K, T]>,
+  fn: (key: K, value: T) => V
+): mapEnumeration<V, T> {
+  return map<[K, T], [V, T]>(iterable, ([key, val]) => [fn(key, val), val]);
+}
+
+/**
+ * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the keys of the map.
  */
 export function keysOf<K, T>(
