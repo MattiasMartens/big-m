@@ -214,15 +214,20 @@ export type EventualCanonMap<K, V> = {
   _underlyingMap: CanonMap<K, V>,
   finalMap: Promise<CanonMap<K, V>>
 };
+
 /**
  * 
- * Initialize an EventualMap from a stream of entries.
- * An EventualMap is a Map-like object that returns Promises which resolve as soon as possible.
- * If a request comes in for a key that has already been loaded in from the stream, it resolves immediately with that value.
- * If a request comes in before the corresponding entry arrives, it is added to a queue.
- * When the entry with the request key comes in, the Promise resolves with that value.
- * If the stream ends, and the requested key has not arrived in the stream, the Promise resolves with `undefined`.
+ * Initialize an EventualMap from a stream of entries. An EventualMap is a Map-like object that returns Promises which resolve as soon as possible.
  * 
+ * - If a request comes in for a key that has already been loaded in from the stream, it resolves immediately with that value.
+ * 
+ * - If a request comes in before the corresponding entry arrives, it is added to a queue.
+ * 
+ * - When the entry with the request key comes in, the Promise resolves with that value.
+ * 
+ * - If the stream ends, and the requested key has not arrived in the stream, the Promise resolves with `undefined`.
+ * 
+ * @remarks
  * To ensure the correctness of early `get` calls, the eventualMap does not allow existing values to be overwritten.
  * Instead, collisions can be resolved by modifying the incoming key using the `bumper` option.
  * If the `bumper` returns `undefined`, the second entry to arrive is simply ignored.
@@ -247,7 +252,7 @@ export type EventualCanonMap<K, V> = {
  * This must be accessed with caution as mutating operations on `_underlyingMap`, like `set` and `delete`, destroy all correctness guarantees for the other methods.
  * @field finalMap A Promise resolving to `underlyingMap` when the input stream ends.
  */
-export function eventualMap<K, T>(
+export function EventualMap<K, T>(
   stream: ReadableStream<[K, T]>,
   {
     bumper,
@@ -257,7 +262,7 @@ export function eventualMap<K, T>(
     seed?: BiMap<K, T>
   }
 ): EventualBiMap<K, T>
-export function eventualMap<K, T>(
+export function EventualMap<K, T>(
   stream: ReadableStream<[K, T]>,
   {
     bumper,
@@ -267,7 +272,7 @@ export function eventualMap<K, T>(
     seed?: CanonMap<K, T>
   }
 ): EventualCanonMap<K, T>
-export function eventualMap<K, T>(
+export function EventualMap<K, T>(
   stream: ReadableStream<[K, T]>,
   {
     bumper,
