@@ -98,7 +98,6 @@ describeThis(EventualMap, subject => {
     });
 
     it("With a bumper, bumps keys instead of discarding entries", async () => {
-      debugger;
       const eventual = subject(
         Stream.from([
           valAfterMs(tuple(["A", 92]), 15),

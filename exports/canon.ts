@@ -1,5 +1,4 @@
 import { entries, map, collect } from "../iterable";
-import { pipe } from "fp-ts/lib/pipeable";
 import { Possible } from "types/utils";
 
 /**
@@ -25,17 +24,19 @@ export function naiveCanonize<K>(lookup: K, maxDepth = 2): string | null | undef
       } else {
         // Non-recursive stringify
         return "{"
-          + pipe(
-              entries(lookup as any) as any,
-              (x: Iterable<any>) => map(x, ([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1)),
-              collect,
-              x => x.join(", ")
+          + collect(
+            map(
+              entries(lookup as any),
+              ([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1)
             )
+          ).join(", ")
           + "}";
       }
     }
   } else if (typeof lookup === 'string') {
     return "String: " + lookup;
+  } else if (Number.isNaN(lookup as any)) {
+    return "Number: NaN";
   } else {
     return lookup as any;
   }

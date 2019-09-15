@@ -6,20 +6,7 @@
   "author": "Mattias Martens <mattiasofmartens@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@types/benchmark": "^1.0.31",
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^12.7.3",
-    "benchmark": "^2.1.4",
-    "fp-ts": "^2.0.5",
-    "jsdoc": "^3.6.3",
-    "mocha": "^6.2.0",
-    "promise-fs": "^2.1.1",
-    "promisify": "^0.0.3",
-    "should": "^13.2.3",
-    "ts-node": "^8.3.0",
-    "ts-stream": "^2.0.1",
-    "tsconfig-paths": "^3.8.0",
-    "typescript": "^3.6.2"
+    "ts-stream": "^2.0.1"
   },
   "nyc": {
     "extension": [
@@ -38,9 +25,20 @@
     "debug": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts --inspect-brk",
     "benchmark": "node -r ts-node/register -r tsconfig-paths/register benchmarks",
     "compile": "rm -rf dist; cd exports; tsc; cd ..",
-    "docs": "rm -rf docs; ./node_modules/.bin/jsdoc dist/exports/* -c .jsdoc.config.json; mv out docs; open docs/index.html"
+    "docs": "rm -rf docs; ./node_modules/.bin/jsdoc dist/exports/* --readme README.md -c .jsdoc.config.json; mv out docs; open docs/index.html"
   },
   "devDependencies": {
-    "nyc": "^14.1.1"
+    "nyc": "^14.1.1",
+    "jsdoc": "^3.6.3",
+    "typescript": "^3.6.2",
+    "@types/benchmark": "^1.0.31",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.7.3",
+    "benchmark": "^2.1.4",
+    "fp-ts": "^2.0.5",
+    "mocha": "^6.2.0",
+    "should": "^13.2.3",
+    "ts-node": "^8.3.0",
+    "tsconfig-paths": "^3.8.0"
   }
 }

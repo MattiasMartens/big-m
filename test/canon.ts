@@ -60,6 +60,10 @@ describeThis(naiveCanonize, () => {
     should.notEqual(naiveCanonize(new Date(0)), naiveCanonize(0));
   });
 
+  it("Should map NaN to itself", () => {
+    should.equal(naiveCanonize(NaN), naiveCanonize(NaN));
+  });
+
   it("Should conflate objects at level 0", () => {
     should.equal(
       naiveCanonize({a: 1, c: {}}, 0),

@@ -104,7 +104,7 @@
     
 
     
-    <h4 class="name" id="bumpDuplicateKeys"><span class="type-signature"></span>bumpDuplicateKeys<span class="signature">(mapEnumeration, bumper, seed)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    <h4 class="name" id="biMapCollect"><span class="type-signature"></span>biMapCollect<span class="signature">(iterable, reconcileFn?)</span><span class="type-signature"></span></h4>
     
 
     
@@ -112,8 +112,9 @@
 
 
 <div class="description">
-    <p>Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by <code>bumper</code>.
-If the new key collides too, keep calling <code>bumper</code> until it either resolves to a unique key or returns <code>undefined</code> to signal failure.</p>
+    <p>Converts an Iterable of Map entries into a brand new BiMap.
+If two values map to the same key and the <code>reconcileFn</code> argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.</p>
+<p>Note that BiMaps do not allow two values to share a key. The reconciler plays no role in this case.</p>
 </div>
 
 
@@ -149,7 +150,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
 
         <tr>
             
-                <td class="name"><code>mapEnumeration</code></td>
+                <td class="name"><code>iterable</code></td>
             
 
             <td class="type">
@@ -165,20 +166,20 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
 
             
 
-            <td class="description last"><p>An entry stream with duplicate keys.</p></td>
+            <td class="description last"><p>The entries to add.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>bumper</code></td>
+                <td class="name"><code>reconcileFn?</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">BumperFn</span>
+<span class="param-type">Reconciler</span>
 
 
             
@@ -188,30 +189,14 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
 
             
 
-            <td class="description last"><p>A function to be called each time a key would overwrite a key that has already been set in <code>seed</code>.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>seed</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Map</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The Map to insert values into.</p></td>
+            <td class="description last"><p>A function specifying what value to set when two keys map to the same value.
+If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+Called with:</p>
+<ol>
+<li>The value previously set at this key, or <code>undefined</code> if no value was set;</li>
+<li>The new value arriving from the Iterable;</li>
+<li>The key where the output will be entered.</li>
+</ol></td>
         </tr>
 
     
@@ -252,7 +237,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line416">line 416</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line72">line 72</a>
     </li></ul></dd>
     
 
@@ -281,228 +266,10 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
 
         
 <div class="param-desc">
-    <p>The finalized Map.</p>
+    <p>The newly created BiMap.</p>
 </div>
 
 
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Object</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="collectIntoBumpingDuplicateKeys"><span class="type-signature"></span>collectIntoBumpingDuplicateKeys<span class="signature">(mapEnumeration, bumper, seed)</span><span class="type-signature"> &rarr; {Object}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by <code>bumper</code>.
-If the new key collides too, keep calling <code>bumper</code> until it either resolves to a unique key or returns <code>undefined</code> to signal failure.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>mapEnumeration</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Iterable</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>An entry stream with duplicate keys.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bumper</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">BumperFn</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>A function to be called each time a key would overwrite a key that has already been set in <code>seed</code>.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>seed</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Map</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The Map to insert values into.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line429">line 429</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>The finalized Map.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Object</span>
-
-
-    </dd>
-</dl>
 
     
 
@@ -640,7 +407,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line185">line 185</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line216">line 216</a>
     </li></ul></dd>
     
 
@@ -852,7 +619,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line120">line 120</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line151">line 151</a>
     </li></ul></dd>
     
 
@@ -1041,7 +808,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line136">line 136</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line167">line 167</a>
     </li></ul></dd>
     
 
@@ -1233,7 +1000,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line153">line 153</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line184">line 184</a>
     </li></ul></dd>
     
 
@@ -1434,7 +1201,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line103">line 103</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line134">line 134</a>
     </li></ul></dd>
     
 
@@ -1581,7 +1348,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line335">line 335</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line379">line 379</a>
     </li></ul></dd>
     
 
@@ -1761,7 +1528,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="canon.js.html">canon.js</a>, <a href="canon.js.html#line50">line 50</a>
+        <a href="canon.js.html">canon.js</a>, <a href="canon.js.html#line55">line 55</a>
     </li></ul></dd>
     
 
@@ -1796,6 +1563,139 @@ assert(deepEquals(
 
 
     
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="JsonCanonMap"><span class="type-signature"></span>JsonCanonMap<span class="signature">(entries?)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Create a CanonMap that canonizes using <code>JSON.stringify</code>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>entries?</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The entries with which to initialize the map.
+By default, creates an empty map.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="canon.js.html">canon.js</a>, <a href="canon.js.html#line170">line 170</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1904,7 +1804,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line66">line 66</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line97">line 97</a>
     </li></ul></dd>
     
 
@@ -2074,7 +1974,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line171">line 171</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line202">line 202</a>
     </li></ul></dd>
     
 
@@ -2107,6 +2007,391 @@ assert(deepEquals(
 </div>
 
 
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="mapCollect"><span class="type-signature"></span>mapCollect<span class="signature">(iterable, reconcileFn?)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Converts an Iterable of Map entries into a brand new map.
+When called on a map, the result will be a new Map with the same entries as the previous one.
+If two values map to the same key and the <code>reconcileFn</code> argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>iterable</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Iterable</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The entries to add.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>reconcileFn?</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Reconciler</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function specifying what value to set when two keys map to the same value.
+If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+Called with:</p>
+<ol>
+<li>The value previously set at this key, or <code>undefined</code> if no value was set;</li>
+<li>The new value arriving from the Iterable;</li>
+<li>The key where the output will be entered.</li>
+</ol></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line52">line 52</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>The newly created Map.</p>
+</div>
+
+
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="mapCollectBumping"><span class="type-signature"></span>mapCollectBumping<span class="signature">(mapEnumeration, bumper, seed)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by <code>bumper</code>.
+If the new key collides too, keep calling <code>bumper</code> until it either resolves to a unique key or returns <code>undefined</code> to signal failure.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mapEnumeration</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Iterable</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>An entry stream with duplicate keys.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bumper</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">BumperFn</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function to be called each time a key would overwrite a key that has already been set in <code>seed</code>.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>seed</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Map</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The Map to insert values into.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line460">line 460</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>The finalized Map.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
 
     
 
@@ -2321,6 +2606,212 @@ Called with:</p>
     
 
     
+    <h4 class="name" id="mapCollectIntoBumping"><span class="type-signature"></span>mapCollectIntoBumping<span class="signature">(mapEnumeration, bumper, seed)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by <code>bumper</code>.
+If the new key collides too, keep calling <code>bumper</code> until it either resolves to a unique key or returns <code>undefined</code> to signal failure.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mapEnumeration</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Iterable</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>An entry stream with duplicate keys.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bumper</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">BumperFn</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function to be called each time a key would overwrite a key that has already been set in <code>seed</code>.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>seed</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Map</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The Map to insert values into.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line473">line 473</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>The finalized Map.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="mapToDictionary"><span class="type-signature"></span>mapToDictionary<span class="signature">(map, stringifier?)</span><span class="type-signature"></span></h4>
     
 
@@ -2445,7 +2936,7 @@ Called with:</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line348">line 348</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line392">line 392</a>
     </li></ul></dd>
     
 
@@ -2611,7 +3102,7 @@ Called with:</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line58">line 58</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line89">line 89</a>
     </li></ul></dd>
     
 
@@ -2830,6 +3321,165 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
 
     
+    <h4 class="name" id="reconcileAdd"><span class="type-signature"></span>reconcileAdd<span class="signature">(mapFn)</span><span class="type-signature"> &rarr; {Reconciler}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Generate a Reconciler that either adds a numeric input value to a colliding numeric value, or maps the input value to a number before doing so.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mapFn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function that maps incoming values to numbers so they can be reconciled by adding.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line260">line 260</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A summing Reconciler.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Reconciler</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="reconcileAppend"><span class="type-signature"></span>reconcileAppend<span class="signature">(mapFn?)</span><span class="type-signature"> &rarr; {Reconciler}</span></h4>
     
 
@@ -2931,7 +3581,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line197">line 197</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line228">line 228</a>
     </li></ul></dd>
     
 
@@ -2961,6 +3611,166 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
         
 <div class="param-desc">
     <p>A Reconciler that combines input values into an Array.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Reconciler</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="reconcileConcat"><span class="type-signature"></span>reconcileConcat<span class="signature">(mapFn?)</span><span class="type-signature"> &rarr; {Reconciler}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Generate a Reconciler that concatenates input values together when they collide, optionally transforming them first with a mapper.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mapFn?</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function to call on the inputs.
+Regardless of the input type, the output must be an Iterable.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line295">line 295</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A Reconciler that concatenates input values together.</p>
 </div>
 
 
@@ -3041,7 +3851,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line240">line 240</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line277">line 277</a>
     </li></ul></dd>
     
 
@@ -3151,7 +3961,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line289">line 289</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line333">line 333</a>
     </li></ul></dd>
     
 
@@ -3261,7 +4071,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line299">line 299</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line343">line 343</a>
     </li></ul></dd>
     
 
@@ -3433,7 +4243,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line274">line 274</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line318">line 318</a>
     </li></ul></dd>
     
 
@@ -3466,6 +4276,178 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
 </div>
 
 
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="resolutionFailureMessage"><span class="type-signature"></span>resolutionFailureMessage<span class="signature">(collidingKey, priorBumps)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Function that a caller of <code>bumpDuplicateKeys()</code> can use to produce a generic error message when a key collision cannot be resolved.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>collidingKey</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The key that could not be resolved.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>priorBumps</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The number of attempts made before the bumper gave up.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line508">line 508</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A message describing the error</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+    </dd>
+</dl>
 
     
 
@@ -3576,7 +4558,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line49">line 49</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -3742,7 +4724,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line92">line 92</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line123">line 123</a>
     </li></ul></dd>
     
 
@@ -3777,156 +4759,6 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
 
 
     
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="throwOnBump"><span class="type-signature"></span>throwOnBump<span class="signature">(collidingKey, priorBumps)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Function that a caller of bumpDuplicateKeys() can use to produce a handy generic error message on failure to resolve.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>collidingKey</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The key that could not be resolved.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>priorBumps</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The number of attempts made before the bumper gave up.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line464">line 464</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -4058,7 +4890,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line83">line 83</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line114">line 114</a>
     </li></ul></dd>
     
 
@@ -4201,7 +5033,7 @@ Dates are mapped to their numeric value as milliseconds from epoch.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line74">line 74</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line105">line 105</a>
     </li></ul></dd>
     
 
@@ -4363,7 +5195,7 @@ To include them, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line371">line 371</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line415">line 415</a>
     </li></ul></dd>
     
 
@@ -4537,7 +5369,7 @@ To exclude them instead, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line394">line 394</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line438">line 438</a>
     </li></ul></dd>
     
 
@@ -4605,13 +5437,13 @@ To exclude them instead, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bumpDuplicateKeys">bumpDuplicateKeys</a></li><li><a href="global.html#collectIntoBumpingDuplicateKeys">collectIntoBumpingDuplicateKeys</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#throwOnBump">throwOnBump</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#biMapCollect">biMapCollect</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Sep 14 2019 19:35:11 GMT-0700 (Pacific Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 15 2019 01:07:33 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

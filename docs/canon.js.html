@@ -41,19 +41,24 @@ const pipeable_1 = require("fp-ts/lib/pipeable");
  * @param {number} maxDepth? The maximum number of levels to descend into nested objects and arrays when stringifying.
  * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
  */
-function naiveCanonize(lookup, maxDepth = 1) {
+function naiveCanonize(lookup, maxDepth = 2) {
     if (typeof lookup === 'object' &amp;&amp; lookup !== null) {
-        if (Array.isArray(lookup)) {
-            return "Array: [" + lookup.map(l => maxDepth === 0 ? String(l) : naiveCanonize(l, maxDepth - 1)).join() + "]";
-        }
-        else if (lookup instanceof Date) {
-            return "Date: " + lookup.valueOf();
+        if (maxDepth === 0) {
+            return String(lookup);
         }
         else {
-            // Non-recursive stringify
-            return "Object: {"
-                + pipeable_1.pipe(iterable_1.entries(lookup), (x) => iterable_1.map(x, ([key, val]) => key + (maxDepth === 0 ? String(val) : naiveCanonize(val, maxDepth - 1))), iterable_1.collect, x => x.join())
-                + "}";
+            if (Array.isArray(lookup)) {
+                return "[" + lookup.map(l => naiveCanonize(l, maxDepth - 1)).join(", ") + "]";
+            }
+            else if (lookup instanceof Date) {
+                return "Date: " + lookup.valueOf();
+            }
+            else {
+                // Non-recursive stringify
+                return "{"
+                    + pipeable_1.pipe(iterable_1.entries(lookup), (x) => iterable_1.map(x, ([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1)), iterable_1.collect, x => x.join(", "))
+                    + "}";
+            }
         }
     }
     else if (typeof lookup === 'string') {
@@ -184,6 +189,12 @@ class CanonMap extends Map {
     }
 }
 exports.CanonMap = CanonMap;
+/**
+ * Create a CanonMap that canonizes using `JSON.stringify`.
+ *
+ * @param entries? The entries with which to initialize the map.
+ * By default, creates an empty map.
+ */
 function JsonCanonMap(entries) {
     return new CanonMap(entries, jsonCanonize);
 }
@@ -198,13 +209,13 @@ exports.JsonCanonMap = JsonCanonMap;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bumpDuplicateKeys">bumpDuplicateKeys</a></li><li><a href="global.html#collectIntoBumpingDuplicateKeys">collectIntoBumpingDuplicateKeys</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#throwOnBump">throwOnBump</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#biMapCollect">biMapCollect</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Sep 14 2019 19:35:11 GMT-0700 (Pacific Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 15 2019 01:07:33 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
