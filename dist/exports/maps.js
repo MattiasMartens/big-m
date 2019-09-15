@@ -3,6 +3,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bidirectional_1 = require("./bidirectional");
 const utils_1 = require("../types/utils");
 const iterable_1 = require("../iterable");
+/**
+ * Inserts the entries in the iterable into the provided map.
+ * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ *
+ * @param {Iterable} iterable The entries to add.
+ * @param {Map} seed The Map to add them to.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The updated Map.
+ */
 function mapCollectInto(iterable, seed, reconcileFn) {
     if (reconcileFn) {
         for (let entry of iterable) {
@@ -220,7 +235,7 @@ exports.reconcileAdd = reconcileAdd;
 /**
  * Generate a Reconciler that bumps up a count on each collision, ultimately yielding the total number of entries that collided on a key.
  *
- * @returns {Reconciler} A Reconciler that counts entries that had the same key.
+ * @returns {Reconciler} A Reconciler that counts entries that has the same key.
  */
 function reconcileCount() {
     return function (collidingValue, _) {

@@ -16,21 +16,6 @@ export declare type mapEnumeration<K, V> = Iterable<[K, V]>;
  * @returns The updated value.
  */
 export declare type Reconciler<K, T, V> = (colliding: Possible<V>, incoming: T, key: K) => V;
-/**
- * Inserts the entries in the iterable into the provided map.
- * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
- *
- * @param {Iterable} iterable The entries to add.
- * @param {Map} seed The Map to add them to.
- * @param {Reconciler} reconcileFn?
- * A function specifying what value to set when two keys map to the same value.
- * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
- * Called with:
- * 1. The value previously set at this key, or `undefined` if no value was set;
- * 2. The new value arriving from the Iterable;
- * 3. The key where the output will be entered.
- * @returns The updated Map.
- */
 export declare function mapCollectInto<K, T>(iterable: Iterable<[K, T]>, seed: Map<K, T>): Map<K, T>;
 export declare function mapCollectInto<K, T, V>(iterable: Iterable<[K, T]>, seed: Map<K, V>, reconcileFn: Reconciler<K, T, V>): Map<K, V>;
 /**
@@ -166,7 +151,7 @@ export declare function reconcileAdd<T, K>(mapFn: (val: T) => number): Reconcile
 /**
  * Generate a Reconciler that bumps up a count on each collision, ultimately yielding the total number of entries that collided on a key.
  *
- * @returns {Reconciler} A Reconciler that counts entries that had the same key.
+ * @returns {Reconciler} A Reconciler that counts entries that has the same key.
  */
 export declare function reconcileCount<K, T>(): Reconciler<K, T, number>;
 /**

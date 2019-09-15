@@ -175,6 +175,12 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 }
 
+/**
+ * Create a CanonMap that canonizes using `JSON.stringify`.
+ * 
+ * @param entries? The entries with which to initialize the map.
+ * By default, creates an empty map.
+ */
 export function JsonCanonMap<K, T>(entries?: Iterable<[K, T]>) {
   return new CanonMap(entries, jsonCanonize);
 }

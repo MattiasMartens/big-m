@@ -31,6 +31,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bidirectional_1 = require("./bidirectional");
 const utils_1 = require("../types/utils");
 const iterable_1 = require("../iterable");
+/**
+ * Inserts the entries in the iterable into the provided map.
+ * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ *
+ * @param {Iterable} iterable The entries to add.
+ * @param {Map} seed The Map to add them to.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The updated Map.
+ */
 function mapCollectInto(iterable, seed, reconcileFn) {
     if (reconcileFn) {
         for (let entry of iterable) {
@@ -248,7 +263,7 @@ exports.reconcileAdd = reconcileAdd;
 /**
  * Generate a Reconciler that bumps up a count on each collision, ultimately yielding the total number of entries that collided on a key.
  *
- * @returns {Reconciler} A Reconciler that counts entries that had the same key.
+ * @returns {Reconciler} A Reconciler that counts entries that has the same key.
  */
 function reconcileCount() {
     return function (collidingValue, _) {
@@ -489,13 +504,13 @@ exports.throwOnBump = throwOnBump;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bumpDuplicateKeys">bumpDuplicateKeys</a></li><li><a href="global.html#collectIntoBumpingDuplicateKeys">collectIntoBumpingDuplicateKeys</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#throwOnBump">throwOnBump</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bumpDuplicateKeys">bumpDuplicateKeys</a></li><li><a href="global.html#collectIntoBumpingDuplicateKeys">collectIntoBumpingDuplicateKeys</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#throwOnBump">throwOnBump</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Sep 14 2019 19:24:40 GMT-0700 (Pacific Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Sep 14 2019 19:35:11 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
