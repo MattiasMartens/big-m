@@ -129,7 +129,7 @@ export declare type EventualCanonMap<K, V> = {
  * If the `bumper` returns `undefined`, the second entry to arrive is simply ignored.
  *
  * @param {Stream.ReadableStream} stream The input stream to draw the entries from.
- * @param {{bumper?: Bumper, seed: Map}} opts
+ * @param {object} opts
  * - bumper The function to call on key collisions to get a new key for the colliding entry.
  * By default, after a key arrives, subsequent entries with the same key will be discarded.
  * - seed The Map to load entries into. By default, generates a new Map.
@@ -169,7 +169,7 @@ export declare function EventualMap<K, T>(stream: ReadableStream<[K, T]>, opts?:
  * If the `bumper` returns `undefined`, the second entry to arrive is simply ignored.
  *
  * @param {Stream.ReadableStream} stream The input stream to draw the entries from.
- * @param {{bumper?: Bumper, seed: Map}} opts
+ * @param {object} opts
  * - bumper The function to call on key collisions to get a new key for the colliding entry.
  * By default, after a key arrives, subsequent entries with the same key will be discarded.
  * - seed The Map to load entries into. By default, generates a new Map.
@@ -209,7 +209,7 @@ export declare function EventualMap<K, T>(stream: ReadableStream<[K, T]>, opts?:
  * If the `bumper` returns `undefined`, the second entry to arrive is simply ignored.
  *
  * @param {Stream.ReadableStream} stream The input stream to draw the entries from.
- * @param {{bumper?: Bumper, seed: Map}} opts
+ * @param {object} opts
  * - bumper The function to call on key collisions to get a new key for the colliding entry.
  * By default, after a key arrives, subsequent entries with the same key will be discarded.
  * - seed The Map to load entries into. By default, generates a new Map.
