@@ -25,17 +25,39 @@ export type Reconciler<K, T, V> = (
   key: K
 ) => V;
 
-export function mapCollectInto<K, T>(
-  iterable: Iterable<[K, T]>,
-  seed: Map<K, T>
-): Map<K, T>
-export function mapCollectInto<K, T, V>(
-  iterable: Iterable<[K, T]>,
-  seed: Map<K, V>,
-  reconcileFn: Reconciler<K, T, V>
-): Map<K, V>
 /**
- * Inserts the entries in the iterable into the provided map.
+ * Insert the entries in the iterable into the provided map.
+ * 
+ * @param {Iterable} iterable The entries to add.
+ * @param {Map} seed The Map to add them to.
+ * @param {Reconciler} reconcileFn
+ */
+export function mapCollectInto<K, T, P extends Map<K, T>>(
+  iterable: Iterable<[K, T]>,
+  seed: P
+): P
+/**
+ * Insert the entries in the iterable into the provided map.
+ * If two values map to the same key, `reconcileFn` will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ * 
+ * @param {Iterable} iterable The entries to add.
+ * @param {Map} seed The Map to add them to.
+ * @param {Reconciler} reconcileFn
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The updated Map. 
+ */
+export function mapCollectInto<K, T, V, P extends Map<K, V>>(
+  iterable: Iterable<[K, T]>,
+  seed: P,
+  reconcileFn: Reconciler<K, T, V>
+): P
+/**
+ * Insert the entries in the iterable into the provided map.
  * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
  * 
  * @param {Iterable} iterable The entries to add.
@@ -49,11 +71,11 @@ export function mapCollectInto<K, T, V>(
  * 3. The key where the output will be entered.
  * @returns The updated Map. 
  */
-export function mapCollectInto<K, T, V>(
+export function mapCollectInto<K, T, V, P extends Map<K, V>>(
   iterable: Iterable<[K, T]>,
-  seed: Map<K, V>,
+  seed: P,
   reconcileFn?: Reconciler<K, T, V>
-): Map<K, V> {
+): P {
   if (reconcileFn) {
     for (let entry of iterable) {
       const [key, val] = entry;
@@ -73,15 +95,45 @@ export function mapCollectInto<K, T, V>(
   return seed;
 }
 
+/**
+ * Convert an Iterable of Map entries into a brand new map.
+ * When called on a map, the result will be a new Map with the same entries as the previous one.
+ * If two values map to the same key, the last value to arrive at that key will overwrite the rest.
+ * 
+ * @param {Iterable} iterable The entries to add.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The newly created Map. 
+ */
 export function mapCollect<K, T>(
   iterable: Iterable<[K, T]>
 ): Map<K, T>
+/**
+ * Convert an Iterable of Map entries into a brand new map.
+ * When called on a map, the result will be a new Map with the same entries as the previous one.
+ * If two values map to the same key, `reconcileFn` will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
+ * 
+ * @param {Iterable} iterable The entries to add.
+ * @param {Reconciler} reconcileFn?
+ * A function specifying what value to set when two keys map to the same value.
+ * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
+ * Called with:
+ * 1. The value previously set at this key, or `undefined` if no value was set;
+ * 2. The new value arriving from the Iterable;
+ * 3. The key where the output will be entered.
+ * @returns The newly created Map. 
+ */
 export function mapCollect<K, T, V>(
   iterable: Iterable<[K, T]>,
   reconcileFn: Reconciler<K, T, V>
 ): Map<K, V>
 /**
- * Converts an Iterable of Map entries into a brand new map.
+ * Convert an Iterable of Map entries into a brand new map.
  * When called on a map, the result will be a new Map with the same entries as the previous one.
  * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
  * 
@@ -102,40 +154,6 @@ export function mapCollect<K, T, V>(
   return mapCollectInto(
     iterable,
     new Map<K, V>(),
-    reconcileFn as any
-  );
-}
-
-export function biMapCollect<K, T>(
-  iterable: Iterable<[K, T]>
-): Map<K, T>
-export function biMapCollect<K, T, V>(
-  iterable: Iterable<[K, T]>,
-  reconcileFn: Reconciler<K, T, V>
-): Map<K, V>
-/**
- * Converts an Iterable of Map entries into a brand new BiMap.
- * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
- * 
- * Note that BiMaps do not allow two values to share a key. The reconciler plays no role in this case.
- * 
- * @param {Iterable} iterable The entries to add.
- * @param {Reconciler} reconcileFn?
- * A function specifying what value to set when two keys map to the same value.
- * If provided, this is called whether there is a collision or not, so it also serves as a mapper.
- * Called with:
- * 1. The value previously set at this key, or `undefined` if no value was set;
- * 2. The new value arriving from the Iterable;
- * 3. The key where the output will be entered.
- * @returns The newly created BiMap. 
- */
-export function biMapCollect<K, T, V>(
-  iterable: Iterable<[K, T]>,
-  reconcileFn?: Reconciler<K, T, V>
-) {
-  return mapCollectInto(
-    iterable,
-    new BiMap<K, V>(),
     reconcileFn as any
   );
 }
@@ -233,11 +251,26 @@ export function getOrVal<T, V>(
   }
 }
 
+/** 
+ * 
+ * @param  {Map} map The map on which to perform the lookup.
+ * @param  {T} key The key to look up.
+ * @param  {Function} ifPresent The function to call on the value and `key` if the value is present.
+ * @returns the result of calling `ifPresent` on a value if that value is at `key` in `map`, undefined otherwise.
+ */
 export function foldingGet<T, V, W>(
   map: Map<T, V>,
   key: T,
   ifPresent: (val: V, key: T) => W
 ): W
+/** 
+ * 
+ * @param  {Map} map The map on which to perform the lookup.
+ * @param  {T} key The key to look up.
+ * @param  {Function} ifPresent The function to call on the value and `key` if the value is present.
+ * @param  {Function} ifAbsent? The function to call on `key` if the value is absent, by default a noop returning `undefined`.
+ * @returns the result of calling `ifPresent` on a value if that value is at `key` in `map`, the result of calling `ifAbsent` otherwise.
+ */
 export function foldingGet<T, V, W>(
   map: Map<T, V>,
   key: T,
@@ -422,7 +455,18 @@ export function reconcileAppend<T, V, K>(
   }
 }
 
+/**
+ * Generate a Reconciler that either adds a numeric input value to a colliding numeric value.
+ * 
+ * @returns {Reconciler} A summing Reconciler.
+ */
 export function reconcileAdd<K>(): Reconciler<K, number, number>
+/**
+ * Generate a Reconciler that either adds a numeric input value to a colliding numeric value, or maps the input value to a number before doing so.
+ * 
+ * @param {Function} mapFn A function that maps incoming values to numbers so they can be reconciled by adding.
+ * @returns {Reconciler} A summing Reconciler.
+ */
 export function reconcileAdd<T, K>(
   mapFn: (val: T) => number
 ): Reconciler<K, T, number>
@@ -467,6 +511,11 @@ export function reconcileCount<K, T>(): Reconciler<K, T, number> {
   }
 }
 
+/**
+ * Generate a Reconciler that concatenates input values together when they collide.
+ * 
+ * @returns {Reconciler} A Reconciler that concatenates input values together.
+ */
 export function reconcileConcat<T, K>(): Reconciler<K, (Possible<Iterable<T>>), T[]>
 /**
  * Generate a Reconciler that concatenates input values together when they collide, optionally transforming them first with a mapper.

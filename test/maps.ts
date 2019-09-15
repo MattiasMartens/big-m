@@ -7,7 +7,6 @@ import {
   reconcileConcat,
   reconcileAppend,
   mapCollect,
-  biMapCollect,
   mapCollectInto,
   reconcileCount,
   flatMakeEntries,
@@ -104,7 +103,7 @@ describeThis(reconcileAppend, () => {
 
 describeThis(reconcileDefault, () => {
   it("Should emulate default Map behaviour by overwriting existing values at keys", () => {
-    const map1 = new Map([[5, ["horse"]]]);
+    const map1 = new Map([[5, "horse"]]);
 
     const ret = mapCollectInto(
       [[3, "cat"], [5, "mouse"]],
@@ -174,36 +173,6 @@ describe('collect', function() {
   });
 });
 
-describe('collectBiMap', function() {
-  it('Should turn an array of entries into a bidirectional map', function() {
-    const ret = biMapCollect([["a", 1], ["b", 2]]);
-    
-    ret.should.be.instanceOf(BiMap);
-    defined(ret.get("a")).should.equal(1);
-    defined(ret.get("b")).should.equal(2);
-  });
-
-  it('Should turn an array into a bidirectional map and by default on key collision overwrite earlier entries', function() {
-    const ret = biMapCollect([["a", 7], ["b", 8], ["a", 65]]);
-
-    ret.should.be.instanceOf(BiMap);
-    defined(ret.get("a")).should.equal(65);
-    defined(ret.get("b")).should.equal(8);
-  });
-
-  it('Should turn an array into a bidirectional map and given a reconciler combine entries on key collision', function() {
-    const ret = biMapCollect(
-      [["a", 7], ["b", 8], ["a", 65]],
-      (colliding: Possible<number>, incoming) => (colliding || 0) + incoming
-    );
-
-    ret.should.be.instanceOf(BiMap);
-    defined(ret.get("a")).should.equal(65 + 7);
-    defined(ret.get("b")).should.equal(8);
-  });
-});
-
-
 describe('collectInto', function() {
   it('Should add an array of entries to a map', function() {
     const map1 = new Map();
@@ -248,6 +217,15 @@ describe('collectInto', function() {
     defined(ret.get("a")).should.equal(65 + 7);
     defined(ret.get("b")).should.equal(8 + 1);
   });
+
+  it('With a BiMap seed should turn an array of entries into a BiMap', () => {
+      const ret = mapCollectInto([["a", 1], ["b", 2]], new BiMap<string, number>());
+      
+      ret.should.be.instanceOf(BiMap);
+      defined(ret.get("a")).should.equal(1);
+      defined(ret.get("b")).should.equal(2);
+      defined(ret.getKey(1)).should.equal("a");
+  })
 });
 
 describe("counterReconciler", () => {
