@@ -9,9 +9,9 @@ import { collect } from 'iterable';
 // but have to import should to get the types. Yuck!
 require('should');
 
-describeThis(BiMap, UnderTest => {
+describeThis(BiMap, subject => {
   it ("Should have the capabilities of a normal map", () => {
-    const instance = new UnderTest([["a", 1], ["b", 2]]);
+    const instance = new subject([["a", 1], ["b", 2]]);
     instance.has("a").should.true();
     instance.has("c").should.false();
     instance.delete("a");
@@ -26,7 +26,7 @@ describeThis(BiMap, UnderTest => {
 
   describe("reversed", () => {
     it ("Should have a reversed version which mirrors it", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       instance.reversed.has(1).should.true();
       instance.reversed.has(3).should.false();
       instance.reversed.delete(1);
@@ -41,7 +41,7 @@ describeThis(BiMap, UnderTest => {
     });
 
     it ("On collision of values, should retain whichever entry's value was specified last", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       instance.reversed.has(1).should.true();
       instance.reversed.has(3).should.false();
       instance.reversed.delete(1);
@@ -57,14 +57,14 @@ describeThis(BiMap, UnderTest => {
     });
 
     it ("On reversed, should return the original instance", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       instance.reversed.reversed.should.equal(instance);
     });
   });
 
   describe("hasVal", () => {
     it ("Should return true if map has the value, false otherwise", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       instance.hasVal(1).should.true();
       instance.hasVal(3).should.false();
       instance.reversed.delete(1);
@@ -75,7 +75,7 @@ describeThis(BiMap, UnderTest => {
     });
 
     it ("Should work even when called from reversed", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       instance.reversed.hasVal("a").should.true();
       instance.reversed.hasVal("c").should.false();
       instance.reversed.delete(1);
@@ -89,7 +89,7 @@ describeThis(BiMap, UnderTest => {
 
   describe("hasVal", () => {
     it ("Should delete a key-value pair by value, returning true if it was found and false if not", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       instance.deleteVal(1).should.true();
       instance.deleteVal(1).should.false();
       instance.deleteVal(2).should.true();
@@ -101,7 +101,7 @@ describeThis(BiMap, UnderTest => {
     });
 
     it ("Should work even when called from reversed", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       instance.reversed.deleteVal("a").should.true();
       instance.reversed.deleteVal("a").should.false();
       instance.reversed.deleteVal("b").should.true();
@@ -115,7 +115,7 @@ describeThis(BiMap, UnderTest => {
 
   describe("getKey", () => {
     it ("Should get key of a value", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       defined(instance.getKey(1)).should.equal("a");
       defined(instance.getKey(2)).should.equal("b");
       instance.set("d", 2);
@@ -124,7 +124,7 @@ describeThis(BiMap, UnderTest => {
     });
 
     it ("Should work even when called from reversed", () => {
-      const instance = new UnderTest([["a", 1], ["b", 2], ["?", undefined]]);
+      const instance = new subject([["a", 1], ["b", 2], ["?", undefined]]);
       defined(instance.reversed.getKey("b")).should.equal(2);
       defined(instance.reversed.getKey("a")).should.equal(1);
       instance.set("d", 2);

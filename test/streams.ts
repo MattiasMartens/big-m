@@ -27,10 +27,10 @@ function afterMs<T> (fn: () => T, ms = 0): Promise<T> {
   });
 }
 
-describeThis(EventualMap, underTest => {
+describeThis(EventualMap, subject => {
   describe("constructor", () => {
     it("Returns a BiMap when initialized with one", async () => {
-      const eventual = underTest(
+      const eventual = subject(
         Stream.from([
           valAfterMs(tuple(["A", 92]), 15)
         ]),
@@ -44,7 +44,7 @@ describeThis(EventualMap, underTest => {
 
   describe("get", () => {
     it("Returns a promise that is fulfilled when the stream entry comes through", async () => {
-      const eventual = underTest(
+      const eventual = subject(
         Stream.from([
           valAfterMs(tuple(["A", 92]), 15)
         ])
@@ -55,7 +55,7 @@ describeThis(EventualMap, underTest => {
     });
 
     it("Returns the first value to be returned with key", async () => {
-      const eventual = underTest(
+      const eventual = subject(
         Stream.from([
           valAfterMs(tuple(["A", 92]), 15),
           valAfterMs(tuple(["A", 922]), 20),
@@ -76,7 +76,7 @@ describeThis(EventualMap, underTest => {
     });
 
     it("With a provided seed, plants key-entry pairs on the seed", async () => {
-      const eventual = underTest(
+      const eventual = subject(
         Stream.from([
           valAfterMs(tuple(["A", 92]), 15),
           valAfterMs(tuple(["A", 922]), 20),
@@ -97,9 +97,7 @@ describeThis(EventualMap, underTest => {
 
   describe("getNow", () => {
     it("Returns whatever value is currently loaded into the underlying map", async () => {
-      // tick = new Date().valueOf();
-
-      const eventual = underTest(
+      const eventual = subject(
         Stream.from([
           valAfterMs(tuple(["A", 92]), 15),
           valAfterMs(tuple(["A", 922]), 20),

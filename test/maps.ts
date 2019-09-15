@@ -34,16 +34,16 @@ import { collect, filter } from 'iterable';
 // but have to import should to get the types. Yuck!
 require('should');
 
-describeThis(reconcileAdd, (underTest) => {
+describeThis(reconcileAdd, (subject) => {
   it('Should be useable to compose a map by adding numbers with matching keys', () => {
-    const reconciler = underTest();
+    const reconciler = subject();
 
     reconciler(undefined, 2, "key").should.equal(2);
     reconciler(1, 2, "key").should.equal(3);
   });
 
   it('Should be useable to compose a map by adding values with matching keys after applying a number function', () => {
-    const reconciler = underTest((str: string) => str.length);
+    const reconciler = subject((str: string) => str.length);
 
     reconciler(undefined, "cat", "key").should.equal(3);
     reconciler(1, "mouse", "key").should.equal(5 + 1);

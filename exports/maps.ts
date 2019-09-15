@@ -697,5 +697,5 @@ export function collectIntoBumpingDuplicateKeys<K, T>(
  */
 export function resolutionFailureMessage<K, T>(collidingKey: K, priorBumps: number): string {
   const pluralize = (n: number) => n === 1 ? "try" : "tries";
-  return `Failed to resolve key "${collidingKey}" to a unique value after ${priorBumps} ${pluralize(priorBumps)}`);
+  return `Failed to resolve key "${collidingKey}" to a unique value after ${priorBumps} ${pluralize(priorBumps)}`;
 }
