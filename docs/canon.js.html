@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: canon.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: canon.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const iterable_1 = require("../iterable");
+const pipeable_1 = require("fp-ts/lib/pipeable");
+/**
+ *
+ * A fallible Canonizer.
+ * Primitives are mapped to themselves.
+ * Arrays and objects are mapped to a stringification of them that goes only one level deep.
+ * Dates are mapped to their numeric value as milliseconds from epoch.
+ *
+ * @param {K} lookup The key to canonize.
+ * @param {number} maxDepth? The maximum number of levels to descend into nested objects and arrays when stringifying.
+ * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
+ */
+function naiveCanonize(lookup, maxDepth = 1) {
+    if (typeof lookup === 'object' &amp;&amp; lookup !== null) {
+        if (Array.isArray(lookup)) {
+            return "Array: [" + lookup.map(l => maxDepth === 0 ? String(l) : naiveCanonize(l, maxDepth - 1)).join() + "]";
+        }
+        else if (lookup instanceof Date) {
+            return "Date: " + lookup.valueOf();
+        }
+        else {
+            // Non-recursive stringify
+            return "Object: {"
+                + pipeable_1.pipe(iterable_1.entries(lookup), (x) => iterable_1.map(x, ([key, val]) => key + (maxDepth === 0 ? String(val) : naiveCanonize(val, maxDepth - 1))), iterable_1.collect, x => x.join())
+                + "}";
+        }
+    }
+    else if (typeof lookup === 'string') {
+        return "String: " + lookup;
+    }
+    else {
+        return lookup;
+    }
+}
+exports.naiveCanonize = naiveCanonize;
+/**
+ * Canonize using `JSON.stringify()`.
+ *
+ * @remarks
+ * This canonization algorithm works better than the naïve one for nested objects, but it is subject to all the gotchas of JSON, e.g.:
+ * - `undefined` mapped to `null` when it appears in arrays, not mapped at all when it appears in an object
+ * - `NaN` mapped to `null`
+ *
+ * @param  {K} lookup The key to canonize.
+ * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
+ */
+function jsonCanonize(lookup) {
+    return JSON.stringify(lookup);
+}
+exports.jsonCanonize = jsonCanonize;
+/**
+ * Map with canonized keys.
+ * By instantiating a Map with a canonizer function, we can execute lookups according to an arbitrary notion of key identity.
+ * For example, we can use arrays as Map indices and treat arrays with the same members as equivalent.
+ *
+ * @remarks
+ * In use cases that call for Maps, developers will often want to map by some combination of values instead of a single value.
+ * If they use an object or array for this, however, lookups won't work because objects or arrays are compared by reference rather than value.
+ * The solution is to initialize the map with a "canonizer" that, for any key, creates a canonical equivalent that other referentially unique objects and arrays can map to.
+ *
+ * This gives the user total control over the equality algorithm. Under the hood, CanonMap maintains a Map between canonized keys and values. As far as TypeScript's type system is concerned, though, it is a Map from the desired key type to the desired value type that just happens to compare by equality.
+ *
+ * @extends Map
+ */
+class CanonMap extends Map {
+    /**
+     * Initialize a CanonMap.
+     *
+     * @typeparam K Key type.
+     * @typeparam T Value type.
+     * @param entries? {Iterable}
+     * An iterable yielding all key-value tuples that will be fed into the Map.
+     * Without this, the Map is initialized to empty.
+     * @param {Canonizer} canonizer? Function to map keys to suitable primitives.
+     * If not provided, the CanonMap will use a default canonizer.
+     *
+     */
+    constructor(entries, canonizer = naiveCanonize) {
+        super();
+        this.canonizer = canonizer;
+        if (entries) {
+            for (let entry of entries) {
+                const [key, value] = entry;
+                // @ts-ignore
+                super.set(canonizer(key), [key, value]);
+            }
+        }
+    }
+    /**
+     * Gets the value at the canonized key in the CanonMap object.
+     * Returns the CanonMap object.
+     *
+     *
+     * @param {K} key The key to look up.
+     * @returns {T | undefined} The value if found, `undefined` otherwise.
+     */
+    get(key) {
+        const canon = this.canonizer(key);
+        return super.has(canon) ? super.get(canon)[1] : undefined;
+    }
+    /**
+     * Gets the value at the canonized key in the CanonMap object.
+     * Returns the CanonMap object.
+     *
+     * @param {K} key The key to look up.
+     * @returns {boolean} `true` if the canonization of the key is present in the CanonMap, `false` otherwise.
+     */
+    has(key) {
+        return super.has(this.canonizer(key));
+    }
+    /**
+     * Sets the value for the canonized key in the CanonMap object.
+     * Returns the CanonMap object.
+     *
+     * @param {K} key The key to set.
+     * @param {T} val The value to set at that key.
+     */
+    set(key, val) {
+        // @ts-ignore
+        super.set(this.canonizer(key), [key, val]);
+        return this;
+    }
+    /**
+     *
+     * Deletes the key-value pair associated with the canonized `key`.
+     * Does nothing if that entry is not present.
+     *
+     * @param {K} key The key to delete the canonization of.
+     * @returns `true` if an element in the CanonMap object existed and has been removed, `false` if the element does not exist.
+     */
+    delete(key) {
+        return super.delete(this.canonizer(key));
+    }
+    *[Symbol.iterator]() {
+        for (let entry of super[Symbol.iterator]()) {
+            yield entry[1];
+        }
+    }
+    *entries() {
+        for (let entry of this[Symbol.iterator]()) {
+            yield entry;
+        }
+    }
+    *keys() {
+        for (let entry of this[Symbol.iterator]()) {
+            yield entry[0];
+        }
+    }
+    *values() {
+        for (let entry of this[Symbol.iterator]()) {
+            yield entry[1];
+        }
+    }
+}
+exports.CanonMap = CanonMap;
+function JsonCanonMap(entries) {
+    return new CanonMap(entries, jsonCanonize);
+}
+exports.JsonCanonMap = JsonCanonMap;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bumpDuplicateKeys">bumpDuplicateKeys</a></li><li><a href="global.html#collectIntoBumpingDuplicateKeys">collectIntoBumpingDuplicateKeys</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#throwOnBump">throwOnBump</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Sep 14 2019 19:24:40 GMT-0700 (Pacific Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

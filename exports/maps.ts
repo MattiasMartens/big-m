@@ -405,7 +405,7 @@ export function reconcileAdd<T, K>(
 /**
  * Generate a Reconciler that bumps up a count on each collision, ultimately yielding the total number of entries that collided on a key.
  * 
- * @returns {Reconciler} A Reconciler that counts entries that had the same key.
+ * @returns {Reconciler} A Reconciler that counts entries that has the same key.
  */
 export function reconcileCount<K, T>(): Reconciler<K, T, number> {
   return function(

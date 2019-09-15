@@ -21,10 +21,25 @@
     "tsconfig-paths": "^3.8.0",
     "typescript": "^3.6.2"
   },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ],
+    "exclude": [
+      "**/*.d.ts"
+    ],
+    "reporter": [
+      "html"
+    ],
+    "all": true  
+  },
   "scripts": {
     "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts",
     "benchmark": "node -r ts-node/register -r tsconfig-paths/register benchmarks",
     "compile": "rm -rf dist; cd exports; tsc; cd ..",
     "docs": "rm -rf docs; ./node_modules/.bin/jsdoc dist/exports/* -c .jsdoc.config.json; mv out docs; open docs/index.html"
+  },
+  "devDependencies": {
+    "source-map-support": "^0.5.13"
   }
 }

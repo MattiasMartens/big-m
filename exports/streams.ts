@@ -254,24 +254,25 @@ export type EventualCanonMap<K, V> = {
  */
 export function EventualMap<K, T>(
   stream: ReadableStream<[K, T]>,
-  {
-    bumper,
-    seed
-  }: {
+  opts?: {
     bumper?: Bumper<K, T>,
     seed?: BiMap<K, T>
   }
 ): EventualBiMap<K, T>
 export function EventualMap<K, T>(
   stream: ReadableStream<[K, T]>,
-  {
-    bumper,
-    seed
-  }: {
+  opts?: {
     bumper?: Bumper<K, T>,
     seed?: CanonMap<K, T>
   }
 ): EventualCanonMap<K, T>
+export function EventualMap<K, T>(
+  stream: ReadableStream<[K, T]>,
+  opts?: {
+    bumper?: Bumper<K, T>,
+    seed?: Map<K, T>
+  }
+): EventualMap<K, T>
 export function EventualMap<K, T>(
   stream: ReadableStream<[K, T]>,
   {
@@ -300,24 +301,28 @@ export function EventualMap<K, T>(
 
   stream.forEach(([key, value]) => {
     let keyToUse;
-    if (bumper && _underlyingMap.has(key)) {
-      let newKey = key;
-      let attempts = 0;
+    if (_underlyingMap.has(key)) {
+      if (bumper) {
+        let newKey = key;
+        let attempts = 0;
 
-      do {
-        attempts++;
-        const innerNewKey = bumper(newKey, attempts, getOrFail(_underlyingMap, key), value);
+        do {
+          attempts++;
+          const innerNewKey = bumper(newKey, attempts, getOrFail(_underlyingMap, key), value);
 
-        if (innerNewKey === undefined) {
-          // Failed to set
-          break;
-        } else if (!_underlyingMap.has(newKey)) {
-          _underlyingMap.set(innerNewKey, value);
-          break;
-        } else {
-          newKey = innerNewKey;
-        }
-      } while (!!newKey);
+          if (innerNewKey === undefined) {
+            // Failed to set
+            break;
+          } else if (!_underlyingMap.has(newKey)) {
+            _underlyingMap.set(innerNewKey, value);
+            break;
+          } else {
+            newKey = innerNewKey;
+          }
+        } while (!!newKey);
+      } else {
+        keyToUse = undefined;
+      }
     } else {
       keyToUse = key;
     }
