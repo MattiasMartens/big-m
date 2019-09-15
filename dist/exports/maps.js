@@ -214,6 +214,24 @@ function makeEntries(arr, mapFn) {
 exports.makeEntries = makeEntries;
 /**
  *
+ * Convert an Iterable into a Map from an attribute defined by `keyFn` to a list of values with the same attribute.
+ *
+ * @param {Iterable} arr The Iterable to map over.
+ * @param keyFn The function to generate keys with.
+ */
+function binMap(arr, keyFn, seed) {
+    const ret = seed || new Map();
+    iterable_1.forEach(arr, val => {
+        const key = keyFn(val);
+        const current = getOrVal(ret, key, []);
+        current.push(val);
+        ret.set(key, current);
+    });
+    return ret;
+}
+exports.binMap = binMap;
+/**
+ *
  * Convert an iterable of values into an arbitrary-length iterable of Map entries with a flat-mapping function.
  *
  * @remarks This is a thin wrapper over the flatMap function (as provided by lodash, Ramda, etc.) whose main use is to enfore the correct type for working with Maps.

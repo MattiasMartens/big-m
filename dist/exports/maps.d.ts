@@ -99,6 +99,14 @@ export declare function getOrFail<T, V>(map: Map<T, V>, key: T, error?: string |
 export declare function makeEntries<T, K, V>(arr: Iterable<T>, mapFn: (value: T) => [K, V]): Iterable<[K, V]>;
 /**
  *
+ * Convert an Iterable into a Map from an attribute defined by `keyFn` to a list of values with the same attribute.
+ *
+ * @param {Iterable} arr The Iterable to map over.
+ * @param keyFn The function to generate keys with.
+ */
+export declare function binMap<T, K, P extends Map<K, T[]>>(arr: Iterable<T>, keyFn: (val: T) => K, seed?: P): P extends unknown ? Map<K, T[]> : P;
+/**
+ *
  * Convert an iterable of values into an arbitrary-length iterable of Map entries with a flat-mapping function.
  *
  * @remarks This is a thin wrapper over the flatMap function (as provided by lodash, Ramda, etc.) whose main use is to enfore the correct type for working with Maps.

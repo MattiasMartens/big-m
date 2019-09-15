@@ -31,11 +31,13 @@ import {
   zipMapsUnion,
   mapCollectBumping,
   resolutionFailureMessage,
-  mapKeys
+  mapKeys,
+  binMap
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
 import { collect, filter } from 'iterable';
+import { CanonMap } from 'exports';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
@@ -754,5 +756,26 @@ describeThis(mapCollectBumping, subject => {
 describeThis(resolutionFailureMessage, subject => {
   it("Should produce a generic error message on key resolution failure", () => {
     subject("B", 1).should.equal("Failed to resolve key \"B\" to a unique value after 1 try");
+  });
+});
+
+describeThis(binMap, subject => {
+  it("Should create a Map from results of keyFn to arrays of values", () => {
+    const result = subject(
+      ["cat", "dog", "rat", "mouse", "horse"],
+      str => str.length
+    );
+
+    Array.from(result).should.deepEqual([[3, ["cat", "dog", "rat"]], [5, ["mouse", "horse"]]]);
+  });
+
+  it("Should be able to use canonized keys using a CanonMap as seed", () => {
+    const result = subject(
+      ["cat", "cow", "dog", "mouse", "horse"],
+      str => [str.length, str.charCodeAt(0)],
+      new CanonMap<[number, number], string[]>()
+    );
+
+    Array.from(result).should.deepEqual([[[3, 99], ["cat", "cow"]], [[3, 100], ["dog"]], [[5, 109], ["mouse"]], [[5, 104], ["horse"]]]);
   });
 });
