@@ -1,5 +1,5 @@
 {
-  "name": "cartographer",
+  "name": "big-m",
   "version": "1.0.0",
   "description": "Utilities for building and transforming maps using iterables and streams.",
   "main": "dist/exports/index.js",
