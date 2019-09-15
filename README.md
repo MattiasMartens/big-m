@@ -6,6 +6,8 @@ That's Maps with a big "M", not `array.map` or "directions to the nearest Thai p
 Specifically, Big-M enables composing Maps, decomposing them, recomposing them, and chaining operations without having to loop over the data structure more than once.
 It also includes some Map sub-classes for special use cases: EventualMap, BiMap, and CanonizedMap.
 
+Complete docs available at <https://mattiasmartens.github.io/big-m/>
+
 # maps.ts
 
 Pure function library.
@@ -25,7 +27,7 @@ const myNewMap = mapCollect(myIterable);
 const myNewMap2 = new Map(myIterable);
 ```
 
-See the docs for detailed descriptions of all the functions and what they do.
+See the [docs](https://mattiasmartens.github.io/big-m/) for detailed descriptions of all the functions and what they do.
 
 # streams.ts
 
