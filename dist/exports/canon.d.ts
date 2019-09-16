@@ -1,4 +1,4 @@
-import { Possible } from "types/utils";
+import { Possible } from "../types/utils";
 /**
  *
  * A fallible Canonizer.

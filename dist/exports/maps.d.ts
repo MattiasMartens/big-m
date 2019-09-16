@@ -1,4 +1,4 @@
-import { Possible } from "../types/utils";
+import { Possible } from '../types/utils';
 /**
  * Any iterable of entries, regardless of origin.
  * Note that `Map<K, V>` is in this type.

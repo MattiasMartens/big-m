@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("../types/utils");
 const iterable_1 = require("../iterable");
+const utils_1 = require("../types/utils");
 /**
  * Insert the entries in the iterable into the provided map.
  * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.

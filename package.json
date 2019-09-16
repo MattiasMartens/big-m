@@ -1,6 +1,6 @@
 {
   "name": "big-m",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Utilities for building and transforming maps using iterables and streams.",
   "main": "dist/exports/index.js",
   "author": "Mattias Martens <mattiasofmartens@gmail.com>",
@@ -25,7 +25,8 @@
     "debug": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.ts --inspect-brk",
     "benchmark": "node -r ts-node/register -r tsconfig-paths/register benchmarks",
     "compile": "rm -rf dist; cd exports; tsc; cd ..",
-    "docs": "rm -rf docs; ./node_modules/.bin/jsdoc dist/exports/* --readme README.md -c .jsdoc.config.json; mv out docs; open docs/index.html"
+    "docs": "rm -rf docs; ./node_modules/.bin/jsdoc dist/exports/* --readme README.md -c .jsdoc.config.json; mv out docs; open docs/index.html",
+    "republish": "yarn compile; yarn docs; npm publish;"
   },
   "devDependencies": {
     "nyc": "^14.1.1",

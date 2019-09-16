@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const maps_1 = require("./maps");
-const utils_1 = require("types/utils");
+const utils_1 = require("../types/utils");
 /**
  * Insert the entries of a ReadableStream into `seed` with an optional Reconciler.
  *

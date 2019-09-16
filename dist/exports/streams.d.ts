@@ -1,7 +1,7 @@
 import { ReadableStream } from "ts-stream";
 import { Reconciler, BumperFn as Bumper } from "./maps";
-import { Possible } from "types/utils";
-import { BiMap } from "exports";
+import { Possible } from "../types/utils";
+import { BiMap } from ".";
 import { CanonMap } from "./canon";
 /**
  * Insert the entries of a ReadableStream into `seed` with an optional Reconciler.
