@@ -1,6 +1,5 @@
-import {BiMap} from "./bidirectional";
-import {defined, Possible, tuple} from "../types/utils";
-import {map, filter, flatMap, forEach, entries, collect, collectInto} from "../iterable";
+import { filter, flatMap, forEach, map } from '../iterable';
+import { Possible, tuple } from '../types/utils';
 
 /**
  * Any iterable of entries, regardless of origin.

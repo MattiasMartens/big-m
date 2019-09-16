@@ -1,7 +1,7 @@
 import { ReadableStream } from "ts-stream";
 import { Reconciler, BumperFn as Bumper, getOrFail, foldingGet } from "./maps";
-import { defined, Possible } from "types/utils";
-import { BiMap } from "exports";
+import { defined, Possible } from "../types/utils";
+import { BiMap } from ".";
 import { CanonMap } from "./canon";
 
 

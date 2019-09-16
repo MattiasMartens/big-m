@@ -1,5 +1,5 @@
 import { entries, map, collect } from "../iterable";
-import { Possible } from "types/utils";
+import { Possible } from "../types/utils";
 
 /**
  * 

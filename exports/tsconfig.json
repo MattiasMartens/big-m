@@ -6,7 +6,6 @@
     "module": "commonjs",
     "target": "es2018",
     "types": ["node", "mocha"],
-    "baseUrl": "..",
     "outDir": "../dist",
     "declaration": true
   }
