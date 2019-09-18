@@ -27,7 +27,7 @@ function naiveCanonize(lookup, maxDepth = 2) {
             else {
                 // Non-recursive stringify
                 return "{"
-                    + iterable_1.collect(iterable_1.map(iterable_1.entries(lookup), ([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1))).join(", ")
+                    + iterable_1.collect(iterable_1.entries(lookup)).sort((entry1, entry2) => entry1[0] > entry2[0] ? 1 : -1).map(([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1)).join(", ")
                     + "}";
             }
         }
