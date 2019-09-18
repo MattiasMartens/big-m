@@ -2,11 +2,11 @@ import { entries, map, collect } from "../iterable";
 import { Possible } from "../types/utils";
 
 /**
- * 
- * A fallible Canonizer.
- * Primitives are mapped to themselves.
- * Arrays and objects are mapped to a stringification of them that goes only one level deep.
- * Dates are mapped to their numeric value as milliseconds from epoch.
+ * A fallible Canonizer for mapping objects to primitive versions to allow comparison by value.
+ * Most primitives are mapped to themselves.
+ * Strings are mapped to `"String: " + ` themselves to avoid collisions with the stringifications of other entities.
+ * Arrays and objects are mapped to a stringification that digs into objects to a level defined by `maxDepth`, or 2 if `maxDepth` is not provided.
+ * Dates are mapped to `"Date: "` plus their numeric value as milliseconds from epoch.
  * 
  * @param {K} lookup The key to canonize.
  * @param {number} maxDepth? The maximum number of levels to descend into nested objects and arrays when stringifying.
@@ -49,6 +49,7 @@ export function naiveCanonize<K>(lookup: K, maxDepth = 2): string | null | undef
  * This canonization algorithm works better than the naïve one for nested objects, but it is subject to all the gotchas of JSON, e.g.:
  * - `undefined` mapped to `null` when it appears in arrays, not mapped at all when it appears in an object
  * - `NaN` mapped to `null`
+ * - Fails on circular references
  * 
  * @param  {K} lookup The key to canonize.
  * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
