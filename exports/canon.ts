@@ -86,13 +86,18 @@ export class CanonMap<K, T> extends Map<K, T> {
    * @param entries? {Iterable}
    * An iterable yielding all key-value tuples that will be fed into the Map.
    * Without this, the Map is initialized to empty.
-   * @param {Canonizer} canonizer? Function to map keys to suitable primitives.
+   * @param {Canonizer | number} canonizer? Function to map keys to suitable primitives.
    * If not provided, the CanonMap will use a default canonizer.
+   * If a number is provided, that number will be the recursion depth of the default canonizer, overriding the default depth of 2.
    * 
    */
-  constructor(entries?: Iterable<[K, T]>, canonizer: Canonizer<any, K> = naiveCanonize) {
+  constructor(entries?: Iterable<[K, T]>, canonizer: number | Canonizer<any, K> = naiveCanonize) {
     super();
-    this.canonizer = canonizer;
+    if (typeof canonizer === "number") {
+      this.canonizer = (k: K) => naiveCanonize(k, canonizer);
+    } else {
+      this.canonizer = canonizer;
+    }
 
     if (entries) {
       for (let entry of entries) {

@@ -1,7 +1,7 @@
 import * as should from 'should';
 
 import { CanonMap, naiveCanonize, jsonCanonize, JsonCanonMap } from '../exports/canon';
-import { defined, isDefined, Possible } from '../types/utils';
+import { defined } from '../types/utils';
 import { describeThis } from './describe-this';
 import { collect } from 'iterable';
 
@@ -46,6 +46,18 @@ describeThis(CanonMap, subject => {
     ]);
     collect(instance.keys()).should.deepEqual([b2, c3]);
     collect(instance.values()).should.deepEqual([7002, 70002]);
+  });
+
+  it ("Should be instantiable with a custom canonizer", () => {
+    const instance = new subject<any, any>([], (obj: any) => obj.a);
+    instance.set({a: 1, b: 2}, 9);
+    defined(instance.get({a: 1, b: 3})).should.equal(9);
+  });
+
+  it ("Should be instantiable with a number that sets the naive canonizer recursion depth", () => {
+    const instance = new subject<any, any>([], 0);
+    instance.set({a: 1}, 9);
+    defined(instance.get({a: 2})).should.equal(9);
   });
 });
 
