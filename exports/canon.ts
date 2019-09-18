@@ -24,12 +24,9 @@ export function naiveCanonize<K>(lookup: K, maxDepth = 2): string | null | undef
       } else {
         // Non-recursive stringify
         return "{"
-          + collect(
-            map(
-              entries(lookup as any),
+          + collect(entries(lookup as any)).sort((entry1, entry2) => entry1[0] > entry2[0] ? 1 : -1).map(
               ([key, val]) => key + ": " + naiveCanonize(val, maxDepth - 1)
-            )
-          ).join(", ")
+            ).join(", ")
           + "}";
       }
     }

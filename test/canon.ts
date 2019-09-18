@@ -85,6 +85,13 @@ describeThis(naiveCanonize, () => {
     );
   });
 
+  it("Should conflate objects regardless of key order", () => {
+    should.equal(
+      naiveCanonize({a: 1, c: 2}),
+      naiveCanonize({c: 2, a: 1})
+    );
+  });
+
   it("Should distinguish one-level-nested objects but conflate nested objects at level 2 and by default", () => {
     should.notEqual(
       naiveCanonize({a: 1, c: { a: 1}}, 2),
