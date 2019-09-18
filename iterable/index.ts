@@ -6,6 +6,12 @@ export function* map<T, V>(arr: Iterable<T>, fn: (t: T) => V) {
   }
 }
 
+export function* combine<T>(...arrs: Iterable<T>[]) {
+  for (let arr of arrs) {
+    yield* arr;
+  }
+}
+
 export function forEach<T>(arr: Iterable<T>, fn: (t: T) => void) {
   for (let val of arr) {
     fn(val);

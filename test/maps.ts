@@ -31,7 +31,8 @@ import {
   mapCollectBumping,
   resolutionFailureMessage,
   mapKeys,
-  binMap
+  binMap,
+  concatMap
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
@@ -757,3 +758,23 @@ describeThis(binMap, subject => {
     Array.from(result).should.deepEqual([[[3, 99], ["cat", "cow"]], [[3, 100], ["dog"]], [[5, 109], ["mouse"]], [[5, 104], ["horse"]]]);
   });
 });
+
+describeThis(concatMap, subject => {
+  it("Should concatenate Maps without combining duplicate keys", () => {
+    const result = subject(
+      [
+        ["A", 1], ["B", 2],
+        ["A", 3], ["B", 3]
+      ]
+    );
+
+    Array.from(result).should.deepEqual(
+      [
+        ["A", 1],
+        ["B", 2],
+        ["A", 3],
+        ["B", 3]
+      ]
+    );
+  });
+})

@@ -1,11 +1,11 @@
-import { filter, flatMap, forEach, map } from '../iterable';
+import { filter, flatMap, forEach, map, combine } from '../iterable';
 import { Possible, tuple } from '../types/utils';
 
 /**
  * Any iterable of entries, regardless of origin.
  * Note that `Map<K, V>` is in this type.
  */
-export type mapEnumeration<K, V> = Iterable<[K, V]>;
+export type MapEnumeration<K, V> = Iterable<[K, V]>;
 
 /**
  * A function for dealing with collisions when an iterable has two entries of the same key to insert into a Map, or the Map already has a value at that key.
@@ -95,6 +95,19 @@ export function mapCollectInto<K, T, V, P extends Map<K, V>>(
 }
 
 /**
+ * 
+ * Combine Iterables of Map entries into a single Iterable, leaving keys unmerged.
+ * 
+ * @param maps The Map Iterables to merge
+ * @returns An Iterable consisting of *all* entries of the Iterables in the arguments, even those with duplicate keys.
+ */
+export function concatMap<K, T>(
+  ...maps: MapEnumeration<K, T>[]
+): MapEnumeration<K, T> {
+  return combine(...maps);
+}
+
+/**
  * Convert an Iterable of Map entries into a brand new map.
  * When called on a map, the result will be a new Map with the same entries as the previous one.
  * If two values map to the same key, the last value to arrive at that key will overwrite the rest.
@@ -175,7 +188,7 @@ export function reverseMap<K, T>(
 export function mapValues<K, T, V>(
   iterable: Iterable<[K, T]>,
   fn: (value: T, key: K) => V
-): mapEnumeration<K, V> {
+): MapEnumeration<K, V> {
   return map<[K, T], [K, V]>(iterable, ([key, val]) => [key, fn(val, key)]);
 }
 
@@ -187,7 +200,7 @@ export function mapValues<K, T, V>(
 export function mapKeys<K, T, V>(
   iterable: Iterable<[K, T]>,
   fn: (key: K, value: T) => V
-): mapEnumeration<V, T> {
+): MapEnumeration<V, T> {
   return map<[K, T], [V, T]>(iterable, ([key, val]) => [fn(key, val), val]);
 }
 
