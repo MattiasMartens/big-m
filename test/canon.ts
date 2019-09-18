@@ -58,7 +58,7 @@ describeThis(naiveCanonize, () => {
     should.notEqual(naiveCanonize(0), naiveCanonize(""));
     should.notEqual(naiveCanonize({}), naiveCanonize([]));
     should.notEqual(naiveCanonize(new Date(0)), naiveCanonize(0));
-    should.equal(naiveCanonize(new Date(1)), naiveCanonize(new Date(1)));
+    should.equal(naiveCanonize(new Date(2012, 6, 5)), naiveCanonize(new Date(2012, 6, 5)));
   });
 
   it("Should map NaN to itself", () => {
