@@ -34,6 +34,17 @@ function mapCollectInto(iterable, seed, reconcileFn) {
 }
 exports.mapCollectInto = mapCollectInto;
 /**
+ *
+ * Combine Iterables of Map entries into a single Iterable, leaving keys unmerged.
+ *
+ * @param maps The Map Iterables to merge
+ * @returns An Iterable consisting of *all* entries of the Iterables in the arguments, even those with duplicate keys.
+ */
+function concatMap(...maps) {
+    return iterable_1.combine(...maps);
+}
+exports.concatMap = concatMap;
+/**
  * Convert an Iterable of Map entries into a brand new map.
  * When called on a map, the result will be a new Map with the same entries as the previous one.
  * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.

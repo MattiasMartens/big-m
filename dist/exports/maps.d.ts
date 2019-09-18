@@ -3,7 +3,7 @@ import { Possible } from '../types/utils';
  * Any iterable of entries, regardless of origin.
  * Note that `Map<K, V>` is in this type.
  */
-export declare type mapEnumeration<K, V> = Iterable<[K, V]>;
+export declare type MapEnumeration<K, V> = Iterable<[K, V]>;
 /**
  * A function for dealing with collisions when an iterable has two entries of the same key to insert into a Map, or the Map already has a value at that key.
  *
@@ -40,6 +40,14 @@ export declare function mapCollectInto<K, T, P extends Map<K, T>>(iterable: Iter
  * @returns The updated Map.
  */
 export declare function mapCollectInto<K, T, V, P extends Map<K, V>>(iterable: Iterable<[K, T]>, seed: P, reconcileFn: Reconciler<K, T, V>): P;
+/**
+ *
+ * Combine Iterables of Map entries into a single Iterable, leaving keys unmerged.
+ *
+ * @param maps The Map Iterables to merge
+ * @returns An Iterable consisting of *all* entries of the Iterables in the arguments, even those with duplicate keys.
+ */
+export declare function concatMap<K, T>(...maps: MapEnumeration<K, T>[]): MapEnumeration<K, T>;
 /**
  * Convert an Iterable of Map entries into a brand new map.
  * When called on a map, the result will be a new Map with the same entries as the previous one.
@@ -82,13 +90,13 @@ export declare function reverseMap<K, T>(iterable: Iterable<[K, T]>): Generator<
  * @param {Function} fn A function mapping the values of the Map to a transformed value.
  * @returns An iterable representing the entries of a map from key to the transformed value.
  */
-export declare function mapValues<K, T, V>(iterable: Iterable<[K, T]>, fn: (value: T, key: K) => V): mapEnumeration<K, V>;
+export declare function mapValues<K, T, V>(iterable: Iterable<[K, T]>, fn: (value: T, key: K) => V): MapEnumeration<K, V>;
 /**
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @param {Function} fn A function mapping the keys of the Map to a transformed key.
  * @returns An iterable representing the entries of a map from the transformed key to value.
  */
-export declare function mapKeys<K, T, V>(iterable: Iterable<[K, T]>, fn: (key: K, value: T) => V): mapEnumeration<V, T>;
+export declare function mapKeys<K, T, V>(iterable: Iterable<[K, T]>, fn: (key: K, value: T) => V): MapEnumeration<V, T>;
 /**
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the keys of the map.

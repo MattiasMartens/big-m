@@ -7,6 +7,12 @@ function* map(arr, fn) {
     }
 }
 exports.map = map;
+function* combine(...arrs) {
+    for (let arr of arrs) {
+        yield* arr;
+    }
+}
+exports.combine = combine;
 function forEach(arr, fn) {
     for (let val of arr) {
         fn(val);
