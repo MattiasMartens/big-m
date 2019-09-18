@@ -78,7 +78,7 @@ myMap.get(
 But with CanonMap, the above actually works:
 
 ```
-const myMap = new Map();
+const myMap = new CanonMap();
 myMap.set(
   ["Farooq", "867-5309"],
   36.59
