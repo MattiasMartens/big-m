@@ -33,7 +33,7 @@ import {
   mapKeys,
   binMap,
   concatMap,
-  makeKeyedList
+  keyBy
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
@@ -797,7 +797,7 @@ describeThis(concatMap, subject => {
   });
 })
 
-describeThis(makeKeyedList, subject => {
+describeThis(keyBy, subject => {
   it ("Should make an un-filtered list of key-value pairs from a list of values", () => {
     const list = ["jackrabbit", "dog", "cat"];
 
