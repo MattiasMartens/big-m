@@ -1,5 +1,5 @@
 import { BiMap } from 'exports';
-import { getOrFail, reconcileAdd } from 'exports/maps';
+import { getOrFail, reconcileAdd, reconcileEntryInto } from 'exports/maps';
 import * as should from 'should';
 import { Stream } from 'ts-stream';
 
@@ -350,6 +350,33 @@ describeThis(streamCollectInto, subject => {
     result.should.equal(seed);
     getOrFail(result, "A").should.equal(92222 + 9222 + 922 + 92);
   });
+
+  it ("Should pipe a stream into a map with a reconciler that can return `undefined`", async () => {
+    const seed = new Map([["A", 92222]]);
+    
+    const promise = subject(Stream.from([
+      valAfterMs(tuple(["A", 92]), 15),
+      valAfterMs(tuple(["A", 922]), 20),
+      valAfterMs(tuple(["B", 111]), 30),
+      valAfterMs(tuple(["B", 110]), 31),
+      valAfterMs(tuple(["A", 9222]), 30)
+      ]),
+      seed,
+      (colliding, incoming) => {
+        if (colliding === undefined) {
+          return incoming % 2 === 1 ? undefined : incoming;
+        } else {
+          return incoming + colliding;
+        }
+      }
+    );
+
+    getOrFail(seed, "A").should.equal(92222);
+
+    const result = await promise;
+    result.should.equal(seed);
+    getOrFail(result, "A").should.equal(92222 + 9222 + 922 + 92);
+  });
 });
 
 describeThis(streamCollect, subject => {
@@ -363,5 +390,55 @@ describeThis(streamCollect, subject => {
 
     const result = await promise;
     getOrFail(result, "A").should.equal(9222 + 922 + 92);
+  });
+});
+
+describeThis(reconcileEntryInto, subject => {
+  it ("Should insert the value into the map, combining with the local value if present", () => {
+    const map = new Map([[1, 2], [3, 6]]);
+
+    subject(
+      map,
+      4,
+      8,
+      reconcileAdd()
+    );
+
+    should.equal(map.get(4), 8);
+
+    subject(
+      map,
+      4,
+      8,
+      reconcileAdd()
+    );
+
+    should.equal(map.get(4), 16);
+  });
+
+  it ("Should insert the value into the map, deleting the value if the reconciler returns `undefined`", () => {
+    const map = new Map([[1, 2], [3, 6]]);
+
+    subject(
+      map,
+      3,
+      8,
+      () => undefined
+    );
+
+    should.equal(map.has(3), false);
+  });
+
+  it ("Should insert the value into the map with no special behaviour if the reconciler returns `null`", () => {
+    const map = new Map([[1, 2], [3, 6]]);
+
+    subject(
+      map,
+      3,
+      8,
+      () => null
+    );
+
+    should.equal(map.get(3), null);
   });
 });

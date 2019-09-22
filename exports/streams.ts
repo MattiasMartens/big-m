@@ -27,7 +27,7 @@ export function streamCollectInto<K, T>(
 export function streamCollectInto<K, T, V>(
   stream: ReadableStream<[K, T]>,
   seed: Map<K, V>,
-  reconcileFn: Reconciler<K, T, V>
+  reconcileFn: Reconciler<K, T, Possible<V>>
 ): Promise<Map<K, V>>
 /**
  * Insert the entries of a ReadableStream into `seed` with an optional Reconciler.
@@ -40,17 +40,18 @@ export function streamCollectInto<K, T, V>(
 export async function streamCollectInto<K, T, V>(
   stream: ReadableStream<[K, T]>,
   seed: Map<K, V>,
-  reconcileFn?: Reconciler<K, T, V>
+  reconcileFn?: Reconciler<K, T, Possible<V>>
 ): Promise<Map<K, V>> {
   if (reconcileFn) {
     await stream.forEach(
       entry => {
         const [key, val] = entry;
-        seed.set(key, reconcileFn(
+        const reconciled = reconcileFn(
           seed.get(key),
           val,
           key
-        ));
+        );
+        reconciled !== undefined && seed.set(key, reconciled);
       }
     );
   } else {

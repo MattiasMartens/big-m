@@ -32,12 +32,14 @@ import {
   resolutionFailureMessage,
   mapKeys,
   binMap,
-  concatMap
+  concatMap,
+  makeKeyedList
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
 import { collect, filter } from 'iterable';
 import { CanonMap } from 'exports';
+import { AssertionError } from 'assert';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
@@ -47,15 +49,15 @@ describeThis(reconcileAdd, (subject) => {
   it('Should be useable to compose a map by adding numbers with matching keys', () => {
     const reconciler = subject();
 
-    reconciler(undefined, 2, "key").should.equal(2);
-    reconciler(1, 2, "key").should.equal(3);
+    should.equal(2, reconciler(undefined, 2, "key"));
+    should.equal(3, reconciler(1, 2, "key"));
   });
 
   it('Should be useable to compose a map by adding values with matching keys after applying a number function', () => {
     const reconciler = subject((str: string) => str.length);
 
-    reconciler(undefined, "cat", "key").should.equal(3);
-    reconciler(1, "mouse", "key").should.equal(5 + 1);
+    should.equal(3, reconciler(undefined, "cat", "key"));
+    should.equal(5 + 1, reconciler(1, "mouse", "key"));
   });
 });
 
@@ -174,7 +176,7 @@ describe('collect', function() {
   });
 });
 
-describe('collectInto', function() {
+describe('mapCollectInto', function() {
   it('Should add an array of entries to a map', function() {
     const map1 = new Map();
     const ret = mapCollectInto([["a", 1], ["b", 2]], map1);
@@ -216,6 +218,22 @@ describe('collectInto', function() {
 
     ret.should.equal(map1);
     defined(ret.get("a")).should.equal(65 + 7);
+    defined(ret.get("b")).should.equal(8 + 1);
+  });
+
+  it('Should add an array of entries into a map and given a reconciler skip entries that return `undefined`', function() {
+    const map1 = new Map([["b", 1]]);
+    const ret = mapCollectInto(
+      [["a", 7], ["b", 8], ["a", 65], ["a", 10]],
+      map1,
+      (colliding: Possible<number>, incoming) => {
+        const ret = (colliding || 0) + incoming;
+        return ret % 2 === 0 ? undefined : ret;
+      }
+    );
+
+    ret.should.equal(map1);
+    defined(ret.has("a")).should.false();
     defined(ret.get("b")).should.equal(8 + 1);
   });
 
@@ -778,3 +796,17 @@ describeThis(concatMap, subject => {
     );
   });
 })
+
+describeThis(makeKeyedList, subject => {
+  it ("Should make an un-filtered list of key-value pairs from a list of values", () => {
+    const list = ["jackrabbit", "dog", "cat"];
+
+    const result = subject(list, str => str.length);
+
+    collect(result).should.deepEqual([
+      [10, "jackrabbit"],
+      [3, "dog"],
+      [3, "cat"]
+    ]);
+  });
+});
