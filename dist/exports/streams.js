@@ -14,7 +14,8 @@ async function streamCollectInto(stream, seed, reconcileFn) {
     if (reconcileFn) {
         await stream.forEach(entry => {
             const [key, val] = entry;
-            seed.set(key, reconcileFn(seed.get(key), val, key));
+            const reconciled = reconcileFn(seed.get(key), val, key);
+            reconciled !== undefined && seed.set(key, reconciled);
         });
     }
     else {

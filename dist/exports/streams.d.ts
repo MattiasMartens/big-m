@@ -19,7 +19,7 @@ export declare function streamCollectInto<K, T>(stream: ReadableStream<[K, T]>, 
  * @param {Reconciler} reconcileFn Function to call to resolve collisions.
  * @returns A promise of the updated map, to be returned when the ReadableStream closes.
  */
-export declare function streamCollectInto<K, T, V>(stream: ReadableStream<[K, T]>, seed: Map<K, V>, reconcileFn: Reconciler<K, T, V>): Promise<Map<K, V>>;
+export declare function streamCollectInto<K, T, V>(stream: ReadableStream<[K, T]>, seed: Map<K, V>, reconcileFn: Reconciler<K, T, Possible<V>>): Promise<Map<K, V>>;
 /**
  * Generate a new map from the ReadableStream of entries using an optional Reconciler.
  *
