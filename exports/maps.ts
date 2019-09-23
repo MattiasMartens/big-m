@@ -646,6 +646,34 @@ export function reconcileFold<K, T, V>(
 }
 
 /**
+ * Generate a Reconciler by specifying a function to generate the initial value if none exists, and a second function to run to merge the incoming value with either the preexisting value or the initial value.
+ * 
+ * @remarks
+ * This is an alternate dialect for generating a Reconciler that saves the boilerplate of `const toMerge = colliding === undefined ?initial() : colliding;` at the cost of having to define two different functions.
+ * It makes the function behave like a traditional reducer, with a zip function and an initializer.
+ * 
+ * @param reducer A function that merges a colliding value and an incoming value.
+ * @param initial A function that generates the first colliding value for when a colliding value does not exist.
+ * 
+ * @returns A Reconciler that calls `mapper` if a collidingValue exists (even if it is `undefined`!), calls `reducer` otherwise.
+ */
+export function reconcileInit<K, T, V>(
+  reducer: (colliding: V, val: T) => V,
+  initializer: () => V,
+): Reconciler<K, T, V> {
+  return function(
+    collidingValue,
+    value
+  ) {
+    if (collidingValue === undefined) {
+      return reducer(initializer(), value);
+    } else {
+      return reducer(collidingValue, value);
+    }
+  }
+}
+
+/**
  * Generates a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on `set`.
  * @returns {Reconciler} A Reconciler that always returns the `incomingValue`. 
  */

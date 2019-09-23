@@ -34,7 +34,8 @@ import {
   binMap,
   concatMap,
   keyBy,
-  rekeyBinMap
+  rekeyBinMap,
+  reconcileInit
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
@@ -102,6 +103,27 @@ describeThis(reconcileAppend, () => {
 
     defined(ret.get(3)).should.deepEqual(["tac"]);
     defined(ret.get(5)).should.deepEqual(["horse", "esuom"]);
+  });
+});
+
+describeThis(reconcileInit, subject => {
+  it("Should reconcile by calling the reducer always, using initializer to generate a colliding value if one does not already exist", () => {
+    const reconciler = subject(
+      (colliding: number, val: number) => colliding + val,
+      () => 100
+    );
+
+    const ret = mapCollect(
+      [
+        ["a", 1],
+        ["b", 2],
+        ["b", 3]
+      ],
+      reconciler
+    );
+
+    defined(ret.get("a")).should.equal(101);
+    defined(ret.get("b")).should.equal(105); 
   });
 });
 
