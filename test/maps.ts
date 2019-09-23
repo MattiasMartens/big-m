@@ -33,7 +33,8 @@ import {
   mapKeys,
   binMap,
   concatMap,
-  keyBy
+  keyBy,
+  rekeyBinMap
 } from '../exports/maps';
 import { defined, isDefined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
@@ -453,6 +454,19 @@ describe('invertBinMap', () => {
     getOrFail(ret, 10).should.deepEqual([5]);
     ret.has(5).should.false();
     ret.has(22).should.false();
+  });
+});
+
+describeThis(rekeyBinMap, subject => {
+  it ('Should convert map of arrays Map<K, T[]> to map of arrays Map<K2, T[]> with a function T => K2', () => {
+    const map1 = new Map([[5, [1, 2]], [2, [3]]]);
+
+    const ret = subject(map1, (val, key) => val * 3 + key);
+
+    getOrFail(ret, 8).should.deepEqual([1]);
+    getOrFail(ret, 11).should.deepEqual([2, 3]);
+    ret.has(5).should.false();
+    ret.has(2).should.false();
   });
 });
 
