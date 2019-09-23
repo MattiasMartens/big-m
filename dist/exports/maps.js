@@ -448,6 +448,36 @@ function invertBinMap(map) {
 }
 exports.invertBinMap = invertBinMap;
 /**
+ * Convert a map from keys to arrays of values (i.e., of the form Map<K, T[]>) to a map of different keys to arrays of values (i.e. of the form Map<K2, T[]>) with a re-keying function that takes the value and its current key.
+ *
+ * @example
+ * const peopleToFlavours = new Map([
+  *   ["Alex", ["vanilla"]],
+  *   ["Desdemona", ["banana", "chocolate"],
+  *   ["Alexa", ["vanilla", "chocolate", "cherry"]
+  * ]);
+  *
+  * const firstLettersToPeople = new Map([
+  *   ["A", ["Alex", "Alexa"]],
+  *   ["D", ["Desdemona"]]
+  * ]);
+  *
+  * assert(deepEquals(
+  *   Array.from(flavoursToPeople),
+  *   Array.from(rekeyBinMap(firstLettersToPeople, str => str[0]))
+  * ));
+  *
+  * @param {Iterable} map An Iterable representing a Map of entries where the values are arrays.
+  * @param {Function} keyBy The function used to generate a new key for each member element of each bin.
+  * First argument: the value in the bin
+  * Second argument: the key of the bin
+  * @returns {Map} A Map containing, for each member value that appears in any of the arrays, an entry where the key is the value in the array and the value is a list of all the keys in the input Map that included it.
+  */
+function rekeyBinMap(map, keyBy) {
+    return mapCollect(iterable_1.flatMap(map, ([key, arr]) => arr.map(t => utils_1.tuple([keyBy(t, key), t]))), reconcileAppend());
+}
+exports.rekeyBinMap = rekeyBinMap;
+/**
  * Convert a Map into a dictionary.
  *
  * @remarks This is handy when the contents of map need to be serialized to JSON.
