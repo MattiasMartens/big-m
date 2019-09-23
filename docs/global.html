@@ -1478,7 +1478,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line446">line 446</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line469">line 469</a>
     </li></ul></dd>
     
 
@@ -2638,7 +2638,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line557">line 557</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line580">line 580</a>
     </li></ul></dd>
     
 
@@ -3045,7 +3045,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line570">line 570</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line593">line 593</a>
     </li></ul></dd>
     
 
@@ -3393,7 +3393,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line489">line 489</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line512">line 512</a>
     </li></ul></dd>
     
 
@@ -4419,7 +4419,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line400">line 400</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line423">line 423</a>
     </li></ul></dd>
     
 
@@ -4727,7 +4727,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line410">line 410</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line433">line 433</a>
     </li></ul></dd>
     
 
@@ -4945,6 +4945,166 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
 
     
+    <h4 class="name" id="reconcileInit"><span class="type-signature"></span>reconcileInit<span class="signature">(reducer, initial)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Generate a Reconciler by specifying a function to generate the initial value if none exists, and a second function to run to merge the incoming value with either the preexisting value or the initial value.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>reducer</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function that merges a colliding value and an incoming value.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>initial</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function that generates the first colliding value for when a colliding value does not exist.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line408">line 408</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A Reconciler that calls <code>mapper</code> if a collidingValue exists (even if it is <code>undefined</code>!), calls <code>reducer</code> otherwise.</p>
+</div>
+
+
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="rekeyBinMap"><span class="type-signature"></span>rekeyBinMap<span class="signature">(map, keyBy)</span><span class="type-signature"> &rarr; {Map}</span></h4>
     
 
@@ -5071,7 +5231,7 @@ Second argument: the key of the bin</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line476">line 476</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line499">line 499</a>
     </li></ul></dd>
     
 
@@ -5262,7 +5422,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line604">line 604</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line627">line 627</a>
     </li></ul></dd>
     
 
@@ -6417,7 +6577,7 @@ To include them, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line512">line 512</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line535">line 535</a>
     </li></ul></dd>
     
 
@@ -6591,7 +6751,7 @@ To exclude them instead, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line535">line 535</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line558">line 558</a>
     </li></ul></dd>
     
 
@@ -6659,13 +6819,13 @@ To exclude them instead, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#binMap">binMap</a></li><li><a href="global.html#concatMap">concatMap</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keyBy">keyBy</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapKeys">mapKeys</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileEntryInto">reconcileEntryInto</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#rekeyBinMap">rekeyBinMap</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#streamCollect">streamCollect</a></li><li><a href="global.html#streamCollectInto">streamCollectInto</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#binMap">binMap</a></li><li><a href="global.html#concatMap">concatMap</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keyBy">keyBy</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapKeys">mapKeys</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileEntryInto">reconcileEntryInto</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#reconcileInit">reconcileInit</a></li><li><a href="global.html#rekeyBinMap">rekeyBinMap</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#streamCollect">streamCollect</a></li><li><a href="global.html#streamCollectInto">streamCollectInto</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 22 2019 17:27:56 GMT-0700 (Pacific Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 22 2019 19:31:50 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
