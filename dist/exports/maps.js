@@ -175,7 +175,7 @@ exports.foldingGet = foldingGet;
  * @param key The key to set.
  * @param value The value to reconcile with any possible colliding value in Map.
  * @param reconciler The reconciler function.
- * @returns The Map this function was called on.
+ * @returns The value ultimately set.
  */
 function reconcileEntryInto(map, key, value, reconciler) {
     const reconciled = reconciler(map.get(key), value, key);
@@ -185,7 +185,7 @@ function reconcileEntryInto(map, key, value, reconciler) {
     else {
         map.delete(key);
     }
-    return map;
+    return reconciled;
 }
 exports.reconcileEntryInto = reconcileEntryInto;
 /**
