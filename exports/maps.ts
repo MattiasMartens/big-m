@@ -334,14 +334,14 @@ export function foldingGet<T, V, W>(
  * @param key The key to set.
  * @param value The value to reconcile with any possible colliding value in Map.
  * @param reconciler The reconciler function.
- * @returns The Map this function was called on.
+ * @returns The value ultimately set.
  */
 export function reconcileEntryInto<T, V, W>(
   map: Map<T, W>,
   key: T,
   value: V,
   reconciler: Reconciler<T, V, W>
-): Map<T, W> {
+): Possible<W> {
   const reconciled = reconciler(
     map.get(key),
     value,
@@ -354,7 +354,7 @@ export function reconcileEntryInto<T, V, W>(
     map.delete(key);
   }
 
-  return map;
+  return reconciled;
 }
 
 /** 
