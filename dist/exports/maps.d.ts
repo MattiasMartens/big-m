@@ -16,7 +16,7 @@ export declare type MapEnumeration<K, V> = Iterable<[K, V]>;
  * @returns The updated value.
  * If the updated value is `undefined`, any existing value at the key will be deleted, *and no further values will be added at that key for the remainder of the operation*.
  */
-export declare type Reconciler<K, T, V> = (colliding: Possible<V>, incoming: T, key: K) => Possible<V>;
+export declare type Reconciler<K, T, V> = (colliding: Possible<V>, incoming: T, key: K) => V;
 /**
  * Insert the entries in the iterable into the provided map.
  *
@@ -159,7 +159,7 @@ export declare function foldingGet<T, V, W>(map: Map<T, V>, key: T, ifPresent: (
  * @param reconciler The reconciler function.
  * @returns The value ultimately set.
  */
-export declare function reconcileEntryInto<T, V, W>(map: Map<T, W>, key: T, value: V, reconciler: Reconciler<T, V, W>): Possible<W>;
+export declare function reconcileEntryInto<T, V, W>(map: Map<T, W>, key: T, value: V, reconciler: Reconciler<T, V, W>): W;
 /**
  *
  * @param  {Map} map The map on which to perform the lookup.

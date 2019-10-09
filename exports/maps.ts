@@ -23,7 +23,7 @@ export type Reconciler<K, T, V> = (
   colliding: Possible<V>,
   incoming: T,
   key: K
-) => Possible<V>;
+) => V;
 
 /**
  * Insert the entries in the iterable into the provided map.
@@ -341,7 +341,7 @@ export function reconcileEntryInto<T, V, W>(
   key: T,
   value: V,
   reconciler: Reconciler<T, V, W>
-): Possible<W> {
+): W {
   const reconciled = reconciler(
     map.get(key),
     value,
