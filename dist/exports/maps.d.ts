@@ -271,7 +271,7 @@ export declare function reconcileFold<K, T, V>(mapper: (val: T) => V, reducer: (
  *
  * @returns A Reconciler that calls `mapper` if a collidingValue exists (even if it is `undefined`!), calls `reducer` otherwise.
  */
-export declare function reconcileInit<K, T, V>(reducer: (colliding: V, val: T) => V, initializer: () => V): Reconciler<K, T, V>;
+export declare function reconcileInit<K, T, V>(initializer: (val: T) => V, reducer: (colliding: V, val: T) => V): Reconciler<K, T, V>;
 /**
  * Generates a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on `set`.
  * @returns {Reconciler} A Reconciler that always returns the `incomingValue`.

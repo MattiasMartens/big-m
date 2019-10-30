@@ -405,10 +405,10 @@ exports.reconcileFold = reconcileFold;
  *
  * @returns A Reconciler that calls `mapper` if a collidingValue exists (even if it is `undefined`!), calls `reducer` otherwise.
  */
-function reconcileInit(reducer, initializer) {
+function reconcileInit(initializer, reducer) {
     return function (collidingValue, value) {
         if (collidingValue === undefined) {
-            return reducer(initializer(), value);
+            return reducer(initializer(value), value);
         }
         else {
             return reducer(collidingValue, value);
