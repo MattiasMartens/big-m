@@ -658,15 +658,17 @@ export function reconcileFold<K, T, V>(
  * @returns A Reconciler that calls `mapper` if a collidingValue exists (even if it is `undefined`!), calls `reducer` otherwise.
  */
 export function reconcileInit<K, T, V>(
-  reducer: (colliding: V, val: T) => V,
-  initializer: () => V,
+  initializer: (val: T) => V,
+  reducer: (colliding: V, val: T) => V
 ): Reconciler<K, T, V> {
   return function(
     collidingValue,
     value
   ) {
     if (collidingValue === undefined) {
-      return reducer(initializer(), value);
+      return reducer(initializer(
+        value
+      ), value);
     } else {
       return reducer(collidingValue, value);
     }

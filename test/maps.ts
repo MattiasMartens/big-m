@@ -109,8 +109,8 @@ describeThis(reconcileAppend, () => {
 describeThis(reconcileInit, subject => {
   it("Should reconcile by calling the reducer always, using initializer to generate a colliding value if one does not already exist", () => {
     const reconciler = subject(
-      (colliding: number, val: number) => colliding + val,
-      () => 100
+      () => 100,
+      (colliding: number, val: number) => colliding + val
     );
 
     const ret = mapCollect(
