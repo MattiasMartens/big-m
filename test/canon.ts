@@ -59,6 +59,26 @@ describeThis(CanonMap, subject => {
     instance.set({a: 1}, 9);
     defined(instance.get({a: 2})).should.equal(9);
   });
+
+  it("Should provide forEach in a way that hides the abstraction", () => {
+    const instance = new subject<{a: number}, number>([
+      [{a: 1}, 2],
+      [{a: 3}, 4]
+    ])
+
+    const result: any[] = []
+
+    instance.forEach(
+      function () {
+        result.push(Array.from(arguments))
+      }
+    )
+
+    result.should.deepEqual([
+      [2, {a: 1}],
+      [4, {a: 3}]
+    ])
+  })
 });
 
 describeThis(naiveCanonize, () => {

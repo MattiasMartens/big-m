@@ -181,6 +181,12 @@ export class CanonMap<K, T> extends Map<K, T> {
       yield entry[1] as T;
     }
   }
+
+  forEach(callbackfn: (value: T, key: K, map: Map<K, T>) => void, thisArg?: any): void {
+    for (let entry of this[Symbol.iterator]()) {
+      callbackfn.call(thisArg, entry[1], entry[0])
+    }
+  }
 }
 
 /**

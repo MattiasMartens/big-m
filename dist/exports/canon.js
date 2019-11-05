@@ -168,6 +168,11 @@ class CanonMap extends Map {
             yield entry[1];
         }
     }
+    forEach(callbackfn, thisArg) {
+        for (let entry of this[Symbol.iterator]()) {
+            callbackfn.call(thisArg, entry[1], entry[0]);
+        }
+    }
 }
 exports.CanonMap = CanonMap;
 /**

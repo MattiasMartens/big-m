@@ -97,6 +97,7 @@ export declare class CanonMap<K, T> extends Map<K, T> {
     entries(): Generator<[K, T], void, unknown>;
     keys(): Generator<K, void, unknown>;
     values(): Generator<T, void, unknown>;
+    forEach(callbackfn: (value: T, key: K, map: Map<K, T>) => void, thisArg?: any): void;
 }
 /**
  * Create a CanonMap that canonizes using `JSON.stringify`.
