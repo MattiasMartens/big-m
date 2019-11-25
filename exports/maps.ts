@@ -340,7 +340,7 @@ export function reconcileEntryInto<T, V, W>(
   map: Map<T, W>,
   key: T,
   value: V,
-  reconciler: Reconciler<T, V, W>
+  reconciler: Reconciler<T, V, Possible<W>>
 ): W {
   const reconciled = reconciler(
     map.get(key),
