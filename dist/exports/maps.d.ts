@@ -159,7 +159,7 @@ export declare function foldingGet<T, V, W>(map: Map<T, V>, key: T, ifPresent: (
  * @param reconciler The reconciler function.
  * @returns The value ultimately set.
  */
-export declare function reconcileEntryInto<T, V, W>(map: Map<T, W>, key: T, value: V, reconciler: Reconciler<T, V, W>): W;
+export declare function reconcileEntryInto<T, V, W>(map: Map<T, W>, key: T, value: V, reconciler: Reconciler<T, V, Possible<W>>): W;
 /**
  *
  * @param  {Map} map The map on which to perform the lookup.
