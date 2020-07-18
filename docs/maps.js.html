@@ -69,7 +69,6 @@ function mapCollectInto(iterable, seed, reconcileFn) {
 }
 exports.mapCollectInto = mapCollectInto;
 /**
- *
  * Combine Iterables of Map entries into a single Iterable, leaving keys unmerged.
  *
  * @param maps The Map Iterables to merge
@@ -99,6 +98,10 @@ function mapCollect(iterable, reconcileFn) {
 }
 exports.mapCollect = mapCollect;
 /**
+ * Reverse a stream of entries so that entries of the form [key, value] are now in the form [value, key].
+ *
+ * Any key collisions must be handled in later steps, or they will be reconciled automatically by later entries overriding earlier ones.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the entries of a Map from value to key.
  */
@@ -107,24 +110,32 @@ function reverseMap(iterable) {
 }
 exports.reverseMap = reverseMap;
 /**
+ * Given a Map-like Iterable, produce an entry set for a new Map where each key has been mapped to a new key by calling ${mapper}.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
- * @param {Function} fn A function mapping the values of the Map to a transformed value.
+ * @param {Function} mapper A function mapping the values of the Map to a transformed value.
  * @returns An iterable representing the entries of a map from key to the transformed value.
  */
-function mapValues(iterable, fn) {
-    return iterable_1.map(iterable, ([key, val]) => [key, fn(val, key)]);
+function mapValues(iterable, mapper) {
+    return iterable_1.map(iterable, ([key, val]) => [key, mapper(val, key)]);
 }
 exports.mapValues = mapValues;
 /**
+ * Given a Map-like Iterable, produce an entry set for a new Map where each key has been mapped to a new key by calling ${keyMapper}.
+ *
+ * Any key collisions must be handled in later steps, or they will be reconciled automatically by later entries overriding earlier ones.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @param {Function} fn A function mapping the keys of the Map to a transformed key.
  * @returns An iterable representing the entries of a map from the transformed key to value.
  */
-function mapKeys(iterable, fn) {
-    return iterable_1.map(iterable, ([key, val]) => [fn(key, val), val]);
+function mapKeys(iterable, keyMapper) {
+    return iterable_1.map(iterable, ([key, val]) => [keyMapper(key, val), val]);
 }
 exports.mapKeys = mapKeys;
 /**
+ * Get an Iterable containing the keys of a Map or Map-like Iterable.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the keys of the map.
  */
@@ -133,6 +144,8 @@ function keysOf(iterable) {
 }
 exports.keysOf = keysOf;
 /**
+ * Get an Iterable containing the values of a Map or Map-like Iterable.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the values of the map.
  */
@@ -141,15 +154,19 @@ function valuesOf(iterable) {
 }
 exports.valuesOf = valuesOf;
 /**
+ * Create a Map-like Iterable from an Iterable of keys where each key maps to the same value.
+ *
  * @param {Iterable} iterable An iterable representing the keys of a Map.
  * @param {T} of The fixed value to set all keys to.
- * @returns An iterable representing the entries of a Map from the keys each to the same fixed value.
+ * @returns An Iterable representing the entries of a Map from the keys each to the same fixed value.
  */
 function uniformMap(keys, of) {
     return iterable_1.map(keys, key => [key, of]);
 }
 exports.uniformMap = uniformMap;
 /**
+ * Filter out key-value pairs from a Map or Map-like Iterable.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map.
  * @param {Function} filterFn A function that returns true if the entry is to be included, false otherwise.
  * @returns An iterable representing the entries of a Map without all those entries for which `filterFn` returned `false`.
@@ -159,6 +176,7 @@ function selectMap(iterable, filterFn) {
 }
 exports.selectMap = selectMap;
 /**
+ * Retrieve a value from the Map at the given key. If it is not present, return ${substitute} instead.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
@@ -175,11 +193,12 @@ function getOrVal(map, key, substitute) {
 }
 exports.getOrVal = getOrVal;
 /**
+ * Retrieve a value from the Map at the given key. If the value was retrieved, map it with ${ifPresent}; if not, return the result or calling ${ifAbsent}.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
  * @param  {Function} ifPresent The function to call on the value and `key` if the value is present.
- * @param  {Function} ifAbsent? The function to call on `key` if the value is absent, by default a noop returning `undefined`.
+ * @param  {Function} ifAbsent? The function to call with `key` if the value is absent, by default a noop returning `undefined`.
  * @returns the result of calling `ifPresent` on a value if that value is at `key` in `map`, the result of calling `ifAbsent` otherwise.
  */
 function foldingGet(map, key, ifPresent, ifAbsent = (() => { })) {
@@ -192,12 +211,11 @@ function foldingGet(map, key, ifPresent, ifAbsent = (() => { })) {
 }
 exports.foldingGet = foldingGet;
 /**
- *
  * Set a value on Map, using a Reconciler to merge the incoming value with any existing value.
  *
  * This simulates the behaviour of merging a value in MapCollect, but for a single value instead of an Iterable.
  *
- * *This includes the behaviour that, if the Reconciler returns `undefined`, the entry at the Map will be deleted.*
+ * WARNING: This includes the behaviour that, if the Reconciler returns `undefined`, the entry at the Map will be deleted.
  *
  * @param map The Map to set the key-value pair on.
  * @param key The key to set.
@@ -217,6 +235,7 @@ function reconcileEntryInto(map, key, value, reconciler) {
 }
 exports.reconcileEntryInto = reconcileEntryInto;
 /**
+ * Retrieve a value from the Map at the given key. If the key is not set, return an alternate value by calling ${substitute}.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
@@ -233,6 +252,7 @@ function getOrElse(map, key, substitute) {
 }
 exports.getOrElse = getOrElse;
 /**
+ * Retrieve a value from the Map at the given key, throwing an error if the key was not set.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
@@ -251,7 +271,6 @@ function getOrFail(map, key, error) {
 }
 exports.getOrFail = getOrFail;
 /**
- *
  * Convert an iterable of values into a list of Map entries with a mapping function.
  *
  * @param {Iterable} arr The input iterable.
@@ -267,7 +286,7 @@ exports.makeEntries = makeEntries;
  *
  * Does not check collisions; these can be handled at a later step.
  *
- * @param arr The values to map
+ * @param arr The values to map.
  * @param keyFn The function to generate keys.
  * @returns An Iterable representing key-value pairs where the keys are generated by calling `keyFn` on the values.
  */
@@ -281,8 +300,9 @@ function* keyBy(arr, keyFn) {
 }
 exports.keyBy = keyBy;
 /**
+ * Generate a Map that stores the keys of incoming values, as produced by ${keyFn}, and maps them to the full array of values that produced those keys.
  *
- * Convert an Iterable into a Map from an attribute defined by `keyFn` to a list of values with the same attribute.
+ * For those familiar with SQL, this is functionally a "GROUP BY" query that groups values by combining them into arrays.
  *
  * @param {Iterable} arr The Iterable to map over.
  * @param keyFn The function to generate keys with.
@@ -299,10 +319,9 @@ function binMap(arr, keyFn, seed) {
 }
 exports.binMap = binMap;
 /**
+ * Convert an iterable of values into a sequence of Map entries, pairing each value with a series of keys as returned by ${expandFn}.
  *
- * Convert an iterable of values into an arbitrary-length iterable of Map entries with a flat-mapping function.
- *
- * @remarks This is a thin wrapper over the flatMap function (as provided by lodash, Ramda, etc.) whose main use is to enfore the correct type for working with Maps.
+ * Where @{expandFn} returns no keys, the value will be ignored; where it returns multiple keys, an entry will be created for each key.
  *
  * @param {Iterable} arr The input iterable.
  * @param {Function} expandFn The function that turns the input into a (possibly empty) list of entries.
@@ -384,7 +403,7 @@ exports.reconcileCount = reconcileCount;
  * Generate a Reconciler that concatenates input values together when they collide, optionally transforming them first with a mapper.
  *
  * @param {Function} mapFn? A function to call on the inputs.
- * Regardless of the input type, the output must be an Iterable.
+ * Regardless of the input type, the output must be an Iterable so it can be concatenated into the Map.
  * @returns {Reconciler} A Reconciler that concatenates input values together.
  */
 function reconcileConcat(mapFn = (val) => val) {
@@ -445,7 +464,7 @@ function reconcileInit(initializer, reducer) {
 }
 exports.reconcileInit = reconcileInit;
 /**
- * Generates a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on `set`.
+ * Generate a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on `set`.
  * @returns {Reconciler} A Reconciler that always returns the `incomingValue`.
  */
 function reconcileDefault() {
@@ -455,7 +474,7 @@ function reconcileDefault() {
 }
 exports.reconcileDefault = reconcileDefault;
 /**
- * Generates a reconciler that reverses the default behaviour of setting Maps: instead of overwriting what's already at a key, the `set` operation is ignored if a value is already present at that key.
+ * Generate a reconciler that reverses the default behaviour of setting Maps: instead of overwriting what's already at a key, the `set` operation is ignored if a value is already present at that key.
  * @returns {Reconciler} A Reconciler that returns the `collidingValue` if it is defined, the `incomingValue` otherwise.
  */
 function reconcileFirst() {
@@ -499,24 +518,28 @@ function invertBinMap(map) {
 }
 exports.invertBinMap = invertBinMap;
 /**
- * Convert a map from keys to arrays of values (i.e., of the form Map&lt;K, T[]>) to a map of different keys to arrays of values (i.e. of the form Map&lt;K2, T[]>) with a re-keying function that takes the value and its current key.
- *
- * @example
- * const peopleToFlavours = new Map([
-  *   ["Alex", ["vanilla"]],
-  *   ["Desdemona", ["banana", "chocolate"],
-  *   ["Alexa", ["vanilla", "chocolate", "cherry"]
-  * ]);
+  * Convert a map from keys to arrays of values (i.e., of the form Map&lt;K, T[]>) to a map of different keys to arrays of values (i.e. of the form Map&lt;K2, T[]>) with a re-keying function that takes the value and its current key.
   *
-  * const firstLettersToPeople = new Map([
-  *   ["A", ["Alex", "Alexa"]],
-  *   ["D", ["Desdemona"]]
-  * ]);
+  * This is most useful when a collection of objects has been grouped by one of its properties and, after operating on it, you need to group it by a different one of its properties.
   *
-  * assert(deepEquals(
-  *   Array.from(flavoursToPeople),
-  *   Array.from(rekeyBinMap(firstLettersToPeople, str => str[0]))
-  * ));
+  * @example
+const peopleToFlavours = new Map([
+  ["Alex", [{name: "Alex", flavour: "vanilla"}]],
+  ["Desdemona", [{name: "Desdemona", flavour: "banana"}, {name: "Desdemona", flavour: "chocolate"}]],
+  ["Alexa", [{name: "Alexa", flavour: "vanilla"}, {name: "Alexa", flavour: "chocolate"}, {name: "Alexa", flavour: "cherry"}]]
+]);
+
+const flavoursToPeople = new Map([
+  ["vanilla", [{name: "Alex", flavour: "vanilla"}, {name: "Alexa", flavour: "vanilla"}]],
+  ["banana", [{name: "Desdemona", flavour: "banana"}]],
+  ["chocolate", [{name: "Desdemona", flavour: "chocolate"}, {name: "Alexa", flavour: "chocolate"}]],
+  ["cherry", [{name: "Alexa", flavour: "cherry"}]]
+]);
+
+should.deepEqual(
+  Array.from(flavoursToPeople),
+  Array.from(rekeyBinMap(peopleToFlavours, val => val.flavour))
+);
   *
   * @param {Iterable} map An Iterable representing a Map of entries where the values are arrays.
   * @param {Function} keyBy The function used to generate a new key for each member element of each bin.
@@ -547,8 +570,7 @@ function mapToDictionary(map, stringifier = String) {
 }
 exports.mapToDictionary = mapToDictionary;
 /**
- *
- * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap], [valueInSecondMap]]`.
+ * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap, valueInSecondMap]]`.
  * Any key that is not contained in both input Maps will not be represented in the output.
  * To include them, use {@link zipMapsUnion}.
  *
@@ -570,10 +592,9 @@ function* zipMapsIntersection(map1, map2) {
 }
 exports.zipMapsIntersection = zipMapsIntersection;
 /**
- *
  * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap | undefined], [valueInSecondMap | undefined]]`.
  * If a key is in one Map but not the other, the output tuple will contain `undefined` in place of the missing value.
- * To exclude them instead, use {@link zipMapsUnion}.
+ * To exclude them instead, use {@link zipMapsIntersection}.
  *
  * @remarks
  * Internally, `zipMapsUnion` must collect all non-Map Iterables into Maps so it can look up what keys exist in `map2` during the initial pass over `map1`, and then to determine which keys have already been yielded during the second pass over `map2`.
@@ -611,11 +632,15 @@ function mapCollectBumping(mapEnumeration, bumper) {
 exports.mapCollectBumping = mapCollectBumping;
 /**
  * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
- * If the new key collides too, keep calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
+ * If the new key collides too, keeps calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
  *
- * @param  {Iterable} mapEnumeration An entry stream with duplicate keys.
- * @param  {BumperFn} bumper A function to be called each time a key would overwrite a key that has already been set in `seed`.
- * @param  {Map} seed The Map to insert values into.
+ * @remarks
+ * The `priorBumps` parameter can be used to fail key generation if too many collisions occur, either by returning `undefined` or by throwing an appropriate error (see {@link resolutionFailureMessage}).
+ * For complex functions, this is the only guaranteed way to avoid entering an infinite loop.
+ *
+ * @param {Iterable} mapEnumeration An entry stream with duplicate keys.
+ * @param {BumperFn} bumper A function to be called each time a key would overwrite a key that has already been set in `seed`.
+ * @param {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map.
  */
 function mapCollectIntoBumping(mapEnumeration, bumper, seed) {
@@ -673,7 +698,7 @@ exports.resolutionFailureMessage = resolutionFailureMessage;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Nov 04 2019 16:09:08 GMT-0800 (Pacific Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.4</a> on Sat Jul 18 2020 02:53:20 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

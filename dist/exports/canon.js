@@ -53,7 +53,7 @@ exports.naiveCanonize = naiveCanonize;
  * - Fails on circular references
  *
  * @param  {K} lookup The key to canonize.
- * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
+ * @returns A stringified version of the lookup.
  */
 function jsonCanonize(lookup) {
     return JSON.stringify(lookup);
@@ -85,7 +85,6 @@ class CanonMap extends Map {
      * @param {Canonizer | number} canonizer? Function to map keys to suitable primitives.
      * If not provided, the CanonMap will use a default canonizer.
      * If a number is provided, that number will be the recursion depth of the default canonizer, overriding the default depth of 2.
-     *
      */
     constructor(entries, canonizer = naiveCanonize) {
         super();
@@ -104,9 +103,8 @@ class CanonMap extends Map {
         }
     }
     /**
-     * Gets the value at the canonized key in the CanonMap object.
+     * Get the value at the canonized key in the CanonMap object.
      * Returns the CanonMap object.
-     *
      *
      * @param {K} key The key to look up.
      * @returns {T | undefined} The value if found, `undefined` otherwise.
@@ -116,7 +114,7 @@ class CanonMap extends Map {
         return super.has(canon) ? super.get(canon)[1] : undefined;
     }
     /**
-     * Gets the value at the canonized key in the CanonMap object.
+     * Get the value at the canonized key in the CanonMap object.
      * Returns the CanonMap object.
      *
      * @param {K} key The key to look up.
@@ -126,7 +124,7 @@ class CanonMap extends Map {
         return super.has(this.canonizer(key));
     }
     /**
-     * Sets the value for the canonized key in the CanonMap object.
+     * Set the value for the canonized key in the CanonMap object.
      * Returns the CanonMap object.
      *
      * @param {K} key The key to set.
@@ -138,8 +136,7 @@ class CanonMap extends Map {
         return this;
     }
     /**
-     *
-     * Deletes the key-value pair associated with the canonized `key`.
+     * Delete the key-value pair associated with the canonized `key`.
      * Does nothing if that entry is not present.
      *
      * @param {K} key The key to delete the canonization of.

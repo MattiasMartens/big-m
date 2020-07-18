@@ -22,9 +22,8 @@ export declare class BiMap<K, T> extends Map<K, T> {
      *
      * @returns BiMap
      */
-    readonly reversed: BiMap<T, K>;
+    get reversed(): BiMap<T, K>;
     /**
-     *
      * Initialize a bidirectional map.
      *
      * @example
@@ -56,7 +55,6 @@ export declare class BiMap<K, T> extends Map<K, T> {
      */
     clear(): void;
     /**
-     *
      * Delete the key-value pair associated with `key`.
      * Does nothing if that entry is not present.
      *
@@ -65,14 +63,12 @@ export declare class BiMap<K, T> extends Map<K, T> {
      */
     delete(key: K): boolean;
     /**
-     *
      * Return the key associated to `value`, or `undefined` if there is none.
      *
      * @param {T} val The value to look up.
      */
     getKey(val: T): K | undefined;
     /**
-     *
      * Delete the key-value pair associated with `val`.
      * Do nothing if that entry is not present.
      *
@@ -81,6 +77,7 @@ export declare class BiMap<K, T> extends Map<K, T> {
      */
     deleteVal(val: T): boolean;
     /**
+     * Check for the presence of a value in the Map.
      *
      * @param val The value to look up.
      * @returns A boolean asserting whether a key has been associated to `val` in the Map object or not.

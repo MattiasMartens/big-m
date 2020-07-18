@@ -112,7 +112,8 @@
 
 
 <div class="description">
-    <p>Convert an Iterable into a Map from an attribute defined by <code>keyFn</code> to a list of values with the same attribute.</p>
+    <p>Generate a Map that stores the keys of incoming values, as produced by ${keyFn}, and maps them to the full array of values that produced those keys.</p>
+<p>For those familiar with SQL, this is functionally a &quot;GROUP BY&quot; query that groups values by combining them into arrays.</p>
 </div>
 
 
@@ -223,7 +224,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line262">line 262</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line282">line 282</a>
     </li></ul></dd>
     
 
@@ -367,7 +368,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line50">line 50</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -421,7 +422,8 @@
 
 
 <div class="description">
-    <p>Convert an iterable of values into an arbitrary-length iterable of Map entries with a flat-mapping function.</p>
+    <p>Convert an iterable of values into a sequence of Map entries, pairing each value with a series of keys as returned by ${expandFn}.</p>
+<p>Where @{expandFn} returns no keys, the value will be ignored; where it returns multiple keys, an entry will be created for each key.</p>
 </div>
 
 
@@ -537,7 +539,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line283">line 283</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line302">line 302</a>
     </li></ul></dd>
     
 
@@ -589,6 +591,10 @@
     
 
 
+
+<div class="description">
+    <p>Retrieve a value from the Map at the given key. If the value was retrieved, map it with ${ifPresent}; if not, return the result or calling ${ifAbsent}.</p>
+</div>
 
 
 
@@ -708,7 +714,7 @@
 
             
 
-            <td class="description last"><p>The function to call on <code>key</code> if the value is absent, by default a noop returning <code>undefined</code>.</p></td>
+            <td class="description last"><p>The function to call with <code>key</code> if the value is absent, by default a noop returning <code>undefined</code>.</p></td>
         </tr>
 
     
@@ -749,7 +755,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line157">line 157</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line176">line 176</a>
     </li></ul></dd>
     
 
@@ -801,6 +807,10 @@
     
 
 
+
+<div class="description">
+    <p>Retrieve a value from the Map at the given key. If the key is not set, return an alternate value by calling ${substitute}.</p>
+</div>
 
 
 
@@ -938,7 +948,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line198">line 198</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line217">line 217</a>
     </li></ul></dd>
     
 
@@ -990,6 +1000,10 @@
     
 
 
+
+<div class="description">
+    <p>Retrieve a value from the Map at the given key, throwing an error if the key was not set.</p>
+</div>
 
 
 
@@ -1130,7 +1144,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line215">line 215</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line235">line 235</a>
     </li></ul></dd>
     
 
@@ -1194,6 +1208,10 @@
     
 
 
+
+<div class="description">
+    <p>Retrieve a value from the Map at the given key. If it is not present, return ${substitute} instead.</p>
+</div>
 
 
 
@@ -1331,7 +1349,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line140">line 140</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line158">line 158</a>
     </li></ul></dd>
     
 
@@ -1478,7 +1496,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line469">line 469</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line488">line 488</a>
     </li></ul></dd>
     
 
@@ -1687,7 +1705,7 @@ assert(deepEquals(
 
         
 <div class="param-desc">
-    <p>A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.</p>
+    <p>A stringified version of the lookup.</p>
 </div>
 
 
@@ -1801,7 +1819,7 @@ By default, creates an empty map.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="canon.js.html">canon.js</a>, <a href="canon.js.html#line184">line 184</a>
+        <a href="canon.js.html">canon.js</a>, <a href="canon.js.html#line181">line 181</a>
     </li></ul></dd>
     
 
@@ -1893,7 +1911,7 @@ By default, creates an empty map.</p></td>
 
             
 
-            <td class="description last"><p>The values to map</p></td>
+            <td class="description last"><p>The values to map.</p></td>
         </tr>
 
     
@@ -1952,7 +1970,7 @@ By default, creates an empty map.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line246">line 246</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line265">line 265</a>
     </li></ul></dd>
     
 
@@ -2004,6 +2022,10 @@ By default, creates an empty map.</p></td>
     
 
 
+
+<div class="description">
+    <p>Get an Iterable containing the keys of a Map or Map-like Iterable.</p>
+</div>
 
 
 
@@ -2095,7 +2117,7 @@ By default, creates an empty map.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line103">line 103</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line114">line 114</a>
     </li></ul></dd>
     
 
@@ -2265,7 +2287,7 @@ By default, creates an empty map.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line233">line 233</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line252">line 252</a>
     </li></ul></dd>
     
 
@@ -2444,7 +2466,7 @@ Called with:</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line69">line 69</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line68">line 68</a>
     </li></ul></dd>
     
 
@@ -2638,7 +2660,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line580">line 580</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line601">line 601</a>
     </li></ul></dd>
     
 
@@ -2906,7 +2928,7 @@ Called with:</p>
 
 <div class="description">
     <p>Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by <code>bumper</code>.
-If the new key collides too, keep calling <code>bumper</code> until it either resolves to a unique key or returns <code>undefined</code> to signal failure.</p>
+If the new key collides too, keeps calling <code>bumper</code> until it either resolves to a unique key or returns <code>undefined</code> to signal failure.</p>
 </div>
 
 
@@ -3045,7 +3067,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line593">line 593</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line618">line 618</a>
     </li></ul></dd>
     
 
@@ -3109,6 +3131,11 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
 
 
+
+<div class="description">
+    <p>Given a Map-like Iterable, produce an entry set for a new Map where each key has been mapped to a new key by calling ${keyMapper}.</p>
+<p>Any key collisions must be handled in later steps, or they will be reconciled automatically by later entries overriding earlier ones.</p>
+</div>
 
 
 
@@ -3223,7 +3250,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line95">line 95</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line104">line 104</a>
     </li></ul></dd>
     
 
@@ -3393,7 +3420,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line512">line 512</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line535">line 535</a>
     </li></ul></dd>
     
 
@@ -3439,12 +3466,16 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
 
     
-    <h4 class="name" id="mapValues"><span class="type-signature"></span>mapValues<span class="signature">(iterable, fn)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="mapValues"><span class="type-signature"></span>mapValues<span class="signature">(iterable, mapper)</span><span class="type-signature"></span></h4>
     
 
     
 
 
+
+<div class="description">
+    <p>Given a Map-like Iterable, produce an entry set for a new Map where each key has been mapped to a new key by calling ${mapper}.</p>
+</div>
 
 
 
@@ -3502,7 +3533,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
 
         <tr>
             
-                <td class="name"><code>fn</code></td>
+                <td class="name"><code>mapper</code></td>
             
 
             <td class="type">
@@ -3559,7 +3590,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line86">line 86</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line91">line 91</a>
     </li></ul></dd>
     
 
@@ -3615,7 +3646,7 @@ If the new key collides too, keep calling <code>bumper</code> until it either re
 <div class="description">
     <p>A fallible Canonizer for mapping objects to primitive versions to allow comparison by value.
 Most primitives are mapped to themselves.
-Strings are mapped to <code>&quot;String: &quot; +</code> themselves to avoid collisions with the stringifications of other entities.
+Strings are mapped to <code>&quot;String: &quot; + </code> themselves to avoid collisions with the stringifications of other entities.
 Arrays and objects are mapped to a stringification that digs into objects to a level defined by <code>maxDepth</code>, or 2 if <code>maxDepth</code> is not provided.
 Dates are mapped to <code>&quot;Date: &quot;</code> plus their numeric value as milliseconds from epoch.</p>
 </div>
@@ -3880,7 +3911,7 @@ Dates are mapped to <code>&quot;Date: &quot;</code> plus their numeric value as 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line327">line 327</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line346">line 346</a>
     </li></ul></dd>
     
 
@@ -4039,7 +4070,7 @@ Dates are mapped to <code>&quot;Date: &quot;</code> plus their numeric value as 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line295">line 295</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line314">line 314</a>
     </li></ul></dd>
     
 
@@ -4158,7 +4189,7 @@ Dates are mapped to <code>&quot;Date: &quot;</code> plus their numeric value as 
             
 
             <td class="description last"><p>A function to call on the inputs.
-Regardless of the input type, the output must be an Iterable.</p></td>
+Regardless of the input type, the output must be an Iterable so it can be concatenated into the Map.</p></td>
         </tr>
 
     
@@ -4199,7 +4230,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line362">line 362</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line381">line 381</a>
     </li></ul></dd>
     
 
@@ -4309,7 +4340,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line344">line 344</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line363">line 363</a>
     </li></ul></dd>
     
 
@@ -4375,7 +4406,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
 
 
 <div class="description">
-    <p>Generates a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on <code>set</code>.</p>
+    <p>Generate a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on <code>set</code>.</p>
 </div>
 
 
@@ -4419,7 +4450,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line423">line 423</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line442">line 442</a>
     </li></ul></dd>
     
 
@@ -4487,7 +4518,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
 <div class="description">
     <p>Set a value on Map, using a Reconciler to merge the incoming value with any existing value.</p>
 <p>This simulates the behaviour of merging a value in MapCollect, but for a single value instead of an Iterable.</p>
-<p><em>This includes the behaviour that, if the Reconciler returns <code>undefined</code>, the entry at the Map will be deleted.</em></p>
+<p>WARNING: This includes the behaviour that, if the Reconciler returns <code>undefined</code>, the entry at the Map will be deleted.</p>
 </div>
 
 
@@ -4629,7 +4660,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line180">line 180</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line198">line 198</a>
     </li></ul></dd>
     
 
@@ -4683,7 +4714,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
 
 
 <div class="description">
-    <p>Generates a reconciler that reverses the default behaviour of setting Maps: instead of overwriting what's already at a key, the <code>set</code> operation is ignored if a value is already present at that key.</p>
+    <p>Generate a reconciler that reverses the default behaviour of setting Maps: instead of overwriting what's already at a key, the <code>set</code> operation is ignored if a value is already present at that key.</p>
 </div>
 
 
@@ -4727,7 +4758,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line433">line 433</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line452">line 452</a>
     </li></ul></dd>
     
 
@@ -4899,7 +4930,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line385">line 385</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line404">line 404</a>
     </li></ul></dd>
     
 
@@ -5059,7 +5090,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line408">line 408</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line427">line 427</a>
     </li></ul></dd>
     
 
@@ -5114,6 +5145,7 @@ Regardless of the input type, the output must be an Iterable.</p></td>
 
 <div class="description">
     <p>Convert a map from keys to arrays of values (i.e., of the form Map&lt;K, T[]&gt;) to a map of different keys to arrays of values (i.e. of the form Map&lt;K2, T[]&gt;) with a re-keying function that takes the value and its current key.</p>
+<p>This is most useful when a collection of objects has been grouped by one of its properties and, after operating on it, you need to group it by a different one of its properties.</p>
 </div>
 
 
@@ -5231,7 +5263,7 @@ Second argument: the key of the bin</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line499">line 499</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line522">line 522</a>
     </li></ul></dd>
     
 
@@ -5285,20 +5317,22 @@ Second argument: the key of the bin</p></td>
     <h5>Example</h5>
     
     <pre class="prettyprint"><code>const peopleToFlavours = new Map([
-  ["Alex", ["vanilla"]],
-  ["Desdemona", ["banana", "chocolate"],
-  ["Alexa", ["vanilla", "chocolate", "cherry"]
+  ["Alex", [{name: "Alex", flavour: "vanilla"}]],
+  ["Desdemona", [{name: "Desdemona", flavour: "banana"}, {name: "Desdemona", flavour: "chocolate"}]],
+  ["Alexa", [{name: "Alexa", flavour: "vanilla"}, {name: "Alexa", flavour: "chocolate"}, {name: "Alexa", flavour: "cherry"}]]
 ]);
 
-const firstLettersToPeople = new Map([
-  ["A", ["Alex", "Alexa"]],
-  ["D", ["Desdemona"]]
+const flavoursToPeople = new Map([
+  ["vanilla", [{name: "Alex", flavour: "vanilla"}, {name: "Alexa", flavour: "vanilla"}]],
+  ["banana", [{name: "Desdemona", flavour: "banana"}]],
+  ["chocolate", [{name: "Desdemona", flavour: "chocolate"}, {name: "Alexa", flavour: "chocolate"}]],
+  ["cherry", [{name: "Alexa", flavour: "cherry"}]]
 ]);
 
-assert(deepEquals(
+should.deepEqual(
   Array.from(flavoursToPeople),
-  Array.from(rekeyBinMap(firstLettersToPeople, str => str[0]))
-));</code></pre>
+  Array.from(rekeyBinMap(peopleToFlavours, val => val.flavour))
+);</code></pre>
 
 
 
@@ -5422,7 +5456,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line627">line 627</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line652">line 652</a>
     </li></ul></dd>
     
 
@@ -5486,6 +5520,11 @@ assert(deepEquals(
     
 
 
+
+<div class="description">
+    <p>Reverse a stream of entries so that entries of the form [key, value] are now in the form [value, key].</p>
+<p>Any key collisions must be handled in later steps, or they will be reconciled automatically by later entries overriding earlier ones.</p>
+</div>
 
 
 
@@ -5577,7 +5616,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line77">line 77</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -5629,6 +5668,10 @@ assert(deepEquals(
     
 
 
+
+<div class="description">
+    <p>Filter out key-value pairs from a Map or Map-like Iterable.</p>
+</div>
 
 
 
@@ -5743,7 +5786,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line129">line 129</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line146">line 146</a>
     </li></ul></dd>
     
 
@@ -6159,6 +6202,10 @@ assert(deepEquals(
 
 
 
+<div class="description">
+    <p>Create a Map-like Iterable from an Iterable of keys where each key maps to the same value.</p>
+</div>
+
 
 
 
@@ -6272,7 +6319,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line120">line 120</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line135">line 135</a>
     </li></ul></dd>
     
 
@@ -6301,7 +6348,7 @@ assert(deepEquals(
 
         
 <div class="param-desc">
-    <p>An iterable representing the entries of a Map from the keys each to the same fixed value.</p>
+    <p>An Iterable representing the entries of a Map from the keys each to the same fixed value.</p>
 </div>
 
 
@@ -6324,6 +6371,10 @@ assert(deepEquals(
     
 
 
+
+<div class="description">
+    <p>Get an Iterable containing the values of a Map or Map-like Iterable.</p>
+</div>
 
 
 
@@ -6415,7 +6466,7 @@ assert(deepEquals(
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line111">line 111</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line124">line 124</a>
     </li></ul></dd>
     
 
@@ -6469,7 +6520,7 @@ assert(deepEquals(
 
 
 <div class="description">
-    <p>Combine two Maps into a stream of entries of the form <code>[commonKeyType, [valueInFirstMap], [valueInSecondMap]]</code>.
+    <p>Combine two Maps into a stream of entries of the form <code>[commonKeyType, [valueInFirstMap, valueInSecondMap]]</code>.
 Any key that is not contained in both input Maps will not be represented in the output.
 To include them, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>.</p>
 </div>
@@ -6577,7 +6628,7 @@ To include them, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line535">line 535</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line557">line 557</a>
     </li></ul></dd>
     
 
@@ -6645,7 +6696,7 @@ To include them, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>.</p>
 <div class="description">
     <p>Combine two Maps into a stream of entries of the form <code>[commonKeyType, [valueInFirstMap | undefined], [valueInSecondMap | undefined]]</code>.
 If a key is in one Map but not the other, the output tuple will contain <code>undefined</code> in place of the missing value.
-To exclude them instead, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>.</p>
+To exclude them instead, use <a href="global.html#zipMapsIntersection">zipMapsIntersection</a>.</p>
 </div>
 
 
@@ -6751,7 +6802,7 @@ To exclude them instead, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line558">line 558</a>
+        <a href="maps.js.html">maps.js</a>, <a href="maps.js.html#line579">line 579</a>
     </li></ul></dd>
     
 
@@ -6825,7 +6876,7 @@ To exclude them instead, use <a href="global.html#zipMapsUnion">zipMapsUnion</a>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Nov 04 2019 16:09:08 GMT-0800 (Pacific Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.4</a> on Sat Jul 18 2020 02:53:20 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

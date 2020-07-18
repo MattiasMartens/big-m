@@ -42,7 +42,6 @@ export declare function mapCollectInto<K, T, P extends Map<K, T>>(iterable: Iter
  */
 export declare function mapCollectInto<K, T, V, P extends Map<K, V>>(iterable: Iterable<[K, T]>, seed: P, reconcileFn: Reconciler<K, T, V>): P;
 /**
- *
  * Combine Iterables of Map entries into a single Iterable, leaving keys unmerged.
  *
  * @param maps The Map Iterables to merge
@@ -82,45 +81,64 @@ export declare function mapCollect<K, T>(iterable: Iterable<[K, T]>): Map<K, T>;
  */
 export declare function mapCollect<K, T, V>(iterable: Iterable<[K, T]>, reconcileFn: Reconciler<K, T, V>): Map<K, V>;
 /**
+ * Reverse a stream of entries so that entries of the form [key, value] are now in the form [value, key].
+ *
+ * Any key collisions must be handled in later steps, or they will be reconciled automatically by later entries overriding earlier ones.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the entries of a Map from value to key.
  */
 export declare function reverseMap<K, T>(iterable: Iterable<[K, T]>): Generator<[T, K], void, unknown>;
 /**
+ * Given a Map-like Iterable, produce an entry set for a new Map where each key has been mapped to a new key by calling ${mapper}.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
- * @param {Function} fn A function mapping the values of the Map to a transformed value.
+ * @param {Function} mapper A function mapping the values of the Map to a transformed value.
  * @returns An iterable representing the entries of a map from key to the transformed value.
  */
-export declare function mapValues<K, T, V>(iterable: Iterable<[K, T]>, fn: (value: T, key: K) => V): MapEnumeration<K, V>;
+export declare function mapValues<K, T, V>(iterable: Iterable<[K, T]>, mapper: (value: T, key: K) => V): MapEnumeration<K, V>;
 /**
+ * Given a Map-like Iterable, produce an entry set for a new Map where each key has been mapped to a new key by calling ${keyMapper}.
+ *
+ * Any key collisions must be handled in later steps, or they will be reconciled automatically by later entries overriding earlier ones.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @param {Function} fn A function mapping the keys of the Map to a transformed key.
  * @returns An iterable representing the entries of a map from the transformed key to value.
  */
-export declare function mapKeys<K, T, V>(iterable: Iterable<[K, T]>, fn: (key: K, value: T) => V): MapEnumeration<V, T>;
+export declare function mapKeys<K, T, V>(iterable: Iterable<[K, T]>, keyMapper: (key: K, value: T) => V): MapEnumeration<V, T>;
 /**
+ * Get an Iterable containing the keys of a Map or Map-like Iterable.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the keys of the map.
  */
 export declare function keysOf<K, T>(iterable: Iterable<[K, T]>): Generator<K, void, unknown>;
 /**
+ * Get an Iterable containing the values of a Map or Map-like Iterable.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the values of the map.
  */
 export declare function valuesOf<K, T>(iterable: Iterable<[K, T]>): Generator<T, void, unknown>;
 /**
+ * Create a Map-like Iterable from an Iterable of keys where each key maps to the same value.
+ *
  * @param {Iterable} iterable An iterable representing the keys of a Map.
  * @param {T} of The fixed value to set all keys to.
- * @returns An iterable representing the entries of a Map from the keys each to the same fixed value.
+ * @returns An Iterable representing the entries of a Map from the keys each to the same fixed value.
  */
 export declare function uniformMap<K, T>(keys: Iterable<K>, of: T): Generator<[K, T], void, unknown>;
 /**
+ * Filter out key-value pairs from a Map or Map-like Iterable.
+ *
  * @param {Iterable} iterable An iterable representing the entries of a Map.
  * @param {Function} filterFn A function that returns true if the entry is to be included, false otherwise.
  * @returns An iterable representing the entries of a Map without all those entries for which `filterFn` returned `false`.
  */
 export declare function selectMap<K, T>(iterable: Iterable<[K, T]>, filterFn: (value: T, key: K) => boolean): Generator<[K, T], void, unknown>;
 /**
+ * Retrieve a value from the Map at the given key. If it is not present, return ${substitute} instead.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
@@ -129,6 +147,7 @@ export declare function selectMap<K, T>(iterable: Iterable<[K, T]>, filterFn: (v
  */
 export declare function getOrVal<T, V>(map: Map<T, V>, key: T, substitute: V): V;
 /**
+ * Retrieve a value from the Map at the given key. If the value was retrieved, map it with ${ifPresent}; if not, return undefined.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
@@ -137,6 +156,7 @@ export declare function getOrVal<T, V>(map: Map<T, V>, key: T, substitute: V): V
  */
 export declare function foldingGet<T, V, W>(map: Map<T, V>, key: T, ifPresent: (val: V, key: T) => W): W;
 /**
+ * Retrieve a value from the Map at the given key. If the value was retrieved, map it with ${ifPresent}; if not, return the result or calling ${ifAbsent}.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
@@ -146,12 +166,11 @@ export declare function foldingGet<T, V, W>(map: Map<T, V>, key: T, ifPresent: (
  */
 export declare function foldingGet<T, V, W>(map: Map<T, V>, key: T, ifPresent: (val: V, key: T) => W, ifAbsent: (key: T) => W): W;
 /**
- *
  * Set a value on Map, using a Reconciler to merge the incoming value with any existing value.
  *
  * This simulates the behaviour of merging a value in MapCollect, but for a single value instead of an Iterable.
  *
- * *This includes the behaviour that, if the Reconciler returns `undefined`, the entry at the Map will be deleted.*
+ * WARNING: This includes the behaviour that, if the Reconciler returns `undefined`, the entry at the Map will be deleted.
  *
  * @param map The Map to set the key-value pair on.
  * @param key The key to set.
@@ -161,6 +180,7 @@ export declare function foldingGet<T, V, W>(map: Map<T, V>, key: T, ifPresent: (
  */
 export declare function reconcileEntryInto<T, V, W>(map: Map<T, W>, key: T, value: V, reconciler: Reconciler<T, V, Possible<W>>): Possible<W>;
 /**
+ * Retrieve a value from the Map at the given key. If the key is not set, return an alternate value by calling ${substitute}.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
@@ -169,6 +189,7 @@ export declare function reconcileEntryInto<T, V, W>(map: Map<T, W>, key: T, valu
  */
 export declare function getOrElse<T, V, W>(map: Map<T, V>, key: T, substitute: (key: T) => W): V | W;
 /**
+ * Retrieve a value from the Map at the given key, throwing an error if the key was not set.
  *
  * @param  {Map} map The map on which to perform the lookup.
  * @param  {T} key The key to look up.
@@ -178,7 +199,6 @@ export declare function getOrElse<T, V, W>(map: Map<T, V>, key: T, substitute: (
  */
 export declare function getOrFail<T, V>(map: Map<T, V>, key: T, error?: string | ((key: T) => string)): V;
 /**
- *
  * Convert an iterable of values into a list of Map entries with a mapping function.
  *
  * @param {Iterable} arr The input iterable.
@@ -191,24 +211,24 @@ export declare function makeEntries<T, K, V>(arr: Iterable<T>, mapFn: (value: T)
  *
  * Does not check collisions; these can be handled at a later step.
  *
- * @param arr The values to map
+ * @param arr The values to map.
  * @param keyFn The function to generate keys.
  * @returns An Iterable representing key-value pairs where the keys are generated by calling `keyFn` on the values.
  */
 export declare function keyBy<T, K>(arr: Iterable<T>, keyFn: (value: T) => K): Iterable<[K, T]>;
 /**
+ * Generate a Map that stores the keys of incoming values, as produced by ${keyFn}, and maps them to the full array of values that produced those keys.
  *
- * Convert an Iterable into a Map from an attribute defined by `keyFn` to a list of values with the same attribute.
+ * For those familiar with SQL, this is functionally a "GROUP BY" query that groups values by combining them into arrays.
  *
  * @param {Iterable} arr The Iterable to map over.
  * @param keyFn The function to generate keys with.
  */
 export declare function binMap<T, K, P extends Map<K, T[]>>(arr: Iterable<T>, keyFn: (val: T) => K, seed?: P): P extends unknown ? Map<K, T[]> : P;
 /**
+ * Convert an iterable of values into a sequence of Map entries, pairing each value with a series of keys as returned by ${expandFn}.
  *
- * Convert an iterable of values into an arbitrary-length iterable of Map entries with a flat-mapping function.
- *
- * @remarks This is a thin wrapper over the flatMap function (as provided by lodash, Ramda, etc.) whose main use is to enfore the correct type for working with Maps.
+ * Where @{expandFn} returns no keys, the value will be ignored; where it returns multiple keys, an entry will be created for each key.
  *
  * @param {Iterable} arr The input iterable.
  * @param {Function} expandFn The function that turns the input into a (possibly empty) list of entries.
@@ -223,7 +243,7 @@ export declare function flatMakeEntries<T, K, V>(arr: Iterable<T>, expandFn: (va
  */
 export declare function reconcileAppend<T, V, K>(mapFn?: (val: T) => unknown extends V ? T : V): Reconciler<K, T, (unknown extends V ? T : V)[]>;
 /**
- * Generate a Reconciler that either adds a numeric input value to a colliding numeric value.
+ * Generate a Reconciler that adds a numeric input value to a colliding numeric value.
  *
  * @returns {Reconciler} A summing Reconciler.
  */
@@ -273,12 +293,12 @@ export declare function reconcileFold<K, T, V>(mapper: (val: T) => V, reducer: (
  */
 export declare function reconcileInit<K, T, V>(initializer: (val: T) => V, reducer: (colliding: V, val: T) => V): Reconciler<K, T, V>;
 /**
- * Generates a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on `set`.
+ * Generate a reconciler that simulates the default behaviour of setting Maps, overwriting any value that was already at the key on `set`.
  * @returns {Reconciler} A Reconciler that always returns the `incomingValue`.
  */
 export declare function reconcileDefault<K, T>(): Reconciler<K, T, T>;
 /**
- * Generates a reconciler that reverses the default behaviour of setting Maps: instead of overwriting what's already at a key, the `set` operation is ignored if a value is already present at that key.
+ * Generate a reconciler that reverses the default behaviour of setting Maps: instead of overwriting what's already at a key, the `set` operation is ignored if a value is already present at that key.
  * @returns {Reconciler} A Reconciler that returns the `collidingValue` if it is defined, the `incomingValue` otherwise.
  */
 export declare function reconcileFirst<K, T>(): Reconciler<K, T, T>;
@@ -309,24 +329,28 @@ export declare function reconcileFirst<K, T>(): Reconciler<K, T, T>;
  */
 export declare function invertBinMap<K, T>(map: Iterable<[K, T[]]>): Map<T, K[]>;
 /**
- * Convert a map from keys to arrays of values (i.e., of the form Map<K, T[]>) to a map of different keys to arrays of values (i.e. of the form Map<K2, T[]>) with a re-keying function that takes the value and its current key.
- *
- * @example
- * const peopleToFlavours = new Map([
-  *   ["Alex", ["vanilla"]],
-  *   ["Desdemona", ["banana", "chocolate"],
-  *   ["Alexa", ["vanilla", "chocolate", "cherry"]
-  * ]);
+  * Convert a map from keys to arrays of values (i.e., of the form Map<K, T[]>) to a map of different keys to arrays of values (i.e. of the form Map<K2, T[]>) with a re-keying function that takes the value and its current key.
   *
-  * const firstLettersToPeople = new Map([
-  *   ["A", ["Alex", "Alexa"]],
-  *   ["D", ["Desdemona"]]
-  * ]);
+  * This is most useful when a collection of objects has been grouped by one of its properties and, after operating on it, you need to group it by a different one of its properties.
   *
-  * assert(deepEquals(
-  *   Array.from(flavoursToPeople),
-  *   Array.from(rekeyBinMap(firstLettersToPeople, str => str[0]))
-  * ));
+  * @example
+const peopleToFlavours = new Map([
+  ["Alex", [{name: "Alex", flavour: "vanilla"}]],
+  ["Desdemona", [{name: "Desdemona", flavour: "banana"}, {name: "Desdemona", flavour: "chocolate"}]],
+  ["Alexa", [{name: "Alexa", flavour: "vanilla"}, {name: "Alexa", flavour: "chocolate"}, {name: "Alexa", flavour: "cherry"}]]
+]);
+
+const flavoursToPeople = new Map([
+  ["vanilla", [{name: "Alex", flavour: "vanilla"}, {name: "Alexa", flavour: "vanilla"}]],
+  ["banana", [{name: "Desdemona", flavour: "banana"}]],
+  ["chocolate", [{name: "Desdemona", flavour: "chocolate"}, {name: "Alexa", flavour: "chocolate"}]],
+  ["cherry", [{name: "Alexa", flavour: "cherry"}]]
+]);
+
+should.deepEqual(
+  Array.from(flavoursToPeople),
+  Array.from(rekeyBinMap(peopleToFlavours, val => val.flavour))
+);
   *
   * @param {Iterable} map An Iterable representing a Map of entries where the values are arrays.
   * @param {Function} keyBy The function used to generate a new key for each member element of each bin.
@@ -334,7 +358,7 @@ export declare function invertBinMap<K, T>(map: Iterable<[K, T[]]>): Map<T, K[]>
   * Second argument: the key of the bin
   * @returns {Map} A Map containing, for each member value that appears in any of the arrays, an entry where the key is the value in the array and the value is a list of all the keys in the input Map that included it.
   */
-export declare function rekeyBinMap<K, T, K2>(map: Iterable<[K, T[]]>, keyBy: (t: T, k: K) => K2): Map<K2, T[]>;
+export declare function rekeyBinMap<K, T, K2>(map: Iterable<[K, T[]]>, keyBy: (element: T, key: K) => K2): Map<K2, T[]>;
 /**
  * Convert a Map into a dictionary.
  *
@@ -348,8 +372,7 @@ export declare function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier
     [key: string]: T;
 };
 /**
- *
- * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap], [valueInSecondMap]]`.
+ * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap, valueInSecondMap]]`.
  * Any key that is not contained in both input Maps will not be represented in the output.
  * To include them, use {@link zipMapsUnion}.
  *
@@ -363,10 +386,9 @@ export declare function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier
  */
 export declare function zipMapsIntersection<K, T1, T2>(map1: Iterable<[K, T1]>, map2: Iterable<[K, T2]>): Iterable<[K, [T1, T2]]>;
 /**
- *
  * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap | undefined], [valueInSecondMap | undefined]]`.
  * If a key is in one Map but not the other, the output tuple will contain `undefined` in place of the missing value.
- * To exclude them instead, use {@link zipMapsUnion}.
+ * To exclude them instead, use {@link zipMapsIntersection}.
  *
  * @remarks
  * Internally, `zipMapsUnion` must collect all non-Map Iterables into Maps so it can look up what keys exist in `map2` during the initial pass over `map1`, and then to determine which keys have already been yielded during the second pass over `map2`.
@@ -388,7 +410,6 @@ export declare function zipMapsUnion<K, T1, T2>(map1: Iterable<[K, T1]>, map2: I
  */
 export declare function mapCollectBumping<K, T>(mapEnumeration: Iterable<[K, T]>, bumper: BumperFn<K, T>): Map<K, T>;
 /**
- *
  * Function to resolve bumping keys.
  * {@link bumpDuplicateKeys} and {@link collectIntoBumpingDuplicateKeys} take one of these as an argument and call it every time they fail to insert an entry into a Map because of a duplicate key.
  * If the BumperFn returns a key, the caller will use that as the new insertion key.
@@ -408,11 +429,15 @@ export declare function mapCollectBumping<K, T>(mapEnumeration: Iterable<[K, T]>
 export declare type BumperFn<K, T> = (collidingKey: K, priorBumps: number, originalKey: K, collidingValue: T, incomingValue: T) => Possible<K>;
 /**
  * Pipe the entries of a Map iterable into a Map, resolving key collisions by setting the incoming entry to a new key determined by `bumper`.
- * If the new key collides too, keep calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
+ * If the new key collides too, keeps calling `bumper` until it either resolves to a unique key or returns `undefined` to signal failure.
  *
- * @param  {Iterable} mapEnumeration An entry stream with duplicate keys.
- * @param  {BumperFn} bumper A function to be called each time a key would overwrite a key that has already been set in `seed`.
- * @param  {Map} seed The Map to insert values into.
+ * @remarks
+ * The `priorBumps` parameter can be used to fail key generation if too many collisions occur, either by returning `undefined` or by throwing an appropriate error (see {@link resolutionFailureMessage}).
+ * For complex functions, this is the only guaranteed way to avoid entering an infinite loop.
+ *
+ * @param {Iterable} mapEnumeration An entry stream with duplicate keys.
+ * @param {BumperFn} bumper A function to be called each time a key would overwrite a key that has already been set in `seed`.
+ * @param {Map} seed The Map to insert values into.
  * @returns {{Map}} The finalized Map.
  */
 export declare function mapCollectIntoBumping<K, T>(mapEnumeration: Iterable<[K, T]>, bumper: BumperFn<K, T>, seed: Map<K, T>): Map<K, T>;

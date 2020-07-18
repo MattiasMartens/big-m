@@ -232,7 +232,7 @@ export type EventualMap<K, V> = {
 };
 
 /**
- * {@link EventualMap} Map, but for BiMaps.
+ * {@link EventualMap}, but for BiMaps.
  */
 export type EventualBiMap<K, V> = {
   get: (key: K) => Promise<Possible<V>>,
@@ -285,7 +285,7 @@ export type EventualCanonMap<K, V> = {
  * By default, after a key arrives, subsequent entries with the same key will be discarded.
  * - seed The Map to load entries into. By default, generates a new Map.
  * 
- * @returns  A Map that is in the process of being built from a Stream.
+ * @returns A Map that is in the process of being built from a Stream.
  * 
  * @method get Return the value that will eventually be at the key.
  * @method has Return `true` if the key is eventually set, `false` if it is not set before the input stream ends.
@@ -328,7 +328,7 @@ export function EventualMap<K, T>(
  * By default, after a key arrives, subsequent entries with the same key will be discarded.
  * - seed The Map to load entries into. By default, generates a new Map.
  * 
- * @returns  A Map that is in the process of being built from a Stream.
+ * @returns A Map that is in the process of being built from a Stream.
  * 
  * @method get Return the value that will eventually be at the key.
  * @method has Return `true` if the key is eventually set, `false` if it is not set before the input stream ends.
@@ -371,7 +371,7 @@ export function EventualMap<K, T>(
  * By default, after a key arrives, subsequent entries with the same key will be discarded.
  * - seed The Map to load entries into. By default, generates a new Map.
  * 
- * @returns  A Map that is in the process of being built from a Stream.
+ * @returns A Map that is in the process of being built from a Stream.
  * 
  * @method get Return the value that will eventually be at the key.
  * @method has Return `true` if the key is eventually set, `false` if it is not set before the input stream ends.
@@ -414,7 +414,7 @@ export function EventualMap<K, T>(
  * By default, after a key arrives, subsequent entries with the same key will be discarded.
  * - seed The Map to load entries into. By default, generates a new Map.
  * 
- * @returns  A Map that is in the process of being built from a Stream.
+ * @returns A Map that is in the process of being built from a Stream.
  * 
  * @method get Return the value that will eventually be at the key.
  * @method has Return `true` if the key is eventually set, `false` if it is not set before the input stream ends.

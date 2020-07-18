@@ -37,11 +37,10 @@ import {
   rekeyBinMap,
   reconcileInit
 } from '../exports/maps';
-import { defined, isDefined, Possible } from '../types/utils';
+import { defined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
 import { collect, filter } from 'iterable';
 import { CanonMap } from 'exports';
-import { AssertionError } from 'assert';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
@@ -289,10 +288,10 @@ describe('flatMakeEntries', () => {
   it ('Should transform a stream of inputs into a sequence of arbitrary length using a key-list function', () => {
     const ret = flatMakeEntries(
       [
-        "cat",
-        "dog",
-        "squirrel",
-        "alpaca"
+        "cat", // Length divisible by 3; will produce []
+        "dog",  // Length divisible by 3; will produce []
+        "squirrel",  // Length % 3 == 2; will produce ["s", "q"]
+        "alpaca"  // Length divisible by 3; will produce []
       ],
       str => str.slice(0, str.length % 3).split("").map((c, i) => [c, str.length])
     );
@@ -489,6 +488,26 @@ describeThis(rekeyBinMap, subject => {
     getOrFail(ret, 11).should.deepEqual([2, 3]);
     ret.has(5).should.false();
     ret.has(2).should.false();
+  });
+
+  it ('Should execute the example from the docs', () => {
+    const peopleToFlavours = new Map([
+      ["Alex", [{name: "Alex", flavour: "vanilla"}]],
+      ["Desdemona", [{name: "Desdemona", flavour: "banana"}, {name: "Desdemona", flavour: "chocolate"}]],
+      ["Alexa", [{name: "Alexa", flavour: "vanilla"}, {name: "Alexa", flavour: "chocolate"}, {name: "Alexa", flavour: "cherry"}]]
+    ]);
+
+    const flavoursToPeople = new Map([
+      ["vanilla", [{name: "Alex", flavour: "vanilla"}, {name: "Alexa", flavour: "vanilla"}]],
+      ["banana", [{name: "Desdemona", flavour: "banana"}]],
+      ["chocolate", [{name: "Desdemona", flavour: "chocolate"}, {name: "Alexa", flavour: "chocolate"}]],
+      ["cherry", [{name: "Alexa", flavour: "cherry"}]]
+    ]);
+    
+    should.deepEqual(
+      Array.from(flavoursToPeople),
+      Array.from(rekeyBinMap(peopleToFlavours, val => val.flavour))
+    );
   });
 });
 

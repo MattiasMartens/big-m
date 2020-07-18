@@ -1,4 +1,4 @@
-import { entries, map, collect } from "../iterable";
+import { entries, collect } from "../iterable";
 import { Possible } from "../types/utils";
 
 /**
@@ -12,7 +12,7 @@ import { Possible } from "../types/utils";
  * @param {number} maxDepth? The maximum number of levels to descend into nested objects and arrays when stringifying.
  * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
  */
-export function naiveCanonize<K>(lookup: K, maxDepth = 2): string | null | undefined | number | boolean {
+export function naiveCanonize<K>(lookup: K, maxDepth: number = 2): string | null | undefined | number | boolean {
   if (typeof lookup === 'object' && lookup !== null) {
     if (maxDepth === 0) {
       return String(lookup);
@@ -49,7 +49,7 @@ export function naiveCanonize<K>(lookup: K, maxDepth = 2): string | null | undef
  * - Fails on circular references
  * 
  * @param  {K} lookup The key to canonize.
- * @returns A canonized version of the lookup. Not necessarily a string but guaranteed to be a primitive.
+ * @returns A stringified version of the lookup.
  */
 export function jsonCanonize<K>(lookup: K) {
   return JSON.stringify(lookup);
@@ -65,14 +65,14 @@ type Canonizer<C, K> = (lookup: K) => C;
  * Map with canonized keys.
  * By instantiating a Map with a canonizer function, we can execute lookups according to an arbitrary notion of key identity.
  * For example, we can use arrays as Map indices and treat arrays with the same members as equivalent.
- * 
+ *
  * @remarks
  * In use cases that call for Maps, developers will often want to map by some combination of values instead of a single value.
  * If they use an object or array for this, however, lookups won't work because objects or arrays are compared by reference rather than value.
  * The solution is to initialize the map with a "canonizer" that, for any key, creates a canonical equivalent that other referentially unique objects and arrays can map to.
- * 
+ *
  * This gives the user total control over the equality algorithm. Under the hood, CanonMap maintains a Map between canonized keys and values. As far as TypeScript's type system is concerned, though, it is a Map from the desired key type to the desired value type that just happens to compare by equality.
- * 
+ *
  * @extends Map
  */
 export class CanonMap<K, T> extends Map<K, T> {
@@ -89,7 +89,6 @@ export class CanonMap<K, T> extends Map<K, T> {
    * @param {Canonizer | number} canonizer? Function to map keys to suitable primitives.
    * If not provided, the CanonMap will use a default canonizer.
    * If a number is provided, that number will be the recursion depth of the default canonizer, overriding the default depth of 2.
-   * 
    */
   constructor(entries?: Iterable<[K, T]>, canonizer: number | Canonizer<any, K> = naiveCanonize) {
     super();
@@ -109,9 +108,8 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * Gets the value at the canonized key in the CanonMap object.
+   * Get the value at the canonized key in the CanonMap object.
    * Returns the CanonMap object.
-   * 
    * 
    * @param {K} key The key to look up.
    * @returns {T | undefined} The value if found, `undefined` otherwise.
@@ -122,7 +120,7 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * Gets the value at the canonized key in the CanonMap object.
+   * Get the value at the canonized key in the CanonMap object.
    * Returns the CanonMap object.
    * 
    * @param {K} key The key to look up.
@@ -133,7 +131,7 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * Sets the value for the canonized key in the CanonMap object.
+   * Set the value for the canonized key in the CanonMap object.
    * Returns the CanonMap object.
    * 
    * @param {K} key The key to set.
@@ -147,8 +145,7 @@ export class CanonMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * 
-   * Deletes the key-value pair associated with the canonized `key`.
+   * Delete the key-value pair associated with the canonized `key`.
    * Does nothing if that entry is not present.
    * 
    * @param {K} key The key to delete the canonization of.

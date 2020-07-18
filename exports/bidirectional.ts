@@ -70,7 +70,6 @@ export class BiMap<K, T> extends Map<K, T> {
     return this._reversedProxy || (this._reversedProxy = getReversedBiMap(this));
   }
   /**
-   * 
    * Initialize a bidirectional map.
    * 
    * @example
@@ -130,7 +129,6 @@ export class BiMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * 
    * Delete the key-value pair associated with `key`.
    * Does nothing if that entry is not present.
    * 
@@ -147,7 +145,6 @@ export class BiMap<K, T> extends Map<K, T> {
   }
   
   /**
-   * 
    * Return the key associated to `value`, or `undefined` if there is none.
    * 
    * @param {T} val The value to look up.
@@ -157,7 +154,6 @@ export class BiMap<K, T> extends Map<K, T> {
   }
 
   /**
-   * 
    * Delete the key-value pair associated with `val`.
    * Do nothing if that entry is not present.
    * 
@@ -174,6 +170,7 @@ export class BiMap<K, T> extends Map<K, T> {
   }
 
   /**
+   * Check for the presence of a value in the Map.
    * 
    * @param val The value to look up.
    * @returns A boolean asserting whether a key has been associated to `val` in the Map object or not.

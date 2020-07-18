@@ -51,7 +51,6 @@ function getReversedBiMap(biMap) {
  */
 class BiMap extends Map {
     /**
-     *
      * Initialize a bidirectional map.
      *
      * @example
@@ -116,7 +115,6 @@ class BiMap extends Map {
         this._reverse.clear();
     }
     /**
-     *
      * Delete the key-value pair associated with `key`.
      * Does nothing if that entry is not present.
      *
@@ -131,7 +129,6 @@ class BiMap extends Map {
         return super.delete(key);
     }
     /**
-     *
      * Return the key associated to `value`, or `undefined` if there is none.
      *
      * @param {T} val The value to look up.
@@ -140,7 +137,6 @@ class BiMap extends Map {
         return this._reverse.get(val);
     }
     /**
-     *
      * Delete the key-value pair associated with `val`.
      * Do nothing if that entry is not present.
      *
@@ -151,6 +147,7 @@ class BiMap extends Map {
         return maps_1.foldingGet(this._reverse, val, key => this.delete(key), () => false);
     }
     /**
+     * Check for the presence of a value in the Map.
      *
      * @param val The value to look up.
      * @returns A boolean asserting whether a key has been associated to `val` in the Map object or not.
