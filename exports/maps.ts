@@ -17,7 +17,7 @@ export type MapEnumeration<K, V> = Iterable<[K, V]>;
  * @param {K} key
  * The `key` at which the value is being inserted.
  * @returns The updated value.
- * If the updated value is `undefined`, any existing value at the key will be deleted, *and no further values will be added at that key for the remainder of the operation*.
+ * If the updated value is `undefined`, any existing value at the key will be deleted.
  */
 export type Reconciler<K, T, V> = (
   colliding: Possible<V>,
@@ -77,26 +77,23 @@ export function mapCollectInto<K, T, V, P extends Map<K, V>>(
   reconcileFn?: Reconciler<K, T, V>
 ): P {
   if (reconcileFn) {
-    const saltedKeys = new Set<K>();
-
     for (let [key, val] of iterable) {
-      if (!saltedKeys.has(key)) {
-        const reconciled = reconcileFn(
-          seed.get(key),
-          val,
-          key
-        );
-        if (reconciled === undefined) {
-          seed.delete(key);
-          saltedKeys.add(key);
-        }
-        reconciled !== undefined && seed.set(key, reconciled);
+      const got = seed.get(key);
+      const reconciled = reconcileFn(
+        got,
+        val,
+        key
+      );
+      if (reconciled === undefined) {
+        seed.delete(key);
+      } else if (reconciled !== got) {
+        seed.set(key, reconciled);
       }
     }
   } else {
     for (let entry of iterable) {
       const [key, val] = entry;
-        seed.set(key, val as unknown as V);
+      seed.set(key, val as unknown as V);
     }
   }
 
