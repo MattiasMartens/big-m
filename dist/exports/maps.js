@@ -19,15 +19,14 @@ const utils_1 = require("../types/utils");
  */
 function mapCollectInto(iterable, seed, reconcileFn) {
     if (reconcileFn) {
-        const saltedKeys = new Set();
         for (let [key, val] of iterable) {
-            if (!saltedKeys.has(key)) {
-                const reconciled = reconcileFn(seed.get(key), val, key);
-                if (reconciled === undefined) {
-                    seed.delete(key);
-                    saltedKeys.add(key);
-                }
-                reconciled !== undefined && seed.set(key, reconciled);
+            const got = seed.get(key);
+            const reconciled = reconcileFn(got, val, key);
+            if (reconciled === undefined) {
+                seed.delete(key);
+            }
+            else if (reconciled !== got) {
+                seed.set(key, reconciled);
             }
         }
     }
