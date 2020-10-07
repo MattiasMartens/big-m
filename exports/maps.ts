@@ -176,6 +176,28 @@ export function mapCollect<K, T, V>(
 }
 
 /**
+ * Generate keys for each item in an Iterable. Sort the items into bins based on the key they generated.
+ * 
+ * If `guaranteeKeys` is supplied, bins with these keys are guaranteed to exist in the result even if no items generated that key.
+ * 
+ * @remarks
+ * This composes some common steps of mapCollect together.
+ * 
+ * @param iterable The input items.
+ * @param keyFn A function to generate keys.
+ * @param guaranteeKeys? A list of keys that must exist in the output.
+ */
+export function partitionCollect<T, V>(iterable: Iterable<T>, keyFn: (item: T) => V, guaranteeKeys?: V[]) {
+  const seed = guaranteeKeys ? new Map(guaranteeKeys.map(key => [key, [] as T[]])) : new Map<V, T[]>()
+
+  return mapCollectInto(
+    keyBy(iterable, keyFn),
+    seed,
+    reconcileAppend()
+  )
+}
+
+/**
  * Reverse a stream of entries so that entries of the form [key, value] are now in the form [value, key].
  * 
  * Any key collisions must be handled in later steps, or they will be reconciled automatically by later entries overriding earlier ones.
@@ -329,7 +351,7 @@ export function foldingGet<T, V, W>(
   map: Map<T, V>,
   key: T,
   ifPresent: (val: V, key: T) => W,
-  ifAbsent: (key: T) => W = (() => {}) as () => W
+  ifAbsent: (key: T) => W = (() => { }) as () => W
 ) {
   if (map.has(key)) {
     return ifPresent(
@@ -523,12 +545,12 @@ export function reconcileAppend<T, V, K>(
   mapFn?: (val: T) => unknown extends V ? T : V
 ): Reconciler<K, T, (unknown extends V ? T : V)[]> {
   if (mapFn) {
-    return function(
+    return function (
       collidingValue,
       value
     ) {
       const val = mapFn(value);
-  
+
       if (collidingValue === undefined) {
         return [val];
       } else {
@@ -537,10 +559,10 @@ export function reconcileAppend<T, V, K>(
       }
     }
   } else {
-    return function(
+    return function (
       collidingValue,
       value
-    ) { 
+    ) {
       if (collidingValue === undefined) {
         return [value] as (unknown extends V ? T : V)[];
       } else {
@@ -575,7 +597,7 @@ export function reconcileAdd<T, K>(
 export function reconcileAdd<T, K>(
   mapFn?: (val: T) => number
 ): Reconciler<K, T, number> {
-  return function(
+  return function (
     collidingValue,
     value
   ) {
@@ -595,7 +617,7 @@ export function reconcileAdd<T, K>(
  * @returns {Reconciler} A Reconciler that counts entries that has the same key.
  */
 export function reconcileCount<K, T>(): Reconciler<K, T, number> {
-  return function(
+  return function (
     collidingValue,
     _
   ) {
@@ -623,7 +645,7 @@ export function reconcileConcat<T, K>(): Reconciler<K, (Possible<Iterable<T>>), 
 export function reconcileConcat<T, V, K>(
   mapFn: (val: T) => Iterable<V> = (val: T) => val as any as V[]
 ): Reconciler<K, T, V[]> {
-  return function(
+  return function (
     collidingValue,
     value
   ) {
@@ -652,7 +674,7 @@ export function reconcileFold<K, T, V>(
   mapper: (val: T) => V,
   reducer: (colliding: V, val: T) => V
 ): Reconciler<K, T, V> {
-  return function(
+  return function (
     collidingValue,
     value
   ) {
@@ -665,7 +687,7 @@ export function reconcileFold<K, T, V>(
 }
 
 /**
- * Generate a Reconciler by specifying a function to generate the initial value if none exists, and a second function to run to merge the incoming value with either the preexisting value or the initial value.
+ * Generate a Reconciler by specifying a function to generate the initial value if none exists, and a second function to run to merge the incoming value with either the preexisting value or the initial value depending on the case.
  * 
  * @remarks
  * This is an alternate dialect for generating a Reconciler that saves the boilerplate of `const toMerge = colliding === undefined ?initial() : colliding;` at the cost of having to define two different functions.
@@ -680,7 +702,7 @@ export function reconcileInit<K, T, V>(
   initializer: (val: T) => V,
   reducer: (colliding: V, val: T) => V
 ): Reconciler<K, T, V> {
-  return function(
+  return function (
     collidingValue,
     value
   ) {
@@ -703,7 +725,7 @@ export function reconcileDefault<K, T>(): Reconciler<
   T,
   T
 > {
-  return function(_, value) {
+  return function (_, value) {
     return value;
   }
 }
@@ -713,7 +735,7 @@ export function reconcileDefault<K, T>(): Reconciler<
  * @returns {Reconciler} A Reconciler that returns the `collidingValue` if it is defined, the `incomingValue` otherwise. 
  */
 export function reconcileFirst<K, T>(): Reconciler<K, T, T> {
-  return function(collidingValue, incomingValue) {
+  return function (collidingValue, incomingValue) {
     if (collidingValue === undefined) {
       return incomingValue;
     } else {
@@ -819,7 +841,7 @@ export function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (val: 
 
 /**
  * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap, valueInSecondMap]]`.
- * Any key that is not contained in both input Maps will not be represented in the output.
+ * If a key is in one Map but not the other, that key will not be represented in the output.
  * To include them, use {@link zipMapsUnion}.
  * 
  * @remarks
@@ -832,7 +854,7 @@ export function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (val: 
  */
 export function* zipMapsIntersection<K, T1, T2>(map1: Iterable<[K, T1]>, map2: Iterable<[K, T2]>): Iterable<[K, [T1, T2]]> {
   const map2Collect: Map<K, T2> = map2 instanceof Map ? map2 : mapCollect(map2);
-  
+
   for (let [key, value1] of map1) {
     if (map2Collect.has(key)) {
       yield [key, [value1, getOrFail(map2Collect, key)]];
@@ -864,7 +886,7 @@ export function* zipMapsUnion<K, T1, T2>(map1: Iterable<[K, T1]>, map2: Iterable
   for (let [key, value2] of map2Collect) {
     if (!map1Collect.has(key)) {
       yield [key, [undefined, value2]];
-    } 
+    }
   }
 }
 

@@ -69,6 +69,23 @@ function mapCollect(iterable, reconcileFn) {
 }
 exports.mapCollect = mapCollect;
 /**
+ * Generate keys for each item in an Iterable. Sort the items into bins based on the key they generated.
+ *
+ * If `guaranteeKeys` is supplied, bins with these keys are guaranteed to exist in the result even if no items generated that key.
+ *
+ * @remarks
+ * This composes some common steps of mapCollect together.
+ *
+ * @param iterable The input items.
+ * @param keyFn A function to generate keys.
+ * @param guaranteeKeys? A list of keys that must exist in the output.
+ */
+function partitionCollect(iterable, keyFn, guaranteeKeys) {
+    const seed = guaranteeKeys ? new Map(guaranteeKeys.map(key => [key, []])) : new Map();
+    return mapCollectInto(keyBy(iterable, keyFn), seed, reconcileAppend());
+}
+exports.partitionCollect = partitionCollect;
+/**
  * Reverse a stream of entries so that entries of the form [key, value] are now in the form [value, key].
  *
  * Any key collisions must be handled in later steps, or they will be reconciled automatically by later entries overriding earlier ones.
@@ -412,7 +429,7 @@ function reconcileFold(mapper, reducer) {
 }
 exports.reconcileFold = reconcileFold;
 /**
- * Generate a Reconciler by specifying a function to generate the initial value if none exists, and a second function to run to merge the incoming value with either the preexisting value or the initial value.
+ * Generate a Reconciler by specifying a function to generate the initial value if none exists, and a second function to run to merge the incoming value with either the preexisting value or the initial value depending on the case.
  *
  * @remarks
  * This is an alternate dialect for generating a Reconciler that saves the boilerplate of `const toMerge = colliding === undefined ?initial() : colliding;` at the cost of having to define two different functions.
@@ -542,7 +559,7 @@ function mapToDictionary(map, stringifier = String) {
 exports.mapToDictionary = mapToDictionary;
 /**
  * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap, valueInSecondMap]]`.
- * Any key that is not contained in both input Maps will not be represented in the output.
+ * If a key is in one Map but not the other, that key will not be represented in the output.
  * To include them, use {@link zipMapsUnion}.
  *
  * @remarks

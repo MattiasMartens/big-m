@@ -1,5 +1,5 @@
 import * as should from 'should';
-import {pipe} from "fp-ts/lib/pipeable";
+import { pipe } from "fp-ts/lib/pipeable";
 
 import { BiMap } from '../exports/bidirectional';
 import {
@@ -35,7 +35,7 @@ import {
   concatMap,
   keyBy,
   rekeyBinMap,
-  reconcileInit
+  reconcileInit, partitionCollect
 } from '../exports/maps';
 import { defined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
@@ -122,7 +122,7 @@ describeThis(reconcileInit, subject => {
     );
 
     defined(ret.get("a")).should.equal(101);
-    defined(ret.get("b")).should.equal(105); 
+    defined(ret.get("b")).should.equal(105);
   });
 });
 
@@ -156,15 +156,15 @@ describeThis(reconcileFirst, () => {
   });
 });
 
-describe('collect', function() {
-  it('Should turn an array of entries into a map', function() {
+describe('collect', function () {
+  it('Should turn an array of entries into a map', function () {
     const ret = mapCollect([["a", 1], ["b", 2]]);
 
     defined(ret.get("a")).should.equal(1);
     defined(ret.get("b")).should.equal(2);
   });
 
-  it('Should turn a map into a new map', function() {
+  it('Should turn a map into a new map', function () {
     const map1 = new Map([["a", 7], ["b", 8]]);
     const ret = mapCollect(map1);
 
@@ -173,21 +173,21 @@ describe('collect', function() {
     defined(ret.get("b")).should.equal(8);
   });
 
-  it('Should turn an iterator into a map', function() {
+  it('Should turn an iterator into a map', function () {
     const ret = mapCollect(([["a", 7], ["b", 8]] as [string, number][])[Symbol.iterator]());
 
     defined(ret.get("a")).should.equal(7);
     defined(ret.get("b")).should.equal(8);
   });
 
-  it('Should turn an array into a map and by default on key collision overwrite earlier entries', function() {
+  it('Should turn an array into a map and by default on key collision overwrite earlier entries', function () {
     const ret = mapCollect([["a", 7], ["b", 8], ["a", 65]]);
 
     defined(ret.get("a")).should.equal(65);
     defined(ret.get("b")).should.equal(8);
   });
 
-  it('Should turn an array into a map and given a reconciler combine entries on key collision', function() {
+  it('Should turn an array into a map and given a reconciler combine entries on key collision', function () {
     const ret = mapCollect(
       [["a", 7], ["b", 8], ["a", 65]],
       (colliding: Possible<number>, incoming) => (colliding || 0) + incoming
@@ -198,8 +198,8 @@ describe('collect', function() {
   });
 });
 
-describe('mapCollectInto', function() {
-  it('Should add an array of entries to a map', function() {
+describe('mapCollectInto', function () {
+  it('Should add an array of entries to a map', function () {
     const map1 = new Map();
     const ret = mapCollectInto([["a", 1], ["b", 2]], map1);
 
@@ -208,7 +208,7 @@ describe('mapCollectInto', function() {
     defined(map1.get("b")).should.equal(2);
   });
 
-  it('Should add the entries of a map to a new map', function() {
+  it('Should add the entries of a map to a new map', function () {
     const map1 = new Map();
     const map2 = new Map([["a", 7], ["b", 8]]);
     const ret = mapCollectInto(map1, map2);
@@ -218,7 +218,7 @@ describe('mapCollectInto', function() {
     defined(ret.get("b")).should.equal(8);
   });
 
-  it('Should add the entries of an iterator into a map', function() {
+  it('Should add the entries of an iterator into a map', function () {
     const map1 = new Map();
     const ret = mapCollectInto(
       ([["a", 7], ["b", 8]] as [string, number][])[Symbol.iterator](),
@@ -230,7 +230,7 @@ describe('mapCollectInto', function() {
     defined(ret.get("b")).should.equal(8);
   });
 
-  it('Should add an array of entries into a map and given a reconciler combine entries on key collision', function() {
+  it('Should add an array of entries into a map and given a reconciler combine entries on key collision', function () {
     const map1 = new Map([["b", 1]]);
     const ret = mapCollectInto(
       [["a", 7], ["b", 8], ["a", 65]],
@@ -243,7 +243,7 @@ describe('mapCollectInto', function() {
     defined(ret.get("b")).should.equal(8 + 1);
   });
 
-  it('Should add an array of entries into a map and given a reconciler skip entries that return `undefined`', function() {
+  it('Should add an array of entries into a map and given a reconciler skip entries that return `undefined`', function () {
     const map1 = new Map([["b", 1]]);
     const ret = mapCollectInto(
       [["a", 7], ["b", 8], ["a", 65], ["a", 10]],
@@ -260,12 +260,12 @@ describe('mapCollectInto', function() {
   });
 
   it('With a BiMap seed should turn an array of entries into a BiMap', () => {
-      const ret = mapCollectInto([["a", 1], ["b", 2]], new BiMap<string, number>());
-      
-      ret.should.be.instanceOf(BiMap);
-      defined(ret.get("a")).should.equal(1);
-      defined(ret.get("b")).should.equal(2);
-      defined(ret.getKey(1)).should.equal("a");
+    const ret = mapCollectInto([["a", 1], ["b", 2]], new BiMap<string, number>());
+
+    ret.should.be.instanceOf(BiMap);
+    defined(ret.get("a")).should.equal(1);
+    defined(ret.get("b")).should.equal(2);
+    defined(ret.getKey(1)).should.equal("a");
   })
 });
 
@@ -285,7 +285,7 @@ describe("counterReconciler", () => {
 });
 
 describe('flatMakeEntries', () => {
-  it ('Should transform a stream of inputs into a sequence of arbitrary length using a key-list function', () => {
+  it('Should transform a stream of inputs into a sequence of arbitrary length using a key-list function', () => {
     const ret = flatMakeEntries(
       [
         "cat", // Length divisible by 3; will produce []
@@ -306,7 +306,7 @@ describe('flatMakeEntries', () => {
 });
 
 describe('foldingGet', () => {
-  it ('Should run one function if the key is present', () => {
+  it('Should run one function if the key is present', () => {
     const map1 = new Map([[5, 9]]);
 
     const ret = foldingGet(
@@ -319,7 +319,7 @@ describe('foldingGet', () => {
     ret.should.equal(9 + 99);
   });
 
-  it ('Should run another function if the key is absent', () => {
+  it('Should run another function if the key is absent', () => {
     const map1 = new Map([[5, 9]]);
 
     const ret = foldingGet(
@@ -334,7 +334,7 @@ describe('foldingGet', () => {
 });
 
 describe('foldReconciler', () => {
-  it ('Should allow construction of a map using one function for each case of colliding value, no colliding value', () => {
+  it('Should allow construction of a map using one function for each case of colliding value, no colliding value', () => {
     const reconciler = reconcileFold(
       (val: number) => 2 * val,
       (colliding: number, val: number) => colliding + val
@@ -355,7 +355,7 @@ describe('foldReconciler', () => {
 });
 
 describe('getOrElse', () => {
-  it ('Should return value if the key is present', () => {
+  it('Should return value if the key is present', () => {
     const map1 = new Map([[5, 9]]);
 
     const ret = getOrElse(
@@ -367,7 +367,7 @@ describe('getOrElse', () => {
     ret.should.equal(9);
   });
 
-  it ('Should run a function if the key is absent', () => {
+  it('Should run a function if the key is absent', () => {
     const map1 = new Map([[5, 9]]);
 
     const ret = getOrElse(
@@ -381,7 +381,7 @@ describe('getOrElse', () => {
 });
 
 describe('getOrFail', () => {
-  it ('Should return value if the key is present', () => {
+  it('Should return value if the key is present', () => {
     const map1 = new Map([[5, 9]]);
 
     const ret = getOrFail(
@@ -392,7 +392,7 @@ describe('getOrFail', () => {
     ret.should.equal(9);
   });
 
-  it ('Should throw error if key is absent', () => {
+  it('Should throw error if key is absent', () => {
     const map1 = new Map([[5, 9]]);
 
     try {
@@ -406,14 +406,14 @@ describe('getOrFail', () => {
     }
   });
 
-  it ('Should throw custom function error if key is absent', () => {
+  it('Should throw custom function error if key is absent', () => {
     const map1 = new Map([[5, 9]]);
 
     try {
       getOrFail(
         map1,
         6,
-        key => JSON.stringify({key})
+        key => JSON.stringify({ key })
       );
       should.fail(false, false, "Should have failed by now");
     } catch (e) {
@@ -423,7 +423,7 @@ describe('getOrFail', () => {
     }
   });
 
-  it ('Should throw custom error if key is absent', () => {
+  it('Should throw custom error if key is absent', () => {
     const map1 = new Map([[5, 9]]);
 
     try {
@@ -440,7 +440,7 @@ describe('getOrFail', () => {
 });
 
 describe('getOrVal', () => {
-  it ('Should return value if the key is present', () => {
+  it('Should return value if the key is present', () => {
     const map1 = new Map([[5, 9]]);
 
     const ret = getOrVal(
@@ -452,7 +452,7 @@ describe('getOrVal', () => {
     ret.should.equal(9);
   });
 
-  it ('Should return substitute if the key is absent', () => {
+  it('Should return substitute if the key is absent', () => {
     const map1 = new Map([[5, 9]]);
 
     const ret = getOrVal(
@@ -466,7 +466,7 @@ describe('getOrVal', () => {
 });
 
 describe('invertBinMap', () => {
-  it ('Should convert map of arrays Map<A, B[]> to map of arrays Map<B, A[]>', () => {
+  it('Should convert map of arrays Map<A, B[]> to map of arrays Map<B, A[]>', () => {
     const map1 = new Map([[5, [9, 10]], [22, [9]]]);
 
     const ret = invertBinMap(map1);
@@ -479,7 +479,7 @@ describe('invertBinMap', () => {
 });
 
 describeThis(rekeyBinMap, subject => {
-  it ('Should convert map of arrays Map<K, T[]> to map of arrays Map<K2, T[]> with a function T => K2', () => {
+  it('Should convert map of arrays Map<K, T[]> to map of arrays Map<K2, T[]> with a function T => K2', () => {
     const map1 = new Map([[5, [1, 2]], [2, [3]]]);
 
     const ret = subject(map1, (val, key) => val * 3 + key);
@@ -490,20 +490,20 @@ describeThis(rekeyBinMap, subject => {
     ret.has(2).should.false();
   });
 
-  it ('Should execute the example from the docs', () => {
+  it('Should execute the example from the docs', () => {
     const peopleToFlavours = new Map([
-      ["Alex", [{name: "Alex", flavour: "vanilla"}]],
-      ["Desdemona", [{name: "Desdemona", flavour: "banana"}, {name: "Desdemona", flavour: "chocolate"}]],
-      ["Alexa", [{name: "Alexa", flavour: "vanilla"}, {name: "Alexa", flavour: "chocolate"}, {name: "Alexa", flavour: "cherry"}]]
+      ["Alex", [{ name: "Alex", flavour: "vanilla" }]],
+      ["Desdemona", [{ name: "Desdemona", flavour: "banana" }, { name: "Desdemona", flavour: "chocolate" }]],
+      ["Alexa", [{ name: "Alexa", flavour: "vanilla" }, { name: "Alexa", flavour: "chocolate" }, { name: "Alexa", flavour: "cherry" }]]
     ]);
 
     const flavoursToPeople = new Map([
-      ["vanilla", [{name: "Alex", flavour: "vanilla"}, {name: "Alexa", flavour: "vanilla"}]],
-      ["banana", [{name: "Desdemona", flavour: "banana"}]],
-      ["chocolate", [{name: "Desdemona", flavour: "chocolate"}, {name: "Alexa", flavour: "chocolate"}]],
-      ["cherry", [{name: "Alexa", flavour: "cherry"}]]
+      ["vanilla", [{ name: "Alex", flavour: "vanilla" }, { name: "Alexa", flavour: "vanilla" }]],
+      ["banana", [{ name: "Desdemona", flavour: "banana" }]],
+      ["chocolate", [{ name: "Desdemona", flavour: "chocolate" }, { name: "Alexa", flavour: "chocolate" }]],
+      ["cherry", [{ name: "Alexa", flavour: "cherry" }]]
     ]);
-    
+
     should.deepEqual(
       Array.from(flavoursToPeople),
       Array.from(rekeyBinMap(peopleToFlavours, val => val.flavour))
@@ -512,7 +512,7 @@ describeThis(rekeyBinMap, subject => {
 });
 
 describe('keysOf', () => {
-  it ('Should convert stream of entries to stream of keys', () => {
+  it('Should convert stream of entries to stream of keys', () => {
     const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
 
     collect(keysOf(map1)).should.deepEqual([9, 6, 4]);
@@ -520,7 +520,7 @@ describe('keysOf', () => {
 });
 
 describe('makeEntries', () => {
-  it ('Should transform an array of values into a stream of map entries using a key function', () => {
+  it('Should transform an array of values into a stream of map entries using a key function', () => {
     const ret = pipe(
       makeEntries(
         [
@@ -545,7 +545,7 @@ describe('makeEntries', () => {
 });
 
 describe('mapStream', () => {
-  it ('Should transform a map into a stream of values as a thin wrapper over the native function', () => {
+  it('Should transform a map into a stream of values as a thin wrapper over the native function', () => {
     const map1 = new Map([["a", 5], ["b", 6]]);
 
     const ret = collect(map1);
@@ -560,7 +560,7 @@ describe('mapStream', () => {
 });
 
 describe('mapToDictionary', () => {
-  it ('Should transform a map into a dictionary', () => {
+  it('Should transform a map into a dictionary', () => {
     const map1 = new Map([["a", 5], ["b", 6]]);
 
     const ret = mapToDictionary(map1);
@@ -573,7 +573,7 @@ describe('mapToDictionary', () => {
     );
   });
 
-  it ('Should transform an array directly into a dictionary', () => {
+  it('Should transform an array directly into a dictionary', () => {
     const ret = mapToDictionary([["a", 5], ["b", 6]]);
 
     ret.should.deepEqual(
@@ -586,7 +586,7 @@ describe('mapToDictionary', () => {
 });
 
 describe('mapValues', () => {
-  it ('Should transform a map into a stream of map entries with a mapper function', () => {
+  it('Should transform a map into a stream of map entries with a mapper function', () => {
     const map1 = new Map([["a", 5], ["b", 6]]);
 
     const ret = mapValues(map1, x => Math.sqrt(x).toFixed(1));
@@ -601,7 +601,7 @@ describe('mapValues', () => {
 });
 
 describe('mapKeys', () => {
-  it ('Should transform a map into a stream of map entries with a mapper function', () => {
+  it('Should transform a map into a stream of map entries with a mapper function', () => {
     const map1 = new Map([["a", 5], ["b", 6]]);
 
     const ret = mapKeys(map1, x => "_" + x);
@@ -616,7 +616,7 @@ describe('mapKeys', () => {
 });
 
 describe('reverseMap', () => {
-  it ('Should transform a map Map<A, B> into its inverse Map<B, A>', () => {
+  it('Should transform a map Map<A, B> into its inverse Map<B, A>', () => {
     const map1 = new Map([["a", 5], ["b", 6]]);
 
     const ret = pipe(
@@ -632,7 +632,7 @@ describe('reverseMap', () => {
 });
 
 describe('selectMap', () => {
-  it ('Should produce a stream of map entries without those that fail the filter function', () => {
+  it('Should produce a stream of map entries without those that fail the filter function', () => {
     const map1 = new Map([["a", 5], ["b", 6], ["a!", 9], ["b!", 10]]);
 
     const ret = pipe(
@@ -650,7 +650,7 @@ describe('selectMap', () => {
 });
 
 describe('uniformMap', () => {
-  it ('Should transform an array of keys into a stream of map entries all with the same value', () => {
+  it('Should transform an array of keys into a stream of map entries all with the same value', () => {
     const ret = pipe(
       uniformMap(
         [
@@ -676,7 +676,7 @@ describe('uniformMap', () => {
 });
 
 describe('keysOf', () => {
-  it ('Should convert stream of entries to stream of values', () => {
+  it('Should convert stream of entries to stream of values', () => {
     const map1 = new Map([[9, "blueberry"], [6, "almond"], [4, "plum"]]);
 
     collect(valuesOf(map1)).should.deepEqual(["blueberry", "almond", "plum"]);
@@ -853,7 +853,7 @@ describeThis(concatMap, subject => {
 })
 
 describeThis(keyBy, subject => {
-  it ("Should make an un-filtered list of key-value pairs from a list of values", () => {
+  it("Should make an un-filtered list of key-value pairs from a list of values", () => {
     const list = ["jackrabbit", "dog", "cat"];
 
     const result = subject(list, str => str.length);
@@ -865,3 +865,24 @@ describeThis(keyBy, subject => {
     ]);
   });
 });
+
+describeThis(partitionCollect, subject => {
+  it("Should collect items into bins", () => {
+    const list = [{ name: "Todd", value: 1 }, { name: "Jen", value: 2 }, { name: "Krissy", value: 1 }]
+
+    const result = subject(list, ({ value }) => value)
+
+    defined(result.get(1)).should.deepEqual([list[0], list[2]])
+    defined(result.get(2)).should.deepEqual([list[1]])
+  })
+
+  it("Should collect items into bins with guaranteed keys", () => {
+    const list = [{ name: "Todd", value: 1 }, { name: "Jen", value: 2 }, { name: "Krissy", value: 1 }]
+
+    const result = subject(list, ({ value }) => value, [1, 3])
+
+    defined(result.get(1)).should.deepEqual([list[0], list[2]])
+    defined(result.get(2)).should.deepEqual([list[1]])
+    defined(result.get(3)).should.deepEqual([])
+  })
+})
