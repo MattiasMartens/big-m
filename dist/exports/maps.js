@@ -259,6 +259,23 @@ function getOrFail(map, key, error) {
 }
 exports.getOrFail = getOrFail;
 /**
+ *
+ * Retrieve a value from the Map at the given key. If the value does not exist, initialize
+ * a value at the specified key with `freshFn`, then return that value.
+ *
+ * @param map The map on which to perform the lookup.
+ * @param key The key to look up.
+ * @param freshFn The function to call with the key to generate a fresh value.
+ */
+function getOrFill(map, key, freshFn) {
+    return foldingGet(map, key, (i) => i, (key) => {
+        const fresh = freshFn(key);
+        map.set(key, fresh);
+        return fresh;
+    });
+}
+exports.getOrFill = getOrFill;
+/**
  * Convert an iterable of values into a list of Map entries with a mapping function.
  *
  * @param {Iterable} arr The input iterable.

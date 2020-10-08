@@ -14,6 +14,7 @@ import {
   reconcileFold,
   getOrElse,
   getOrFail,
+  getOrFill,
   getOrVal,
   invertBinMap,
   keysOf,
@@ -41,6 +42,7 @@ import { defined, Possible } from '../types/utils';
 import { describeThis } from './describe-this';
 import { collect, filter } from 'iterable';
 import { CanonMap } from 'exports';
+import { hasUncaughtExceptionCaptureCallback } from 'process';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
@@ -438,6 +440,30 @@ describe('getOrFail', () => {
     }
   });
 });
+
+describeThis(getOrFill, subject => {
+  it('Should look up the value at the key', () => {
+    const map1 = new Map([[5, 9]])
+
+    subject(
+      map1,
+      5,
+      () => 10
+    ).should.equal(9)
+  })
+
+  it('Should generate a value when key is absent', () => {
+    const map1 = new Map([[5, 9]])
+
+    subject(
+      map1,
+      6,
+      () => 10
+    ).should.equal(10)
+
+    defined(map1.get(6)).should.equal(10)
+  })
+})
 
 describe('getOrVal', () => {
   it('Should return value if the key is present', () => {

@@ -1,6 +1,6 @@
 {
   "name": "big-m",
-  "version": "5.1.0",
+  "version": "5.2.0",
   "description": "Utilities for building and transforming maps using iterables and streams.",
   "main": "dist/exports/index.js",
   "author": "Mattias Martens <mattiasofmartens@gmail.com>",

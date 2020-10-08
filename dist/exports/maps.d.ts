@@ -212,6 +212,16 @@ export declare function getOrElse<T, V, W>(map: Map<T, V>, key: T, substitute: (
  */
 export declare function getOrFail<T, V>(map: Map<T, V>, key: T, error?: string | ((key: T) => string)): V;
 /**
+ *
+ * Retrieve a value from the Map at the given key. If the value does not exist, initialize
+ * a value at the specified key with `freshFn`, then return that value.
+ *
+ * @param map The map on which to perform the lookup.
+ * @param key The key to look up.
+ * @param freshFn The function to call with the key to generate a fresh value.
+ */
+export declare function getOrFill<T, V>(map: Map<T, V>, key: T, freshFn: (key: T) => V): V;
+/**
  * Convert an iterable of values into a list of Map entries with a mapping function.
  *
  * @param {Iterable} arr The input iterable.
