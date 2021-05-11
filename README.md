@@ -184,7 +184,7 @@ But modifying the existing native classes is not recommended.
 Instead the plan is to patch them on using Symbols, which a user can import:
 
 ```
-import { mapCollectInto } from "cartographer/monkey";
+import { mapCollectInto } from "big-m/monkey";
 
 myListOfEntries[mapCollectInto](myNewMap);
 ```
