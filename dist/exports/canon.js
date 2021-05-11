@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.JsonCanonMap = exports.CanonMap = exports.jsonCanonize = exports.naiveCanonize = void 0;
 const iterable_1 = require("../iterable");
 /**
  * A fallible Canonizer for mapping objects to primitive versions to allow comparison by value.

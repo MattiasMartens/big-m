@@ -1,8 +1,14 @@
 {
   "name": "big-m",
-  "version": "5.2.2",
+  "version": "5.2.3",
   "description": "Utilities for building and transforming maps using iterables and streams.",
-  "keywords": ["map", "hashmap", "iterable", "stream", "utility"],
+  "keywords": [
+    "map",
+    "hashmap",
+    "iterable",
+    "stream",
+    "utility"
+  ],
   "homepage": "https://mattiasmartens.github.io/big-m/",
   "bugs": {
     "url": "https://github.com/MattiasMartens/big-m/issues",
@@ -15,9 +21,6 @@
   "main": "dist/exports/index.js",
   "author": "Mattias Martens <mattiasofmartens@gmail.com>",
   "license": "MIT",
-  "dependencies": {
-    "ts-stream": "^2.0.1"
-  },
   "nyc": {
     "extension": [
       ".ts"
@@ -39,13 +42,14 @@
     "republish": "yarn compile; yarn docs; git add -A; git commit -m \"publish new version\"; npm publish;"
   },
   "devDependencies": {
+    "ts-stream": "^3.0.0",
     "@types/benchmark": "^1.0.31",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.3",
     "benchmark": "^2.1.4",
     "fp-ts": "^2.0.5",
-    "jsdoc": "^3.6.3",
-    "mocha": "^6.2.0",
+    "jsdoc": "^3.6.6",
+    "mocha": "^8.4.0",
     "nyc": "^14.1.1",
     "should": "^13.2.3",
     "ts-node": "^8.3.0",

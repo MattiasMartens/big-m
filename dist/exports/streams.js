@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.EventualMap = exports.streamCollect = exports.streamCollectInto = void 0;
 const maps_1 = require("./maps");
 const utils_1 = require("../types/utils");
 /**

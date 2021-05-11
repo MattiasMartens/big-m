@@ -1,14 +1,19 @@
-import { ReadableStream } from "ts-stream";
 import { Reconciler, BumperFn as Bumper, getOrFail, foldingGet } from "./maps";
 import { defined, Possible } from "../types/utils";
 import { BiMap } from ".";
 import { CanonMap } from "./canon";
 
+/**
+ * Minimum-necessary-spec version of ReadableStream from Martin Poelstra's ts-stream library <https://github.com/poelstra/ts-stream>.
+ */
+type ReadableStream<T> = {
+  forEach(reader: (value: T) => void | PromiseLike<void>, ender?: (error?: Error) => void | PromiseLike<void>, aborter?: (error: Error) => void): Promise<void>
+}
 
 /**
  * Insert the entries of a ReadableStream into `seed` with an optional Reconciler.
  * 
- * @param {ReadableStream} stream The input stream.
+ * @param {ReadableStream} stream The input stream as produced by ts-stream <https://github.com/poelstra/ts-stream>.
  * @param {Map} seed The Map to update with the contents of `stream`.
  * @returns A promise of the updated map, to be returned when the ReadableStream closes.
  */
@@ -136,7 +141,7 @@ function foldOption<T, V>(
 type Switchboard<K, T> = Map<K, [Promise<Option<T>>, (resolution: Option<T>) => void]>;
 
 async function getGetOrHasPromise<K, V, W, P extends Map<K, V>>(
-  {finalized}: { finalized: boolean },
+  { finalized }: { finalized: boolean },
   switchboard: Switchboard<K, V>,
   underlyingMap: P,
   key: K
@@ -161,7 +166,7 @@ async function getGetOrHasPromise<K, V, W, P extends Map<K, V>>(
 
 
 async function queryMap<K, V, W, P extends Map<K, V>>(
-  {finalized}: { finalized: boolean },
+  { finalized }: { finalized: boolean },
   switchboard: Switchboard<K, V>,
   underlyingMap: P,
   onSome: (v: V) => W,
@@ -169,7 +174,7 @@ async function queryMap<K, V, W, P extends Map<K, V>>(
   key: K
 ) {
   const ret = await getGetOrHasPromise(
-    {finalized},
+    { finalized },
     switchboard,
     underlyingMap,
     key
@@ -491,13 +496,13 @@ export function EventualMap<K, T>(
       );
     }
   }).then(
-      () => {
-        switchboard.forEach(
-          ([_, resolver]) => resolver(none)
-        );
-        resolveFinalMapPromise(_underlyingMap);
-      }
-    );
+    () => {
+      switchboard.forEach(
+        ([_, resolver]) => resolver(none)
+      );
+      resolveFinalMapPromise(_underlyingMap);
+    }
+  );
 
   return {
     get: (key: K) => queryMap(
@@ -540,10 +545,10 @@ export function EventualMap<K, T>(
       () => {
         throw new Error(
           typeof error === "function"
-          ? error(key)
-          : typeof error === "undefined"
-            ? `Map has no entry "${key}"`
-            : error
+            ? error(key)
+            : typeof error === "undefined"
+              ? `Map has no entry "${key}"`
+              : error
         );
       },
       key

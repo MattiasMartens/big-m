@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.BiMap = void 0;
 const maps_1 = require("../exports/maps");
 function getReversedBiMap(biMap) {
     return new Proxy(biMap._reverse, {

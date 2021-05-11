@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.tuple = exports.notNullOrUndefined = exports.isDefined = exports.defined = void 0;
 function defined(t, errorMessage) {
     if (t === undefined) {
         throw new Error(errorMessage || "Value was undefined but asserted to be defined.");

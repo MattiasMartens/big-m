@@ -1,12 +1,17 @@
-import { ReadableStream } from "ts-stream";
 import { Reconciler, BumperFn as Bumper } from "./maps";
 import { Possible } from "../types/utils";
 import { BiMap } from ".";
 import { CanonMap } from "./canon";
 /**
+ * Minimum-necessary-spec version of ReadableStream from Martin Poelstra's ts-stream library <https://github.com/poelstra/ts-stream>.
+ */
+declare type ReadableStream<T> = {
+    forEach(reader: (value: T) => void | PromiseLike<void>, ender?: (error?: Error) => void | PromiseLike<void>, aborter?: (error: Error) => void): Promise<void>;
+};
+/**
  * Insert the entries of a ReadableStream into `seed` with an optional Reconciler.
  *
- * @param {ReadableStream} stream The input stream.
+ * @param {ReadableStream} stream The input stream as produced by ts-stream <https://github.com/poelstra/ts-stream>.
  * @param {Map} seed The Map to update with the contents of `stream`.
  * @returns A promise of the updated map, to be returned when the ReadableStream closes.
  */
@@ -232,3 +237,4 @@ export declare function EventualMap<K, T>(stream: ReadableStream<[K, T]>, opts?:
     bumper?: Bumper<K, T>;
     seed?: Map<K, T>;
 }): EventualMap<K, T>;
+export {};
