@@ -23,7 +23,7 @@ export type Reconciler<K, T, V> = (
   colliding: Possible<V>,
   incoming: T,
   key: K
-) => V;
+) => Possible<V>;
 
 /**
  * Insert the entries in the iterable into the provided map.

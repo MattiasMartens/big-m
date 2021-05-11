@@ -1,7 +1,17 @@
 {
   "name": "big-m",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Utilities for building and transforming maps using iterables and streams.",
+  "keywords": ["map", "hashmap", "iterable", "stream", "utility"],
+  "homepage": "https://mattiasmartens.github.io/big-m/",
+  "bugs": {
+    "url": "https://github.com/MattiasMartens/big-m/issues",
+    "email": "mattiasofmartens@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MattiasMartens/big-m"
+  },
   "main": "dist/exports/index.js",
   "author": "Mattias Martens <mattiasofmartens@gmail.com>",
   "license": "MIT",

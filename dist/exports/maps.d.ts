@@ -16,7 +16,7 @@ export declare type MapEnumeration<K, V> = Iterable<[K, V]>;
  * @returns The updated value.
  * If the updated value is `undefined`, any existing value at the key will be deleted.
  */
-export declare type Reconciler<K, T, V> = (colliding: Possible<V>, incoming: T, key: K) => V;
+export declare type Reconciler<K, T, V> = (colliding: Possible<V>, incoming: T, key: K) => Possible<V>;
 /**
  * Insert the entries in the iterable into the provided map.
  *

@@ -1,12 +1,12 @@
 # Big-M
 
 Big-M is a library of utility functions for efficiently working with Maps. 
-That's Maps with a big "M", not `array.map` or "directions to the nearest Thai place" kind of map.
+That's Maps with a big "M", commonly known as hashmaps; not `array.map` or "directions to the nearest Thai place" kind of map.
 
 Specifically, Big-M enables composing Maps, decomposing them, recomposing them, and chaining operations without having to loop over the data structure more than once.
 It also includes some Map sub-classes for special use cases: EventualMap, BiMap, and CanonizedMap.
 
-Complete docs available at <https://mattiasmartens.github.io/big-m/>
+Complete docs are available at <https://mattiasmartens.github.io/big-m/>.
 
 # maps.ts
 
