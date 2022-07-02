@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JsonCanonMap = exports.CanonMap = exports.jsonCanonize = exports.naiveCanonize = void 0;
+exports.SelfCanonMap = exports.canonizeByPick = exports.JsonCanonMap = exports.CanonMap = exports.jsonCanonize = exports.naiveCanonize = void 0;
 const iterable_1 = require("../iterable");
+const utils_1 = require("../types/utils");
 /**
  * A fallible Canonizer for mapping objects to primitive versions to allow comparison by value.
  * Most primitives are mapped to themselves.
@@ -183,3 +184,63 @@ function JsonCanonMap(entries) {
     return new CanonMap(entries, jsonCanonize);
 }
 exports.JsonCanonMap = JsonCanonMap;
+function* mapIterable(iter, mapper) {
+    for (const i of iter) {
+        yield mapper(i);
+    }
+}
+/**
+ *
+ * @param _ Example of what will be picked. If necessary, forcefully cast this to the type desired.
+ * @param pick An array of the key lookups to perform.
+ * @returns Canonizer that produces a canonical string by combining all specified key-value pairs together.
+ * @warning This will not maintain distinctness for non-primitive objects.
+ */
+function canonizeByPick(_, pick) {
+    return (o) => pick.map(k => `${String(k)}:${utils_1.defined(o[k])}`).join('|');
+}
+exports.canonizeByPick = canonizeByPick;
+/**
+ * A version of CanonMap that is specialized for creating indexes: mapping an object's identifying attributes, specified by canonization, to the object itself.
+ *
+ * @example
+ * Take this data type Duck: { name: string, featherCount: number ).
+ * Ducks are identified by their name, so we can use a SelfCanonMap both to store the canonical version of a Duck, and to look up a Duck knowing its name only:
+ *
+ * const duckMap = new SelfCanonMap([{ name: 'Rodney', featherCount: 13217 }, { name: 'Ellis', featherCount: 11992 }], ({name}) => name)
+ * duckMap.get({name: 'Ellis'}) // { name: 'Ellis', featherCount: 11992 }
+ */
+class SelfCanonMap extends CanonMap {
+    constructor(pick, entries) {
+        const unwrappedEntries = mapIterable(entries || [], i => [i, i]);
+        const canonizer = canonizeByPick(null, pick);
+        super(unwrappedEntries, canonizer);
+    }
+    /**
+     * Adds the value to the SelfCanonMap.
+     * If any value collides with its canonization, that value will be overwritten.
+     *
+     * @param {T} val The value to set.
+     * @returns the SelfCanonMap object.
+     */
+    add(val) {
+        // @ts-ignore
+        this.set(val, val);
+        return this;
+    }
+    /**
+     * Adds values to the SelfCanonMap.
+     * If any value collides with its canonization, that value will be overwritten.
+     *
+     * @param {T} vals The values to add.
+     * @returns the SelfCanonMap object.
+     */
+    fill(vals) {
+        for (const val of vals) {
+            // @ts-ignore
+            this.add(val);
+        }
+        return this;
+    }
+}
+exports.SelfCanonMap = SelfCanonMap;

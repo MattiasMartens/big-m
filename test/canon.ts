@@ -1,13 +1,21 @@
 import * as should from 'should';
 
-import { CanonMap, naiveCanonize, jsonCanonize, JsonCanonMap } from '../exports/canon';
+import { CanonMap, naiveCanonize, jsonCanonize, JsonCanonMap, SelfCanonMap } from '../exports/canon';
 import { defined } from '../types/utils';
 import { describeThis } from './describe-this';
 import { collect } from 'iterable';
+import { identity } from 'fp-ts/lib/function';
+import { keyBy, mapCollectInto } from 'exports';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
 require('should');
+
+const keyA1 = { "a": 1 };
+const keyA2 = { "a": 2 };
+const otherKeyA1 = { "a": 1 };
+const keyB2 = { "b": 2 };
+const keyC3 = { "c": 3 };
 
 describeThis(CanonMap, subject => {
   it ("Should have the capabilities of a normal map", () => {
@@ -27,37 +35,40 @@ describeThis(CanonMap, subject => {
   });
 
   it ("Should collide keys with the same canonical value", () => {
-    const a1 = { "a": 1 };
-    const a1_ = { "a": 1 };
-    const b2 = { "b": 2 };
-    const c3 = { "c": 3 };
-
-    const instance = new subject<typeof a1 | typeof b2 | typeof c3, number>([[a1, 70], [a1_, 702], [b2, 7002]]);
-    collect(instance.keys()).should.deepEqual([a1_, b2]);
-    defined(instance.get(a1)).should.equal(702);
-    defined(instance.get(a1_)).should.equal(702);
-    instance.set(c3, 70002);
-    instance.delete(a1);
-    instance.has(a1).should.false();
-    instance.has(a1_).should.false();
+    const instance = new subject<typeof keyA1 | typeof keyB2 | typeof keyC3, number>([[keyA1, 70], [otherKeyA1, 702], [keyB2, 7002]]);
+    collect(instance.keys()).should.deepEqual([otherKeyA1, keyB2]);
+    defined(instance.get(keyA1)).should.equal(702);
+    defined(instance.get(otherKeyA1)).should.equal(702);
+    instance.set(keyC3, 70002);
+    instance.delete(keyA1);
+    instance.has(keyA1).should.false();
+    instance.has(otherKeyA1).should.false();
     collect(instance.entries()).should.deepEqual([
-      [b2, 7002],
-      [c3, 70002]
+      [keyB2, 7002],
+      [keyC3, 70002]
     ]);
-    collect(instance.keys()).should.deepEqual([b2, c3]);
+    collect(instance.keys()).should.deepEqual([keyB2, keyC3]);
     collect(instance.values()).should.deepEqual([7002, 70002]);
   });
 
-  it ("Should be instantiable with a custom canonizer", () => {
-    const instance = new subject<any, any>([], (obj: any) => obj.a);
-    instance.set({a: 1, b: 2}, 9);
-    defined(instance.get({a: 1, b: 3})).should.equal(9);
+  it("Should be instantiable with a custom canonizer", () => {
+    const canonizeByALookup = (x: { a: number }) => x.a
+    const instance = new subject<any, any>([], canonizeByALookup);
+    const keyA1WithExtraProperty = {a: 1, b: 2}
+    const keyA1WithDifferentExtraProperty = { a: 1, b: 3 };
+    instance.set(keyA1WithExtraProperty, 9);
+    defined(instance.get(keyA1WithDifferentExtraProperty)).should.equal(9);
   });
 
   it ("Should be instantiable with a number that sets the naive canonizer recursion depth", () => {
-    const instance = new subject<any, any>([], 0);
-    instance.set({a: 1}, 9);
-    defined(instance.get({a: 2})).should.equal(9);
+    const NO_DIG_RECURSION_DEPTH = 0
+    const shallowInstance = new subject<any, any>([], NO_DIG_RECURSION_DEPTH);
+    shallowInstance.set(keyA1, 9);
+    defined(shallowInstance.get(keyA2)).should.equal(9);
+
+    const DEEPER_DIG_RECURSION_DEPTH = 3;
+    const instance = new subject<any, any>([], DEEPER_DIG_RECURSION_DEPTH);
+    const deepInstance = new subject<any, any>([], DEEPER_DIG_RECURSION_DEPTH);
   });
 
   it("Should provide forEach in a way that hides the abstraction", () => {
@@ -78,6 +89,22 @@ describeThis(CanonMap, subject => {
       [2, {a: 1}],
       [4, {a: 3}]
     ])
+  });
+
+  it("Should make it easy to load objects identified by a subset of their keys", () => {
+    type FancyObject = { a: number, b: string }
+    const objects: FancyObject[] = [{ a: 1, b: 'chatter' }, { a: 1, b: 'other chatter' }, { a: 2, b: 'nothing of interest' }]
+
+    
+    const instance = new subject<{a: number}, FancyObject>(
+      keyBy(objects, identity),
+      ({a}) => a
+    );
+
+    mapCollectInto(
+      keyBy(objects, identity),
+      instance
+    );
   })
 });
 
@@ -167,4 +194,19 @@ describeThis(JsonCanonMap, (subject) => {
     defined(newCanonMap.get(getDeepNestedObject())).should.equal(700);
     should.equal(newCanonMap.get({}), undefined);
   });
+})
+
+describeThis(SelfCanonMap, subject => {
+  it("Should index Ducks by their names", () => {
+    const duckMap = new SelfCanonMap(['name'], [{ name: 'Rodney', featherCount: 13217 }, { name: 'Ellis', featherCount: 11992 }])
+    defined(duckMap.get({ name: 'Ellis' })).featherCount.should.equal(11992)
+  })
+
+  it("Should allow post facto filling with overwriting", () => {
+    const duckMap = new SelfCanonMap<{ name: string, featherCount: number }, 'name'>(['name'])
+    duckMap.fill([{ name: 'Rodney', featherCount: 13217 }, { name: 'Ellis', featherCount: 11992 }])
+    duckMap.fill([{ name: 'Rodney', featherCount: 13001 }, { name: 'Alessandra', featherCount: 12314 }])
+    defined(duckMap.get({ name: 'Rodney' })).featherCount.should.equal(13001)
+    defined(duckMap.get({ name: 'Alessandra' })).featherCount.should.equal(12314)
+  })
 })

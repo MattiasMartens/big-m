@@ -28,7 +28,7 @@ export declare function jsonCanonize<K>(lookup: K): string;
  * Function that converts input keys, which may be complex objects that can usually only be compared by equality of reference, to primitive types that can be compared by equality of value.
  * Depending on user needs, some inputs may remain as reference-comparable objects, hence the lack of restriction on the output type.
  */
-declare type Canonizer<C, K> = (lookup: K) => C;
+export declare type Canonizer<C, K> = (lookup: K) => C;
 /**
  * Map with canonized keys.
  * By instantiating a Map with a canonizer function, we can execute lookups according to an arbitrary notion of key identity.
@@ -103,4 +103,40 @@ export declare class CanonMap<K, T> extends Map<K, T> {
  * By default, creates an empty map.
  */
 export declare function JsonCanonMap<K, T>(entries?: Iterable<[K, T]>): CanonMap<unknown, T>;
-export {};
+/**
+ *
+ * @param _ Example of what will be picked. If necessary, forcefully cast this to the type desired.
+ * @param pick An array of the key lookups to perform.
+ * @returns Canonizer that produces a canonical string by combining all specified key-value pairs together.
+ * @warning This will not maintain distinctness for non-primitive objects.
+ */
+export declare function canonizeByPick<T, K extends keyof T>(_: T, pick: K[]): (o: T) => string;
+/**
+ * A version of CanonMap that is specialized for creating indexes: mapping an object's identifying attributes, specified by canonization, to the object itself.
+ *
+ * @example
+ * Take this data type Duck: { name: string, featherCount: number ).
+ * Ducks are identified by their name, so we can use a SelfCanonMap both to store the canonical version of a Duck, and to look up a Duck knowing its name only:
+ *
+ * const duckMap = new SelfCanonMap([{ name: 'Rodney', featherCount: 13217 }, { name: 'Ellis', featherCount: 11992 }], ({name}) => name)
+ * duckMap.get({name: 'Ellis'}) // { name: 'Ellis', featherCount: 11992 }
+ */
+export declare class SelfCanonMap<T, K extends keyof T> extends CanonMap<Pick<T, K>, T> {
+    constructor(pick: K[], entries?: Iterable<T>);
+    /**
+     * Adds the value to the SelfCanonMap.
+     * If any value collides with its canonization, that value will be overwritten.
+     *
+     * @param {T} val The value to set.
+     * @returns the SelfCanonMap object.
+     */
+    add(val: T): this;
+    /**
+     * Adds values to the SelfCanonMap.
+     * If any value collides with its canonization, that value will be overwritten.
+     *
+     * @param {T} vals The values to add.
+     * @returns the SelfCanonMap object.
+     */
+    fill(vals: Iterable<T>): this;
+}

@@ -28,8 +28,9 @@
         <article>
             <pre class="prettyprint source linenums"><code>"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JsonCanonMap = exports.CanonMap = exports.jsonCanonize = exports.naiveCanonize = void 0;
+exports.SelfCanonMap = exports.canonizeByPick = exports.JsonCanonMap = exports.CanonMap = exports.jsonCanonize = exports.naiveCanonize = void 0;
 const iterable_1 = require("../iterable");
+const utils_1 = require("../types/utils");
 /**
  * A fallible Canonizer for mapping objects to primitive versions to allow comparison by value.
  * Most primitives are mapped to themselves.
@@ -211,6 +212,66 @@ function JsonCanonMap(entries) {
     return new CanonMap(entries, jsonCanonize);
 }
 exports.JsonCanonMap = JsonCanonMap;
+function* mapIterable(iter, mapper) {
+    for (const i of iter) {
+        yield mapper(i);
+    }
+}
+/**
+ *
+ * @param _ Example of what will be picked. If necessary, forcefully cast this to the type desired.
+ * @param pick An array of the key lookups to perform.
+ * @returns Canonizer that produces a canonical string by combining all specified key-value pairs together.
+ * @warning This will not maintain distinctness for non-primitive objects.
+ */
+function canonizeByPick(_, pick) {
+    return (o) => pick.map(k => `${String(k)}:${utils_1.defined(o[k])}`).join('|');
+}
+exports.canonizeByPick = canonizeByPick;
+/**
+ * A version of CanonMap that is specialized for creating indexes: mapping an object's identifying attributes, specified by canonization, to the object itself.
+ *
+ * @example
+ * Take this data type Duck: { name: string, featherCount: number ).
+ * Ducks are identified by their name, so we can use a SelfCanonMap both to store the canonical version of a Duck, and to look up a Duck knowing its name only:
+ *
+ * const duckMap = new SelfCanonMap([{ name: 'Rodney', featherCount: 13217 }, { name: 'Ellis', featherCount: 11992 }], ({name}) => name)
+ * duckMap.get({name: 'Ellis'}) // { name: 'Ellis', featherCount: 11992 }
+ */
+class SelfCanonMap extends CanonMap {
+    constructor(pick, entries) {
+        const unwrappedEntries = mapIterable(entries || [], i => [i, i]);
+        const canonizer = canonizeByPick(null, pick);
+        super(unwrappedEntries, canonizer);
+    }
+    /**
+     * Adds the value to the SelfCanonMap.
+     * If any value collides with its canonization, that value will be overwritten.
+     *
+     * @param {T} val The value to set.
+     * @returns the SelfCanonMap object.
+     */
+    add(val) {
+        // @ts-ignore
+        this.set(val, val);
+        return this;
+    }
+    /**
+     * Adds values to the SelfCanonMap.
+     * If any value collides with its canonization, that value will be overwritten.
+     *
+     * @param {T} vals The values to add.
+     * @returns the SelfCanonMap object.
+     */
+    fill(vals) {
+        for (const val of vals) {
+            // @ts-ignore
+            this.add(val);
+        }
+        return this;
+    }
+}
+exports.SelfCanonMap = SelfCanonMap;
 </code></pre>
         </article>
     </section>
@@ -221,13 +282,13 @@ exports.JsonCanonMap = JsonCanonMap;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#binMap">binMap</a></li><li><a href="global.html#concatMap">concatMap</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrFill">getOrFill</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keyBy">keyBy</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapKeys">mapKeys</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#partitionCollect">partitionCollect</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileEntryInto">reconcileEntryInto</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#reconcileInit">reconcileInit</a></li><li><a href="global.html#rekeyBinMap">rekeyBinMap</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#streamCollect">streamCollect</a></li><li><a href="global.html#streamCollectInto">streamCollectInto</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BiMap.html">BiMap</a></li><li><a href="CanonMap.html">CanonMap</a></li><li><a href="SelfCanonMap.html">SelfCanonMap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#binMap">binMap</a></li><li><a href="global.html#canonizeByPick">canonizeByPick</a></li><li><a href="global.html#concatMap">concatMap</a></li><li><a href="global.html#flatMakeEntries">flatMakeEntries</a></li><li><a href="global.html#foldingGet">foldingGet</a></li><li><a href="global.html#getOrElse">getOrElse</a></li><li><a href="global.html#getOrFail">getOrFail</a></li><li><a href="global.html#getOrFill">getOrFill</a></li><li><a href="global.html#getOrVal">getOrVal</a></li><li><a href="global.html#invertBinMap">invertBinMap</a></li><li><a href="global.html#jsonCanonize">jsonCanonize</a></li><li><a href="global.html#JsonCanonMap">JsonCanonMap</a></li><li><a href="global.html#keyBy">keyBy</a></li><li><a href="global.html#keysOf">keysOf</a></li><li><a href="global.html#makeEntries">makeEntries</a></li><li><a href="global.html#mapCollect">mapCollect</a></li><li><a href="global.html#mapCollectBumping">mapCollectBumping</a></li><li><a href="global.html#mapCollectInto">mapCollectInto</a></li><li><a href="global.html#mapCollectIntoBumping">mapCollectIntoBumping</a></li><li><a href="global.html#mapKeys">mapKeys</a></li><li><a href="global.html#mapToDictionary">mapToDictionary</a></li><li><a href="global.html#mapValues">mapValues</a></li><li><a href="global.html#naiveCanonize">naiveCanonize</a></li><li><a href="global.html#partitionCollect">partitionCollect</a></li><li><a href="global.html#reconcileAdd">reconcileAdd</a></li><li><a href="global.html#reconcileAppend">reconcileAppend</a></li><li><a href="global.html#reconcileConcat">reconcileConcat</a></li><li><a href="global.html#reconcileCount">reconcileCount</a></li><li><a href="global.html#reconcileDefault">reconcileDefault</a></li><li><a href="global.html#reconcileEntryInto">reconcileEntryInto</a></li><li><a href="global.html#reconcileFirst">reconcileFirst</a></li><li><a href="global.html#reconcileFold">reconcileFold</a></li><li><a href="global.html#reconcileInit">reconcileInit</a></li><li><a href="global.html#rekeyBinMap">rekeyBinMap</a></li><li><a href="global.html#resolutionFailureMessage">resolutionFailureMessage</a></li><li><a href="global.html#reverseMap">reverseMap</a></li><li><a href="global.html#selectMap">selectMap</a></li><li><a href="global.html#streamCollect">streamCollect</a></li><li><a href="global.html#streamCollectInto">streamCollectInto</a></li><li><a href="global.html#uniformMap">uniformMap</a></li><li><a href="global.html#valuesOf">valuesOf</a></li><li><a href="global.html#zipMapsIntersection">zipMapsIntersection</a></li><li><a href="global.html#zipMapsUnion">zipMapsUnion</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Tue May 11 2021 12:26:15 GMT-0700 (Pacific Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Sat Jul 02 2022 00:57:15 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

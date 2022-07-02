@@ -32,8 +32,8 @@ export type Reconciler<K, T, V> = (
  * @param {Map} seed The Map to add them to.
  * @param {Reconciler} reconcileFn
  */
-export function mapCollectInto<K, T, P extends Map<K, T>>(
-  iterable: Iterable<[K, T]>,
+export function mapCollectInto<K, T, P extends Map<K, T>, IntoK extends K>(
+  iterable: Iterable<[IntoK, T]>,
   seed: P
 ): P
 /**
@@ -51,8 +51,8 @@ export function mapCollectInto<K, T, P extends Map<K, T>>(
  * 3. The key where the output will be entered.
  * @returns The updated Map. 
  */
-export function mapCollectInto<K, T, V, P extends Map<K, V>>(
-  iterable: Iterable<[K, T]>,
+export function mapCollectInto<K, T, V, P extends Map<K, V>, IntoK extends K>(
+  iterable: Iterable<[IntoK, T]>,
   seed: P,
   reconcileFn: Reconciler<K, T, V>
 ): P
@@ -71,8 +71,8 @@ export function mapCollectInto<K, T, V, P extends Map<K, V>>(
  * 3. The key where the output will be entered.
  * @returns The updated Map. 
  */
-export function mapCollectInto<K, T, V, P extends Map<K, V>>(
-  iterable: Iterable<[K, T]>,
+export function mapCollectInto<K, T, V, P extends Map<K, V>, IntoK extends K>(
+  iterable: Iterable<[IntoK, T]>,
   seed: P,
   reconcileFn?: Reconciler<K, T, V>
 ): P {

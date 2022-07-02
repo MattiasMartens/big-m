@@ -24,7 +24,7 @@ export declare type Reconciler<K, T, V> = (colliding: Possible<V>, incoming: T, 
  * @param {Map} seed The Map to add them to.
  * @param {Reconciler} reconcileFn
  */
-export declare function mapCollectInto<K, T, P extends Map<K, T>>(iterable: Iterable<[K, T]>, seed: P): P;
+export declare function mapCollectInto<K, T, P extends Map<K, T>, IntoK extends K>(iterable: Iterable<[IntoK, T]>, seed: P): P;
 /**
  * Insert the entries in the iterable into the provided map.
  * If two values map to the same key, `reconcileFn` will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
@@ -40,7 +40,7 @@ export declare function mapCollectInto<K, T, P extends Map<K, T>>(iterable: Iter
  * 3. The key where the output will be entered.
  * @returns The updated Map.
  */
-export declare function mapCollectInto<K, T, V, P extends Map<K, V>>(iterable: Iterable<[K, T]>, seed: P, reconcileFn: Reconciler<K, T, V>): P;
+export declare function mapCollectInto<K, T, V, P extends Map<K, V>, IntoK extends K>(iterable: Iterable<[IntoK, T]>, seed: P, reconcileFn: Reconciler<K, T, V>): P;
 /**
  * Combine Iterables of Map entries into a single Iterable, leaving keys unmerged.
  *

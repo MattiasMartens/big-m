@@ -1,6 +1,6 @@
 {
   "name": "big-m",
-  "version": "5.2.3",
+  "version": "6.0.0",
   "description": "Utilities for building and transforming maps using iterables and streams.",
   "keywords": [
     "map",

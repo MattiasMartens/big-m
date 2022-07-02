@@ -1,9 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.tuple = exports.notNullOrUndefined = exports.isDefined = exports.defined = void 0;
-function defined(t, errorMessage) {
+exports.tuple = exports.notNullOrUndefined = exports.isDefined = exports.defined = exports.buildError = void 0;
+function buildError(errorBuilder, ...input) {
+    if (typeof errorBuilder === 'string') {
+        return new Error(errorBuilder);
+    }
+    else if (errorBuilder instanceof Error) {
+        return errorBuilder;
+    }
+    else {
+        const yielded = errorBuilder(...input);
+        if (typeof yielded === 'string') {
+            return new Error(yielded);
+        }
+        else {
+            return yielded;
+        }
+    }
+}
+exports.buildError = buildError;
+function defined(t, errorBuilder = "Value was undefined but asserted to be defined.") {
     if (t === undefined) {
-        throw new Error(errorMessage || "Value was undefined but asserted to be defined.");
+        throw buildError(errorBuilder);
     }
     else {
         return t;
@@ -14,9 +32,9 @@ function isDefined(t) {
     return t !== undefined;
 }
 exports.isDefined = isDefined;
-function notNullOrUndefined(t, errorMessage) {
+function notNullOrUndefined(t, errorBuilder = t => `Value was unexpectedly ${t}.`) {
     if (t === undefined || t === null) {
-        throw new Error(errorMessage || "Value was null or undefined.");
+        throw buildError(errorBuilder, t);
     }
     else {
         return t;

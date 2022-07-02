@@ -1,8 +1,26 @@
 export type Possible<T> = T | undefined;
 
-export function defined<T>(t: Possible<T>, errorMessage?: string): T {
+export type ErrorBuilder<T extends any[]> = string | Error | ((...t: T) => string | Error)
+
+export function buildError<T extends any[]>(errorBuilder: ErrorBuilder<T>, ...input: T) {
+  if (typeof errorBuilder === 'string') {
+    return new Error(errorBuilder)
+  } else if (errorBuilder instanceof Error) {
+    return errorBuilder
+  } else {
+    const yielded = errorBuilder(...input)
+
+    if (typeof yielded === 'string') {
+      return new Error(yielded)
+    } else {
+      return yielded
+    }
+  }
+}
+
+export function defined<T>(t: Possible<T>, errorBuilder: ErrorBuilder<[]> = "Value was undefined but asserted to be defined."): T {
   if (t === undefined) {
-    throw new Error(errorMessage || "Value was undefined but asserted to be defined.");
+    throw buildError(errorBuilder);
   } else {
     return t;
   }
@@ -14,9 +32,9 @@ export function isDefined<T>(t: Possible<T>) {
 
 type MaybeNullOrUndefined<T> = T | null | undefined;
 
-export function notNullOrUndefined<T>(t: MaybeNullOrUndefined<T>, errorMessage?: string): T {
+export function notNullOrUndefined<T>(t: MaybeNullOrUndefined<T>, errorBuilder: ErrorBuilder<[T]> = t => `Value was unexpectedly ${t}.`): T {
   if (t === undefined || t === null) {
-    throw new Error(errorMessage || "Value was null or undefined.");
+    throw buildError(errorBuilder, t);
   } else {
     return t;
   }
