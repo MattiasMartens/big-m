@@ -42,7 +42,8 @@ import {
   consume,
   getOption,
   reconcileEntryInto,
-  reconcileDeleteFromSet
+  reconcileDeleteFromSet,
+  reconcileDiminish
 } from '../exports/maps';
 import { defined, Possible, Some } from '../support';
 import { describeThis } from './describe-this';
@@ -988,6 +989,50 @@ describeThis(
         "Desdemona",
         1200127,
         subject()
+      )
+
+      map.has("Desdemona").should.be.false()
+    })
+  }
+)
+
+describeThis(
+  reconcileDiminish,
+  subject => {
+    const mapInit = () => new Map<string, number>([["Billie", 1], ["Angela", 1], ["Barbara", 2]])
+    const reconciler = subject((n1: number, n2: number) => n1 - n2 <= 0 ? undefined : n1 - n2)
+
+    it("Should diminish value at a site", () => {
+      const map = mapInit()
+      reconcileEntryInto(
+        map,
+        "Barbara",
+        1,
+        reconciler
+      )
+
+      getOrFail(map, "Barbara").should.equal(1)
+    })
+
+    it("Should remove an entry if the diminisher returns undefined", () => {
+      const map = mapInit()
+      reconcileEntryInto(
+        map,
+        "Angela",
+        1,
+        reconciler
+      )
+
+      map.has("Angela").should.be.false()
+    })
+
+    it("Should do nothing if site was already empty", () => {
+      const map = mapInit()
+      reconcileEntryInto(
+        map,
+        "Desdemona",
+        1200127,
+        reconciler
       )
 
       map.has("Desdemona").should.be.false()
