@@ -21,7 +21,7 @@ import {
   makeEntries,
   mapToDictionary,
   mapValues,
-  reverseMap,
+  invertMap,
   selectMap,
   uniformMap,
   valuesOf,
@@ -645,12 +645,12 @@ describe('mapKeys', () => {
   });
 });
 
-describe('reverseMap', () => {
+describeThis(invertMap, subject => {
   it('Should transform a map Map<A, B> into its inverse Map<B, A>', () => {
     const map1 = new Map([["a", 5], ["b", 6]]);
 
     const ret = pipe(
-      reverseMap(map1),
+      subject(map1),
       collect
     );
 
