@@ -1,4 +1,4 @@
-import { Possible } from '../types/utils';
+import { Possible, Option } from '../support';
 /**
  * Any iterable of entries, regardless of origin.
  * Note that `Map<K, V>` is in this type.
@@ -101,7 +101,7 @@ export declare function partitionCollect<T, V>(iterable: Iterable<T>, keyFn: (it
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the entries of a Map from value to key.
  */
-export declare function reverseMap<K, T>(iterable: Iterable<[K, T]>): Generator<[T, K], void, unknown>;
+export declare function invertMap<K, T>(iterable: Iterable<[K, T]>): Generator<[T, K], void, unknown>;
 /**
  * Given a Map-like Iterable, produce an entry set for a new Map where each key has been mapped to a new key by calling ${mapper}.
  *
@@ -326,6 +326,12 @@ export declare function reconcileDefault<K, T>(): Reconciler<K, T, T>;
  */
 export declare function reconcileFirst<K, T>(): Reconciler<K, T, T>;
 /**
+ * Generate a reconciler for collecting Sets on a map.
+ *
+ * @returns {Reconciler} A Reconciler that adds the value to a Set or initializes a Set with that member if not.
+ */
+export declare const reconcileAddToSet: <T>() => (colliding: Possible<Set<T>>, incoming: T) => Set<T>;
+/**
  * Convert a map from keys to arrays of values (i.e., of the form Map<K, T[]>) to a map of values from arrays of keys (i.e., of the form Map<T, K[]>).
  *
  * @example
@@ -394,6 +400,23 @@ export declare function rekeyBinMap<K, T, K2>(map: Iterable<[K, T[]]>, keyBy: (e
 export declare function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier?: (val: K) => string): {
     [key: string]: T;
 };
+/**
+ * Get an fp-ts Option representing the result of a map lookup.
+ *
+ * @param map The map to search on
+ * @param key The key to look up
+ * @returns Some(value) if a value is present on the map at the key, None if not.
+ */
+export declare function getOption<K, T>(map: Map<K, T>, key: K): Option<T>;
+/**
+ * Try to grab a value from a map, returning it wrapped in Some if present, and removing it from the map.
+ *
+ * @param map The map to look up on
+ * @param key The key to look up
+ * @returns An fp-ts Option representing success on the lookup.
+ * @effect The entry at the key is deleted.
+ */
+export declare function consume<K, V>(map: Map<K, V>, key: K): Option<V>;
 /**
  * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap, valueInSecondMap]]`.
  * If a key is in one Map but not the other, that key will not be represented in the output.

@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resolutionFailureMessage = exports.mapCollectIntoBumping = exports.mapCollectBumping = exports.zipMapsUnion = exports.zipMapsIntersection = exports.mapToDictionary = exports.rekeyBinMap = exports.invertBinMap = exports.reconcileFirst = exports.reconcileDefault = exports.reconcileInit = exports.reconcileFold = exports.reconcileConcat = exports.reconcileCount = exports.reconcileAdd = exports.reconcileAppend = exports.flatMakeEntries = exports.binMap = exports.keyBy = exports.makeEntries = exports.getOrFill = exports.getOrFail = exports.getOrElse = exports.reconcileEntryInto = exports.foldingGet = exports.getOrVal = exports.selectMap = exports.uniformMap = exports.valuesOf = exports.keysOf = exports.mapKeys = exports.mapValues = exports.reverseMap = exports.partitionCollect = exports.mapCollect = exports.concatMap = exports.mapCollectInto = void 0;
+exports.resolutionFailureMessage = exports.mapCollectIntoBumping = exports.mapCollectBumping = exports.zipMapsUnion = exports.zipMapsIntersection = exports.consume = exports.getOption = exports.mapToDictionary = exports.rekeyBinMap = exports.invertBinMap = exports.reconcileAddToSet = exports.reconcileFirst = exports.reconcileDefault = exports.reconcileInit = exports.reconcileFold = exports.reconcileConcat = exports.reconcileCount = exports.reconcileAdd = exports.reconcileAppend = exports.flatMakeEntries = exports.binMap = exports.keyBy = exports.makeEntries = exports.getOrFill = exports.getOrFail = exports.getOrElse = exports.reconcileEntryInto = exports.foldingGet = exports.getOrVal = exports.selectMap = exports.uniformMap = exports.valuesOf = exports.keysOf = exports.mapKeys = exports.mapValues = exports.invertMap = exports.partitionCollect = exports.mapCollect = exports.concatMap = exports.mapCollectInto = void 0;
 const iterable_1 = require("../iterable");
-const utils_1 = require("../types/utils");
+const support_1 = require("../support");
 /**
  * Insert the entries in the iterable into the provided map.
  * If two values map to the same key and the `reconcileFn` argument is provided, it will be called to combine the colliding values to set the final value; otherwise, the last value to arrive at that key will overwrite the rest.
@@ -94,10 +94,10 @@ exports.partitionCollect = partitionCollect;
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the entries of a Map from value to key.
  */
-function reverseMap(iterable) {
+function invertMap(iterable) {
     return iterable_1.map(iterable, ([k, t]) => [t, k]);
 }
-exports.reverseMap = reverseMap;
+exports.invertMap = invertMap;
 /**
  * Given a Map-like Iterable, produce an entry set for a new Map where each key has been mapped to a new key by calling ${mapper}.
  *
@@ -495,6 +495,20 @@ function reconcileFirst() {
 }
 exports.reconcileFirst = reconcileFirst;
 /**
+ * Generate a reconciler for collecting Sets on a map.
+ *
+ * @returns {Reconciler} A Reconciler that adds the value to a Set or initializes a Set with that member if not.
+ */
+exports.reconcileAddToSet = () => (colliding, incoming) => {
+    if (colliding === undefined) {
+        return new Set([incoming]);
+    }
+    else {
+        colliding.add(incoming);
+        return colliding;
+    }
+};
+/**
  * Convert a map from keys to arrays of values (i.e., of the form Map<K, T[]>) to a map of values from arrays of keys (i.e., of the form Map<T, K[]>).
  *
  * @example
@@ -520,7 +534,7 @@ exports.reconcileFirst = reconcileFirst;
  * @returns {Map} A Map containing, for each member value that appears in any of the arrays, an entry where the key is the value in the array and the value is a list of all the keys in the input Map that included it.
  */
 function invertBinMap(map) {
-    return mapCollect(iterable_1.flatMap(map, ([key, arr]) => arr.map(t => utils_1.tuple([t, key]))), reconcileAppend());
+    return mapCollect(iterable_1.flatMap(map, ([key, arr]) => arr.map(t => support_1.tuple([t, key]))), reconcileAppend());
 }
 exports.invertBinMap = invertBinMap;
 /**
@@ -554,7 +568,7 @@ should.deepEqual(
   * @returns {Map} A Map containing, for each member value that appears in any of the arrays, an entry where the key is the value in the array and the value is a list of all the keys in the input Map that included it.
   */
 function rekeyBinMap(map, keyBy) {
-    return mapCollect(iterable_1.flatMap(map, ([key, arr]) => arr.map(t => utils_1.tuple([keyBy(t, key), t]))), reconcileAppend());
+    return mapCollect(iterable_1.flatMap(map, ([key, arr]) => arr.map(t => support_1.tuple([keyBy(t, key), t]))), reconcileAppend());
 }
 exports.rekeyBinMap = rekeyBinMap;
 /**
@@ -575,6 +589,37 @@ function mapToDictionary(map, stringifier = String) {
     return ret;
 }
 exports.mapToDictionary = mapToDictionary;
+/**
+ * Get an fp-ts Option representing the result of a map lookup.
+ *
+ * @param map The map to search on
+ * @param key The key to look up
+ * @returns Some(value) if a value is present on the map at the key, None if not.
+ */
+function getOption(map, key) {
+    if (map.has(key)) {
+        return support_1.some(map.get(key));
+    }
+    else {
+        return support_1.none;
+    }
+}
+exports.getOption = getOption;
+/**
+ * Try to grab a value from a map, returning it wrapped in Some if present, and removing it from the map.
+ *
+ * @param map The map to look up on
+ * @param key The key to look up
+ * @returns An fp-ts Option representing success on the lookup.
+ * @effect The entry at the key is deleted.
+ */
+function consume(map, key) {
+    return foldingGet(map, key, (val) => {
+        map.delete(key);
+        return support_1.some(val);
+    }, () => support_1.none);
+}
+exports.consume = consume;
 /**
  * Combine two Maps into a stream of entries of the form `[commonKeyType, [valueInFirstMap, valueInSecondMap]]`.
  * If a key is in one Map but not the other, that key will not be represented in the output.

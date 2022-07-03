@@ -1,10 +1,10 @@
+import * as should from 'should';
 import { BiMap } from 'exports';
 import { getOrFail, reconcileAdd, reconcileEntryInto } from 'exports/maps';
-import * as should from 'should';
 import { Stream } from 'ts-stream';
 
 import { EventualMap, streamCollectInto, streamCollect } from '../exports/streams';
-import { defined, tuple } from '../types/utils';
+import { defined, tuple } from '../support';
 import { describeThis } from './describe-this';
 
 // Have to require should to monkey-patch it onto objects,

@@ -1,5 +1,5 @@
 import { Reconciler, BumperFn as Bumper, getOrFail, foldingGet } from "./maps";
-import { defined, Possible } from "../types/utils";
+import { defined, Possible } from "../support";
 import { BiMap } from ".";
 import { CanonMap } from "./canon";
 

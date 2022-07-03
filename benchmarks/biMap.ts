@@ -1,6 +1,6 @@
 import { Suite } from 'benchmark';
 import { BiMap } from 'exports';
-import { pipe } from 'fp-ts/lib/pipeable';
+import { pipe } from 'fp-ts/lib/function';
 
 import { collect, map, series, take } from '../iterable';
 

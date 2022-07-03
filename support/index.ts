@@ -2,6 +2,15 @@ export type Possible<T> = T | undefined;
 
 export type ErrorBuilder<T extends any[]> = string | Error | ((...t: T) => string | Error)
 
+export const identity = <T>(t: T) => t
+
+export type Some<T> = { readonly _tag: 'Some', value: T }
+export type None = { readonly _tag: 'None' }
+export type Option<T> = None | Some<T>
+
+export const none: None = { _tag: 'None' }
+export const some = <T>(value: T) => ({ _tag: 'Some', value } as Option<T>)
+
 export function buildError<T extends any[]>(errorBuilder: ErrorBuilder<T>, ...input: T) {
   if (typeof errorBuilder === 'string') {
     return new Error(errorBuilder)

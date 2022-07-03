@@ -1,5 +1,16 @@
 export declare type Possible<T> = T | undefined;
 export declare type ErrorBuilder<T extends any[]> = string | Error | ((...t: T) => string | Error);
+export declare const identity: <T>(t: T) => T;
+export declare type Some<T> = {
+    readonly _tag: 'Some';
+    value: T;
+};
+export declare type None = {
+    readonly _tag: 'None';
+};
+export declare type Option<T> = None | Some<T>;
+export declare const none: None;
+export declare const some: <T>(value: T) => Option<T>;
 export declare function buildError<T extends any[]>(errorBuilder: ErrorBuilder<T>, ...input: T): Error;
 export declare function defined<T>(t: Possible<T>, errorBuilder?: ErrorBuilder<[]>): T;
 export declare function isDefined<T>(t: Possible<T>): boolean;

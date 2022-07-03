@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventualMap = exports.streamCollect = exports.streamCollectInto = void 0;
 const maps_1 = require("./maps");
-const utils_1 = require("../types/utils");
+const support_1 = require("../support");
 /**
  * Insert the entries of a ReadableStream into `seed` with an optional Reconciler.
  *
@@ -67,7 +67,7 @@ async function getGetOrHasPromise({ finalized }, switchboard, underlyingMap, key
     else {
         let resolver;
         const newPromise = new Promise(resolve => resolver = resolve);
-        switchboard.set(key, [newPromise, utils_1.defined(resolver, "Resolver not properly captured from Promise, this might be due to an unexpected implementation of Promises")]);
+        switchboard.set(key, [newPromise, support_1.defined(resolver, "Resolver not properly captured from Promise, this might be due to an unexpected implementation of Promises")]);
         return newPromise;
     }
 }

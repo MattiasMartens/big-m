@@ -1,10 +1,9 @@
 import * as should from 'should';
 
 import { CanonMap, naiveCanonize, jsonCanonize, JsonCanonMap, SelfCanonMap } from '../exports/canon';
-import { defined } from '../types/utils';
+import { defined, identity } from '../support';
 import { describeThis } from './describe-this';
 import { collect } from 'iterable';
-import { identity } from 'fp-ts/lib/function';
 import { keyBy, mapCollectInto } from 'exports';
 
 // Have to require should to monkey-patch it onto objects,

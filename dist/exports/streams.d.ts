@@ -1,5 +1,5 @@
 import { Reconciler, BumperFn as Bumper } from "./maps";
-import { Possible } from "../types/utils";
+import { Possible } from "../support";
 import { BiMap } from ".";
 import { CanonMap } from "./canon";
 /**

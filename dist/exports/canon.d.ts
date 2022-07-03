@@ -1,4 +1,4 @@
-import { Possible } from "../types/utils";
+import { Possible } from "../support";
 /**
  * A fallible Canonizer for mapping objects to primitive versions to allow comparison by value.
  * Most primitives are mapped to themselves.

@@ -1,7 +1,7 @@
 import * as should from 'should';
 
 import { BiMap } from '../exports/bidirectional';
-import { defined, isDefined, Possible } from '../types/utils';
+import { defined } from '../support';
 import { describeThis } from './describe-this';
 import { collect } from 'iterable';
 

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.collectInto = exports.collect = exports.slice = exports.repeat = exports.take = exports.series = exports.entries = exports.filter = exports.flatMap = exports.forEach = exports.combine = exports.map = void 0;
-const utils_1 = require("../types/utils");
+const support_1 = require("../support");
 function* map(arr, fn) {
     for (let val of arr) {
         yield fn(val);
@@ -36,7 +36,7 @@ function* filter(arr, fn) {
 exports.filter = filter;
 function* entries(obj) {
     for (let key in obj) {
-        yield utils_1.tuple([key, obj[key]]);
+        yield support_1.tuple([key, obj[key]]);
     }
 }
 exports.entries = entries;

@@ -1,5 +1,5 @@
 import { filter, flatMap, forEach, map, combine } from '../iterable';
-import { Possible, tuple } from '../types/utils';
+import { Possible, tuple, none, Option, some } from '../support';
 
 /**
  * Any iterable of entries, regardless of origin.
@@ -205,7 +205,7 @@ export function partitionCollect<T, V>(iterable: Iterable<T>, keyFn: (item: T) =
  * @param {Iterable} iterable An iterable representing the entries of a Map from key to value.
  * @returns An iterable representing the entries of a Map from value to key.
  */
-export function reverseMap<K, T>(
+export function invertMap<K, T>(
   iterable: Iterable<[K, T]>
 ) {
   return map(iterable, ([k, t]) => [t, k] as [T, K])
@@ -767,6 +767,20 @@ export function reconcileFirst<K, T>(): Reconciler<K, T, T> {
 }
 
 /**
+ * Generate a reconciler for collecting Sets on a map.
+ * 
+ * @returns {Reconciler} A Reconciler that adds the value to a Set or initializes a Set with that member if not.
+ */
+export const reconcileAddToSet = <T>() => (colliding: Possible<Set<T>>, incoming: T) => {
+  if (colliding === undefined) {
+    return new Set([incoming])
+  } else {
+    colliding.add(incoming)
+    return colliding
+  }
+}
+
+/**
  * Convert a map from keys to arrays of values (i.e., of the form Map<K, T[]>) to a map of values from arrays of keys (i.e., of the form Map<T, K[]>).
  * 
  * @example
@@ -859,6 +873,41 @@ export function mapToDictionary<K, T>(map: Iterable<[K, T]>, stringifier: (val: 
   }
 
   return ret;
+}
+
+/**
+ * Get an fp-ts Option representing the result of a map lookup.
+ * 
+ * @param map The map to search on
+ * @param key The key to look up
+ * @returns Some(value) if a value is present on the map at the key, None if not.
+ */
+export function getOption<K, T>(map: Map<K, T>, key: K): Option<T> {
+  if (map.has(key)) {
+    return some(map.get(key) as T)
+  } else {
+    return none
+  }
+}
+
+/**
+ * Try to grab a value from a map, returning it wrapped in Some if present, and removing it from the map.
+ * 
+ * @param map The map to look up on
+ * @param key The key to look up
+ * @returns An fp-ts Option representing success on the lookup.
+ * @effect The entry at the key is deleted.
+ */
+export function consume<K, V>(map: Map<K, V>, key: K) {
+  return foldingGet(
+    map,
+    key,
+    (val) => {
+      map.delete(key)
+      return some(val)
+    },
+    () => none
+  )
 }
 
 /**

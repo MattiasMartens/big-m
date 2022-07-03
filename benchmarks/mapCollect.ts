@@ -1,5 +1,5 @@
 import { Suite } from 'benchmark';
-import { pipe } from 'fp-ts/lib/pipeable';
+import { pipe } from 'fp-ts/lib/function';
 
 import { mapCollect } from '../exports/maps';
 import { collect, series, take, map } from '../iterable';

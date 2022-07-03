@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.tuple = exports.notNullOrUndefined = exports.isDefined = exports.defined = exports.buildError = void 0;
+exports.tuple = exports.notNullOrUndefined = exports.isDefined = exports.defined = exports.buildError = exports.some = exports.none = exports.identity = void 0;
+exports.identity = (t) => t;
+exports.none = { _tag: 'None' };
+exports.some = (value) => ({ _tag: 'Some', value });
 function buildError(errorBuilder, ...input) {
     if (typeof errorBuilder === 'string') {
         return new Error(errorBuilder);

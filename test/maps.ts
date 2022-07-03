@@ -1,5 +1,5 @@
 import * as should from 'should';
-import { pipe } from "fp-ts/lib/pipeable";
+import { pipe } from "fp-ts/lib/function";
 
 import { BiMap } from '../exports/bidirectional';
 import {
@@ -36,13 +36,17 @@ import {
   concatMap,
   keyBy,
   rekeyBinMap,
-  reconcileInit, partitionCollect
+  reconcileInit,
+  partitionCollect,
+  reconcileAddToSet,
+  consume,
+  getOption,
+  reconcileEntryInto
 } from '../exports/maps';
-import { defined, Possible } from '../types/utils';
+import { defined, Possible, Some } from '../support';
 import { describeThis } from './describe-this';
 import { collect, filter } from 'iterable';
 import { CanonMap } from 'exports';
-import { hasUncaughtExceptionCaptureCallback } from 'process';
 
 // Have to require should to monkey-patch it onto objects,
 // but have to import should to get the types. Yuck!
@@ -912,3 +916,97 @@ describeThis(partitionCollect, subject => {
     defined(result.get(3)).should.deepEqual([])
   })
 })
+
+describeThis(
+  reconcileAddToSet,
+  subject => {
+    const mapInit = () => new Map<string, Set<number>>([["Billie", new Set([11663])], ["Angela", new Set([11882])], ["Barbara", new Set([10005, 14012])]])
+
+    it("Should add colliding items into a Set", () => {
+      const map = mapInit()
+      reconcileEntryInto(
+        map,
+        "Angela",
+        11883,
+        subject()
+      )
+
+      getOrFail(map, "Angela").has(11882).should.be.true
+      getOrFail(map, "Angela").has(11883).should.be.true
+    })
+
+    it("Should create a Set at the Map site if it does not exist", () => {
+      const map = mapInit()
+      reconcileEntryInto(
+        map,
+        "Desdemona",
+        188829,
+        subject()
+      )
+
+      getOrFail(map, "Desdemona").has(188829).should.be.true
+      getOrFail(map, "Desdemona").size.should.equal(1)
+    })
+  }
+)
+
+describeThis(
+  consume,
+  subject => {
+    const mapInit = () => new Map<string, number>([["Billie", 11663], ["Angela", 11882], ["Barbara", 10004012]])
+
+    it("Should delete the value at the key and return it wrapped in Some if present", () => {
+      const map = mapInit()
+      const ret = subject(
+        map,
+        "Angela"
+      )
+
+      map.has("Angela").should.be.false()
+      ret._tag.should.equal("Some")
+      ;(ret as Some<number>).value.should.equal(11882)
+    })
+
+    it("Should return none if absent", () => {
+      const map = mapInit()
+      const ret = subject(
+        map,
+        "Desdemona"
+      )
+
+      map.has("Desdemona").should.be.false()
+      ret._tag.should.equal("None")
+    })
+  }
+)
+
+describeThis(
+  getOption,
+  subject => {
+    const mapInit = () => new Map<string, number>([["Billie", 11663], ["Angela", 11882], ["Barbara", 10004012]])
+
+    it("Should the value at the key wrapped in Some if present", () => {
+      const map = mapInit()
+      const ret = subject(
+        map,
+        "Angela"
+      )
+
+      map.has("Angela").should.be.true()
+      ret._tag.should.equal("Some")
+      ;(ret as Some<number>).value.should.equal(11882)
+    })
+
+    it("Should return none if absent", () => {
+      const map = mapInit()
+      const ret = subject(
+        map,
+        "Desdemona"
+      )
+
+      map.has("Desdemona").should.be.false()
+      ret._tag.should.equal("None")
+    })
+  }
+)
+

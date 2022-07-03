@@ -1,5 +1,5 @@
 import { entries, collect } from "../iterable";
-import { defined, Possible } from "../types/utils";
+import { defined, Possible } from "../support";
 
 /**
  * A fallible Canonizer for mapping objects to primitive versions to allow comparison by value.

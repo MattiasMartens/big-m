@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SelfCanonMap = exports.canonizeByPick = exports.JsonCanonMap = exports.CanonMap = exports.jsonCanonize = exports.naiveCanonize = void 0;
 const iterable_1 = require("../iterable");
-const utils_1 = require("../types/utils");
+const support_1 = require("../support");
 /**
  * A fallible Canonizer for mapping objects to primitive versions to allow comparison by value.
  * Most primitives are mapped to themselves.
@@ -197,7 +197,7 @@ function* mapIterable(iter, mapper) {
  * @warning This will not maintain distinctness for non-primitive objects.
  */
 function canonizeByPick(_, pick) {
-    return (o) => pick.map(k => `${String(k)}:${utils_1.defined(o[k])}`).join('|');
+    return (o) => pick.map(k => `${String(k)}:${support_1.defined(o[k])}`).join('|');
 }
 exports.canonizeByPick = canonizeByPick;
 /**
