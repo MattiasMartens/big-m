@@ -41,7 +41,8 @@ import {
   reconcileAddToSet,
   consume,
   getOption,
-  reconcileEntryInto
+  reconcileEntryInto,
+  reconcileDeleteFromSet
 } from '../exports/maps';
 import { defined, Possible, Some } from '../support';
 import { describeThis } from './describe-this';
@@ -931,8 +932,8 @@ describeThis(
         subject()
       )
 
-      getOrFail(map, "Angela").has(11882).should.be.true
-      getOrFail(map, "Angela").has(11883).should.be.true
+      getOrFail(map, "Angela").has(11882).should.be.true()
+      getOrFail(map, "Angela").has(11883).should.be.true()
     })
 
     it("Should create a Set at the Map site if it does not exist", () => {
@@ -944,8 +945,52 @@ describeThis(
         subject()
       )
 
-      getOrFail(map, "Desdemona").has(188829).should.be.true
+      getOrFail(map, "Desdemona").has(188829).should.be.true()
       getOrFail(map, "Desdemona").size.should.equal(1)
+    })
+  }
+)
+
+describeThis(
+  reconcileDeleteFromSet,
+  subject => {
+    const mapInit = () => new Map<string, Set<number>>([["Billie", new Set([11663])], ["Angela", new Set([11882])], ["Barbara", new Set([10005, 14012])]])
+
+    it("Should remove colliding items from a Set", () => {
+      const map = mapInit()
+      reconcileEntryInto(
+        map,
+        "Barbara",
+        10005,
+        subject()
+      )
+
+      getOrFail(map, "Barbara").has(10005).should.be.false()
+      getOrFail(map, "Barbara").has(14012).should.be.true()
+    })
+
+    it("Should remove a Set at the Map site if it is now empty", () => {
+      const map = mapInit()
+      reconcileEntryInto(
+        map,
+        "Angela",
+        11882,
+        subject()
+      )
+
+      map.has("Angela").should.be.false()
+    })
+
+    it("Should do nothing if site was already empty", () => {
+      const map = mapInit()
+      reconcileEntryInto(
+        map,
+        "Desdemona",
+        1200127,
+        subject()
+      )
+
+      map.has("Desdemona").should.be.false()
     })
   }
 )

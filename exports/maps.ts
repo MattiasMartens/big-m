@@ -767,7 +767,43 @@ export function reconcileFirst<K, T>(): Reconciler<K, T, T> {
 }
 
 /**
- * Generate a reconciler for collecting Sets on a map.
+ * Reconciler for cases where you want to delete members from values stored within a Map instead of adding them.
+ * 
+ * If an existing aggregate is found at the key, diminisher() will be called to determine the new value at the key.
+ * If not found, nothing is done.
+ * 
+ * @param diminisher Function to take the incoming value away from the value in the Map.
+ * @returns A reconciler that either calls diminisher() on a value in the Map, or forces a no-op if the value does not exist.
+ */
+export function reconcileDiminish<K, I, V>(diminisher: (value: V, input: I, key: K) => V | undefined): Reconciler<K, I, V> {
+  return function (collidingValue, incomingValue, key) {
+    if (collidingValue === undefined) {
+      return undefined;
+    } else {
+      return diminisher(collidingValue, incomingValue, key);
+    }
+  }
+}
+
+/**
+ * Generate a reconciler for removing items from Sets on a Map.
+ * 
+ * @returns {Reconciler} A Reconciler that deletes the value from a Set or does nothing if not.
+ */
+export const reconcileDeleteFromSet = <T>() => reconcileDiminish(
+  (colliding: Set<T>, incoming: T) => {
+    colliding.delete(incoming);
+    
+    if (colliding.size === 0) {
+      return undefined;
+    }
+
+    return colliding;
+  }
+)
+
+/**
+ * Generate a reconciler for collecting Sets on a Map.
  * 
  * @returns {Reconciler} A Reconciler that adds the value to a Set or initializes a Set with that member if not.
  */
