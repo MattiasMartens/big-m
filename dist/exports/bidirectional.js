@@ -76,7 +76,7 @@ class BiMap extends Map {
         }
         this._reverse = entries instanceof BiMap
             ? new Map(entries._reverse)
-            : maps_1.mapCollect(maps_1.reverseMap(entries || []));
+            : maps_1.mapCollect(maps_1.invertMap(entries || []));
     }
     /**
      * Access the reversed map.
